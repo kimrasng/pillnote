@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:pillnote/screen/add.dart';
 import 'package:pillnote/screen/list.dart';
 import 'package:pillnote/screen/taking.dart';
 
 
-void main() => runApp(const NavigationBarApp());
+Future<void> main() async {
+  await dotenv.load(fileName: ".env");
+  runApp(const NavigationBarApp());
+}
 
 class NavigationBarApp extends StatelessWidget {
   const NavigationBarApp({super.key});

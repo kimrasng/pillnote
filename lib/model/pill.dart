@@ -44,18 +44,19 @@ class Pill {
         sideEffect = json['sideEffect'],
         img = json['img'];
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'count': count,
-    'name': name,
-    'pilCode': pilCode,
-    'effect': effect,
-    'guid': guid,
-    'warning': warning,
-    'caution': caution,
-    'sideEffect': sideEffect,
-    'img': img
-  };
+  Map<String, dynamic> toJson() =>
+      {
+        'id': id,
+        'count': count,
+        'name': name,
+        'pilCode': pilCode,
+        'effect': effect,
+        'guid': guid,
+        'warning': warning,
+        'caution': caution,
+        'sideEffect': sideEffect,
+        'img': img
+      };
 }
 
 // 복용 관련 정보(어떤 약을 먹는지 하루에 얼마나 먹는지 등)
@@ -66,10 +67,10 @@ class UserPill {
   final int pillId; // Pill.id 참조
   final DateTime startDate;
   final DateTime? endDate;
-  final int dosePerTake;  // 1회 복용양
-  final int timesPerDay;  // 1일 복용횟
+  final int dosePerTake; // 1회 복용양
+  final int timesPerDay; // 1일 복용횟
   final List<TimeOfDay> alarmTimes; // 알람 시간
-  final bool isActive;  // 활성상태 약을 복용 할지 말지
+  final bool isActive; // 활성상태 약을 복용 할지 말지
 
   UserPill({
     int? id,
@@ -81,6 +82,18 @@ class UserPill {
     required this.alarmTimes,
     this.isActive = true
   }) : id = id ?? _nextid++;
+
+  Map<String, dynamic> toJson() =>
+      {
+        'id': id,
+        'pillId': pillId,
+        'startDate': startDate,
+        'endDate': endDate,
+        'dosePerTake': dosePerTake,
+        'timesPerDay': timesPerDay,
+        'alarmTimes': alarmTimes,
+        'isActive': isActive,
+      };
 }
 
 
@@ -101,4 +114,34 @@ class PillTakeLog {
     required this.takeTime,
     this.isTake = false,
   }) : id = id ?? _nextid++;
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'userPillId': userPillId,
+    'scheduledTime': scheduledTime,
+    'takeTime': takeTime,
+    'isTake': isTake,
+  };
+}
+
+
+// 알림 시간
+class AlarmSettings {
+  final TimeOfDay morning;
+  final TimeOfDay afternoon;
+  final TimeOfDay night;
+
+  AlarmSettings({
+    TimeOfDay? morning,
+    TimeOfDay? afternoon,
+    TimeOfDay? night,
+  })  : morning = morning ?? const TimeOfDay(hour: 6, minute: 30),
+        afternoon = afternoon ?? const TimeOfDay(hour: 12, minute: 30),
+        night = night ?? const TimeOfDay(hour: 18, minute: 30);
+
+  Map<String, dynamic> toJson() => {
+    'morning' : morning,
+    'afternoon' : afternoon,
+    'night' : night,
+  };
 }

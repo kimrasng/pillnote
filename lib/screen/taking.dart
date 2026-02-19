@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pillnote/screen/AppBar.dart';
 
 class TakingScreen extends StatelessWidget {
   const TakingScreen({super.key});
@@ -6,19 +7,8 @@ class TakingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-          title: const Text(
-            "복용 기록",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          centerTitle: false,
-          actions: [
-      ],
-    ),
-    body: Center(child: Text("복용"
-    )
-    )
-    ,
+      appBar: CustomAppBar(title: "복용 기록"),
+      body: Center(child: Column()),
     );
   }
 }
