@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 
 import 'package:pillnote/screen/AppBar.dart';
 import 'package:pillnote/screen/component/photoAdd.dart';
+import 'package:pillnote/screen/component/pillAdd.dart';
 
 class AddScreen extends StatefulWidget {
   const AddScreen({super.key});
@@ -16,7 +17,7 @@ class AddScreen extends StatefulWidget {
 }
 
 class _AddScreenState extends State<AddScreen> {
-  List<dynamic> _items = [];
+  List<dynamic> _items = [];  // API 에서 받아온거 거장할때 쓰는거
   bool _isLoading = false;
   String _error = '';
   Timer? _debounce;
@@ -27,6 +28,8 @@ class _AddScreenState extends State<AddScreen> {
     super.dispose();
   }
 
+
+  // 입력 끝날때까지 대기
   void _onSearchChanged(String text) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
@@ -109,7 +112,11 @@ class _AddScreenState extends State<AddScreen> {
             _PillAdd(onChanged: _onSearchChanged),
             const SizedBox(height: 16),
             Expanded(
-              child: _PillAutoSearch(items: _items, isLoading: _isLoading, error: _error),
+              child: _PillAutoSearch(
+                items: _items,
+                isLoading: _isLoading,
+                error: _error,
+              ),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -139,21 +146,20 @@ class _AddScreenState extends State<AddScreen> {
 
 class _PillAdd extends StatelessWidget {
   final ValueChanged<String> onChanged;
+
   const _PillAdd({required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
     return TextField(
-      decoration: const InputDecoration(
-        labelText: "약 이름",
-      ),
+      decoration: const InputDecoration(labelText: "약 이름"),
       onChanged: onChanged,
     );
   }
 }
 
 class _PillAutoSearch extends StatelessWidget {
-  final List<dynamic> items;
+  final List<dynamic> items;  // 검색해서 나온것들
   final bool isLoading;
   final String error;
 
@@ -166,9 +172,7 @@ class _PillAutoSearch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (error.isNotEmpty) {
@@ -184,6 +188,7 @@ class _PillAutoSearch extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    // 검색 결과
     return ListView.builder(
       itemCount: items.length,
       itemBuilder: (context, index) {
@@ -192,6 +197,7 @@ class _PillAutoSearch extends StatelessWidget {
         final imageUrl = item['ITEM_IMAGE'];
         final entpName = item['ENTP_NAME'] ?? '';
         final className = item['CLASS_NAME'] ?? '';
+        final itemSeq= item['ITEM_SEQ'] ?? '';
 
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -223,15 +229,27 @@ class _PillAutoSearch extends StatelessWidget {
                 ),
               const SizedBox(width: 16),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('제품명 : $name',
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    Text('회사 : $entpName'),
-                    Text('분류 : $className'),
-                  ],
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (context) => pillAdd(itemSeq: itemSeq),
+                      ),
+                    );
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '제품명 : $name',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text('회사 : $entpName'),
+                      Text('분류 : $className'),
+                    ],
+                  ),
                 ),
               ),
             ],
