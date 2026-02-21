@@ -83,15 +83,28 @@ class UserPill {
     this.isActive = true
   }) : id = id ?? _nextid++;
 
-  Map<String, dynamic> toJson() =>
-      {
+  UserPill.fromJson(Map<String, dynamic> json)
+      : id = json['id'],
+        pillId = json['pillId'],
+        startDate = DateTime.parse(json['startDate']),
+        endDate = json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
+        dosePerTake = json['dosePerTake'],
+        timesPerDay = json['timesPerDay'],
+        alarmTimes = (json['alarmTimes'] as List)
+            .map((timeStr) => TimeOfDay(
+                hour: int.parse(timeStr.split(':')[0]),
+                minute: int.parse(timeStr.split(':')[1])))
+            .toList(),
+        isActive = json['isActive'];
+
+  Map<String, dynamic> toJson() => {
         'id': id,
         'pillId': pillId,
-        'startDate': startDate,
-        'endDate': endDate,
+        'startDate': startDate.toIso8601String(),
+        'endDate': endDate?.toIso8601String(),
         'dosePerTake': dosePerTake,
         'timesPerDay': timesPerDay,
-        'alarmTimes': alarmTimes,
+        'alarmTimes': alarmTimes.map((time) => '${time.hour}:${time.minute}').toList(),
         'isActive': isActive,
       };
 }

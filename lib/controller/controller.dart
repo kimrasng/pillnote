@@ -17,6 +17,7 @@ class Controller {
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
     _loadPills();
+    _loadUserPills();
   }
 
   void _loadPills() {
@@ -58,28 +59,21 @@ class Controller {
     }
   }
 
-  UserPill.fromJson(Map<String, dynamic> json)
-      : id = json['id'],
-        pillId = json['pillId'],
-        startDate = DateTime.parse(json['startDate']),
-        endDate = json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
-        dosePerTake = json['dosePerTake'],
-        timesPerDay = json['timesPerDay'],
-        alarmTimes = (json['alarmTimes'] as List)
-            .map((timeStr) => TimeOfDay(
-                hour: int.parse(timeStr.split(':')[0]),
-                minute: int.parse(timeStr.split(':')[1])))
-            .toList(),
-        isActive = json['isActive'];
+  void _loadUserPills() {
+    final userPillsJson = _prefs.getString('userPills');
+    if (userPillsJson != null) {
+      final List<dynamic> userPillsData = jsonDecode(userPillsJson);
+      _userPills = userPillsData.map((data) => UserPill.fromJson(data)).toList();
+    }
+  }
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'pillId': pillId,
-        'startDate': startDate.toIso8601String(),
-        'endDate': endDate?.toIso8601String(),
-        'dosePerTake': dosePerTake,
-        'timesPerDay': timesPerDay,
-        'alarmTimes': alarmTimes.map((time) => '${time.hour}:${time.minute}').toList(),
-        'isActive': isActive,
-      };
+  Future<void> _saveUserPills() async {
+    final userPillsData = _userPills.map((userPill) => userPill.toJson()).toList();
+    await _prefs.setString('userPills', jsonEncode(userPillsData));
+  }
+
+  Future<void> addUserPill(UserPill userPill) async {
+    _userPills.add(userPill);
+    await _saveUserPills();
+  }
 }
