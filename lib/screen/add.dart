@@ -230,14 +230,7 @@ class _PillAutoSearch extends StatelessWidget {
               const SizedBox(width: 16),
               Expanded(
                 child: InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (context) => pillAdd(itemSeq: itemSeq),
-                      ),
-                    );
-                  },
+                  onTap: () => addDialog(context, item),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
