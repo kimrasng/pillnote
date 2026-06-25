@@ -31,24 +31,13 @@ class _OnboardingState extends State<Onboarding> {
               ),
               const Spacer(),
               Text(
-                "약과 영양제를 더 쉽게",
+                "약과 영양제를 더 쉽게\nPillNote 하나로",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Pretendard',
                   fontSize: screenWidth * 0.08,
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                "복용 알림부터 기록까지\nPillNote 하나로",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: screenWidth * 0.045,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey,
                 ),
               ),
               const Spacer(flex: 2),
