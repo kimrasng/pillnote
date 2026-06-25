@@ -38,7 +38,6 @@ jobs:
       - name: Extract version from tag
         id: get_version
         run: |
-          # v1.2.3 -> 1.2.3
           VERSION=${GITHUB_REF#refs/tags/v}
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
@@ -51,6 +50,7 @@ jobs:
           flutter build apk --release \
             --build-name=${{ steps.get_version.outputs.VERSION }} \
             --build-number=${{ github.run_number }}
+          mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/${{ github.event.repository.name }}-${{ steps.get_version.outputs.VERSION }}.apk
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -59,7 +59,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: build/app/outputs/flutter-apk/app-release.apk
+          files: build/app/outputs/flutter-apk/${{ github.event.repository.name }}-${{ steps.get_version.outputs.VERSION }}.apk
           name: Release ${{ github.ref_name }}
           tag_name: ${{ github.ref }}
           draft: false

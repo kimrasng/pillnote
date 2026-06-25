@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pillnote/screen/register/signup.dart';
 
 class Signin extends StatefulWidget {
   const Signin({super.key});
@@ -10,14 +11,129 @@ class Signin extends StatefulWidget {
 class _SigninState extends State<Signin> {
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final double screenWidth = size.width;
+    final double screenHeight = size.height;
+
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: Icon(Icons.arrow_back_ios_new),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
         ),
       ),
-      body: Column(children: [],),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: screenHeight * 0.02),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    "안녕하세요!",
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: screenWidth * 0.07,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Image.asset(
+                    'assets/images/wave.gif',
+                    width: screenWidth * 0.1,
+                  ),
+                ],
+              ),
+              Text(
+                "PillNote에 오신것을 환영합니다.",
+                style: TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: screenWidth * 0.06,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: screenHeight * 0.08),
+              const TextField(
+                decoration: InputDecoration(
+                  labelText: '이메일',
+                  hintText: 'example@email.com',
+                ),
+              ),
+              SizedBox(height: screenHeight * 0.01),
+              const TextField(
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: '비밀번호',
+                  hintText: '비밀번호를 입력해주세요',
+                ),
+              ),
+              SizedBox(height: screenHeight * 0.3),
+              SizedBox(
+                width: double.infinity,
+                height: screenHeight * 0.07,
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    backgroundColor: Color(0xFF2563EB),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    "로그인",
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: screenWidth * 0.05,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: screenHeight * 0.01),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () {},
+                    child: Text(
+                      "로그인 없이 시작하기",
+                      style: TextStyle(
+                        color: Color(0XFF7CA5FF),
+                        fontWeight: FontWeight.bold,
+                        fontSize: screenWidth * 0.035,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (context) => const Signup(),
+                      ),
+                    ),
+                    child: Text(
+                      "회원가입",
+                      style: TextStyle(
+                        color: Color(0XFF7CA5FF),
+                        fontWeight: FontWeight.bold,
+                        fontSize: screenWidth * 0.035,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
