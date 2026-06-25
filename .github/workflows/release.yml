@@ -50,8 +50,8 @@ jobs:
           flutter build apk --release \
             --build-name=${{ steps.get_version.outputs.VERSION }} \
             --build-number=${{ github.run_number }} \
-            --target-platform android-arm,android-arm64,android-x64 \
-          mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/${{ github.event.repository.name }}-${{ steps.get_version.outputs.VERSION }}.apk
+            --target-platform android-arm,android-arm64,android-x64
+          mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/${{ github.event.repository.name }}-v${{ steps.get_version.outputs.VERSION }}.apk
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
