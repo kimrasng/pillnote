@@ -1,6 +1,5 @@
 plugins {
     id("com.android.application")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
@@ -15,10 +14,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "kr.kimrasng.pillnote.pillnote"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -27,11 +23,12 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystorePath = "upload-keystore.jks"
-            val keystoreFile = file(keystorePath)
-            if (keystoreFile.exists()) {
+            val keystoreFile = file("upload-keystore.jks")
+            val password = System.getenv("KEYSTORE_PASSWORD")
+            
+            if (keystoreFile.exists() && !password.isNullOrEmpty()) {
                 storeFile = keystoreFile
-                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                storePassword = password
                 keyAlias = System.getenv("KEY_ALIAS")
                 keyPassword = System.getenv("KEY_PASSWORD")
             }
@@ -39,12 +36,10 @@ android {
     }
 
     buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            val isSigningConfigured = signingConfigs.getByName("release").storeFile?.exists() == true
-            signingConfig = if (isSigningConfigured) {
-                signingConfigs.getByName("release")
+        getByName("release") {
+            val releaseConfig = signingConfigs.getByName("release")
+            signingConfig = if (releaseConfig.storeFile != null) {
+                releaseConfig
             } else {
                 signingConfigs.getByName("debug")
             }
