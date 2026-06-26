@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pillnote/screen/register/signup.dart';
+import 'package:pillnote/widgets/custom_text_field.dart';
+
+import '../home.dart';
 
 class Signin extends StatefulWidget {
   const Signin({super.key});
@@ -22,7 +25,7 @@ class _SigninState extends State<Signin> {
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          icon: Icon(Icons.arrow_back_ios_new, color: Colors.black),
         ),
       ),
       body: SafeArea(
@@ -43,7 +46,7 @@ class _SigninState extends State<Signin> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Image.asset(
                     'assets/images/wave.gif',
                     width: screenWidth * 0.1,
@@ -59,19 +62,16 @@ class _SigninState extends State<Signin> {
                 ),
               ),
               SizedBox(height: screenHeight * 0.08),
-              const TextField(
-                decoration: InputDecoration(
-                  labelText: '이메일',
-                  hintText: 'example@email.com',
-                ),
+              const CustomTextField(
+                label: '이메일',
+                hint: 'example@email.com',
+                keyboardType: TextInputType.emailAddress,
               ),
-              SizedBox(height: screenHeight * 0.01),
-              const TextField(
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: '비밀번호',
-                  hintText: '비밀번호를 입력해주세요',
-                ),
+              SizedBox(height: screenHeight * 0.02),
+              const CustomTextField(
+                label: '비밀번호',
+                hint: '비밀번호를 입력해주세요.',
+                isPassword: true,
               ),
               SizedBox(height: screenHeight * 0.3),
               SizedBox(
@@ -102,7 +102,13 @@ class _SigninState extends State<Signin> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () => Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (context) => const Home(),
+                      ),
+                      (Route<dynamic> route) => false,
+                    ),
                     child: Text(
                       "로그인 없이 시작하기",
                       style: TextStyle(
@@ -115,9 +121,7 @@ class _SigninState extends State<Signin> {
                   TextButton(
                     onPressed: () => Navigator.push(
                       context,
-                      MaterialPageRoute<void>(
-                        builder: (context) => const Signup(),
-                      ),
+                      MaterialPageRoute<void>(builder: (context) => Signup()),
                     ),
                     child: Text(
                       "회원가입",
