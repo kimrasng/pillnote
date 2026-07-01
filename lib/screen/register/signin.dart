@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pillnote/screen/register/signup.dart';
 import 'package:pillnote/widgets/custom_text_field.dart';
 
-import '../home.dart';
+import '../main.dart';
 
 class Signin extends StatefulWidget {
   const Signin({super.key});
@@ -105,7 +105,7 @@ class _SigninState extends State<Signin> {
                     onPressed: () => Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute<void>(
-                        builder: (context) => const Home(),
+                        builder: (context) => const Main(),
                       ),
                       (Route<dynamic> route) => false,
                     ),

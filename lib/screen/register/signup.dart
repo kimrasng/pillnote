@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pillnote/screen/home.dart';
+import 'package:pillnote/screen/main.dart';
 import 'package:pillnote/widgets/custom_text_field.dart';
 
 class Signup extends StatefulWidget {
@@ -97,7 +97,7 @@ class _SignupState extends State<Signup> {
                     onPressed: () => Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute<void>(
-                        builder: (context) => const Home(),
+                        builder: (context) => const Main(),
                       ),
                       (Route<dynamic> route) => false,
                     ),
