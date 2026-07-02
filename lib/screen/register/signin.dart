@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:pillnote/controller/controller.dart';
+import 'package:pillnote/screen/main.dart';
 import 'package:pillnote/screen/register/signup.dart';
 import 'package:pillnote/widgets/custom_text_field.dart';
-
-import '../main.dart';
 
 class Signin extends StatefulWidget {
   const Signin({super.key});
@@ -12,6 +12,41 @@ class Signin extends StatefulWidget {
 }
 
 class _SigninState extends State<Signin> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  void _handleSignin() {
+    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("이메일과 비밀번호를 입력해주세요.")),
+      );
+      return;
+    }
+
+    Controller.setOnboardingCompleted(true);
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute<void>(builder: (context) => const Main()),
+      (route) => false,
+    );
+  }
+
+  void _startWithoutLogin() {
+    Controller.setOnboardingCompleted(true);
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute<void>(builder: (context) => const Main()),
+      (route) => false,
+    );
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -25,7 +60,7 @@ class _SigninState extends State<Signin> {
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
         ),
       ),
       body: SafeArea(
@@ -46,10 +81,11 @@ class _SigninState extends State<Signin> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Image.asset(
                     'assets/images/wave.gif',
                     width: screenWidth * 0.1,
+                    errorBuilder: (context, error, stackTrace) => const SizedBox(),
                   ),
                 ],
               ),
@@ -62,28 +98,30 @@ class _SigninState extends State<Signin> {
                 ),
               ),
               SizedBox(height: screenHeight * 0.08),
-              const CustomTextField(
+              CustomTextField(
                 label: '이메일',
                 hint: 'example@email.com',
                 keyboardType: TextInputType.emailAddress,
+                controller: emailController,
               ),
               SizedBox(height: screenHeight * 0.02),
-              const CustomTextField(
+              CustomTextField(
                 label: '비밀번호',
                 hint: '비밀번호를 입력해주세요.',
                 isPassword: true,
+                controller: passwordController,
               ),
-              SizedBox(height: screenHeight * 0.3),
+              SizedBox(height: screenHeight * 0.25),
               SizedBox(
                 width: double.infinity,
                 height: screenHeight * 0.07,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: _handleSignin,
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
                     ),
-                    backgroundColor: Color(0xFF2563EB),
+                    backgroundColor: const Color(0xFF2563EB),
                     foregroundColor: Colors.white,
                     elevation: 0,
                   ),
@@ -102,17 +140,11 @@ class _SigninState extends State<Signin> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   TextButton(
-                    onPressed: () => Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (context) => const Main(),
-                      ),
-                      (Route<dynamic> route) => false,
-                    ),
+                    onPressed: _startWithoutLogin,
                     child: Text(
                       "로그인 없이 시작하기",
                       style: TextStyle(
-                        color: Color(0XFF7CA5FF),
+                        color: const Color(0XFF7CA5FF),
                         fontWeight: FontWeight.bold,
                         fontSize: screenWidth * 0.035,
                       ),
@@ -121,12 +153,12 @@ class _SigninState extends State<Signin> {
                   TextButton(
                     onPressed: () => Navigator.push(
                       context,
-                      MaterialPageRoute<void>(builder: (context) => Signup()),
+                      MaterialPageRoute<void>(builder: (context) => const Signup()),
                     ),
                     child: Text(
                       "회원가입",
                       style: TextStyle(
-                        color: Color(0XFF7CA5FF),
+                        color: const Color(0XFF7CA5FF),
                         fontWeight: FontWeight.bold,
                         fontSize: screenWidth * 0.035,
                       ),

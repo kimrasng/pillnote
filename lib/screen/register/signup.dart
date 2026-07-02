@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pillnote/controller/controller.dart';
 import 'package:pillnote/screen/main.dart';
 import 'package:pillnote/widgets/custom_text_field.dart';
 
@@ -10,6 +11,54 @@ class Signup extends StatefulWidget {
 }
 
 class _SignupState extends State<Signup> {
+  final nameController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+
+  void _handleSignup() {
+    if (nameController.text.isEmpty ||
+        emailController.text.isEmpty ||
+        passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("모든 항목을 입력해주세요.")),
+      );
+      return;
+    }
+
+    if (passwordController.text != confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("비밀번호가 일치하지 않습니다.")),
+      );
+      return;
+    }
+
+    Controller.setOnboardingCompleted(true);
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute<void>(builder: (context) => const Main()),
+      (route) => false,
+    );
+  }
+
+  void _startWithoutLogin() {
+    Controller.setOnboardingCompleted(true);
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute<void>(builder: (context) => const Main()),
+      (route) => false,
+    );
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -23,7 +72,11 @@ class _SignupState extends State<Signup> {
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.black,
+            size: 20,
+          ),
         ),
       ),
       body: SafeArea(
@@ -53,13 +106,32 @@ class _SignupState extends State<Signup> {
               ),
               SizedBox(height: screenHeight * 0.05),
 
-              const CustomTextField(label: '이름', hint: '이름을 입력해주세요.'),
+              CustomTextField(
+                label: '이름',
+                hint: '이름을 입력해주세요.',
+                controller: nameController,
+              ),
               SizedBox(height: screenHeight * 0.02),
-              const CustomTextField(label: '이메일', hint: 'example@email.com', keyboardType: TextInputType.emailAddress),
+              CustomTextField(
+                label: '이메일',
+                hint: 'example@email.com',
+                keyboardType: TextInputType.emailAddress,
+                controller: emailController,
+              ),
               SizedBox(height: screenHeight * 0.02),
-              const CustomTextField(label: '비밀번호', hint: '비밀번호를 입력해주세요.', isPassword: true),
+              CustomTextField(
+                label: '비밀번호',
+                hint: '비밀번호를 입력해주세요.',
+                isPassword: true,
+                controller: passwordController,
+              ),
               SizedBox(height: screenHeight * 0.02),
-              const CustomTextField(label: '비밀번호 확인', hint: '비밀번호를 다시 입력해주세요.', isPassword: true),
+              CustomTextField(
+                label: '비밀번호 확인',
+                hint: '비밀번호를 다시 입력해주세요.',
+                isPassword: true,
+                controller: confirmPasswordController,
+              ),
 
               SizedBox(height: screenHeight * 0.07),
 
@@ -67,8 +139,7 @@ class _SignupState extends State<Signup> {
                 width: double.infinity,
                 height: screenHeight * 0.065,
                 child: ElevatedButton(
-                  onPressed: () {
-                  },
+                  onPressed: _handleSignup,
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
@@ -87,20 +158,14 @@ class _SignupState extends State<Signup> {
                   ),
                 ),
               ),
-              
+
               SizedBox(height: screenHeight * 0.02),
-              
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   TextButton(
-                    onPressed: () => Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (context) => const Main(),
-                      ),
-                      (Route<dynamic> route) => false,
-                    ),
+                    onPressed: _startWithoutLogin,
                     child: Text(
                       "로그인 없이 시작하기",
                       style: TextStyle(
@@ -138,5 +203,4 @@ class _SignupState extends State<Signup> {
       ),
     );
   }
-
 }

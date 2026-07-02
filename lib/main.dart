@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:pillnote/controller/controller.dart';
+import 'package:pillnote/screen/main.dart';
 import 'package:pillnote/screen/onboarding.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+  await Controller.init();
   runApp(const MyApp());
 }
 
@@ -13,9 +16,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Onboarding(),
+      home: Controller.shouldShowOnboarding()
+          ? const Onboarding() 
+          : const Main(),
     );
   }
 }
