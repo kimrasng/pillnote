@@ -69,7 +69,6 @@ class _HomeState extends State<Home> {
     _itemWidth = screenWidth * 0.12;
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [

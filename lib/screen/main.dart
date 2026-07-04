@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pillnote/screen/pages/distanc.dart';
 import 'package:pillnote/screen/pages/home.dart';
 import 'package:pillnote/screen/pages/pill.dart';
-import 'package:pillnote/screen/pages/reorder.dart';
+import 'package:pillnote/screen/pages/menu.dart';
 
 class Main extends StatefulWidget {
   const Main({super.key});
@@ -19,14 +19,14 @@ class _MainState extends State<Main> {
     (label: '홈', icon: 'assets/icon/home.svg'),
     (label: '약국', icon: 'assets/icon/distance.svg'),
     (label: '약 관리', icon: 'assets/icon/pill.svg'),
-    (label: '기록', icon: 'assets/icon/reorder.svg'),
+    (label: '메뉴', icon: 'assets/icon/menu.svg'),
   ];
 
   final List<Widget> _pages = [
     const Home(),
     const Distanc(),
     const Pill(),
-    const Reorder(),
+    const Menu(),
   ];
 
   @override

@@ -54,9 +54,7 @@ class _SigninState extends State<Signin> {
     final double screenHeight = size.height;
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),

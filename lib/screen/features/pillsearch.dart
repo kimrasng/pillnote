@@ -86,9 +86,7 @@ class _PillsearchState extends State<Pillsearch> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
