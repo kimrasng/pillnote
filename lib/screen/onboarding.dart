@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pillnote/screen/register/signin.dart';
+import 'package:pillnote/screen/register/register.dart';
 
 class Onboarding extends StatefulWidget {
   const Onboarding({super.key});
@@ -47,7 +47,7 @@ class _OnboardingState extends State<Onboarding> {
                 child: ElevatedButton(
                   onPressed: () => Navigator.push(
                     context,
-                    MaterialPageRoute<void>(builder: (context) => const Signin()),
+                    MaterialPageRoute<void>(builder: (context) => const Register()),
                   ),
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(

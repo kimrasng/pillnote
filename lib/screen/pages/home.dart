@@ -23,13 +23,14 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     _selectedDate = DateTime.now();
-    
+
     final now = DateTime.now();
-    _startDate = DateTime(now.year, now.month - 1, 1);
-    _endDate = DateTime(now.year, now.month + 1, 0);
-    
+    final today = DateTime(now.year, now.month, now.day);
+    _startDate = today.subtract(Duration(days: 10));
+    _endDate = today.add(Duration(days: 10));
+
     _totalDays = _endDate.difference(_startDate).inDays + 1;
-    _todayIndex = DateTime(now.year, now.month, now.day).difference(_startDate).inDays;
+    _todayIndex = today.difference(_startDate).inDays;
 
     _scrollController = ScrollController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -40,15 +41,16 @@ class _HomeState extends State<Home> {
 
   void _scrollToIndex(int index, {bool isAnimated = true}) {
     if (!_scrollController.hasClients) return;
-    
+
     final screenWidth = MediaQuery.of(context).size.width;
     final itemTotalWidth = _itemWidth + (_itemMargin * 2);
-    final offset = (index * itemTotalWidth) - (screenWidth / 2) + (itemTotalWidth / 2);
-    
+    final offset =
+        (index * itemTotalWidth) - (screenWidth / 2) + (itemTotalWidth / 2);
+
     if (isAnimated) {
       _scrollController.animateTo(
         offset,
-        duration: const Duration(milliseconds: 500),
+        duration: Duration(milliseconds: 500),
         curve: Curves.easeInOut,
       );
     } else {
@@ -104,11 +106,11 @@ class _HomeState extends State<Home> {
                       _scrollToIndex(_todayIndex);
                     },
                     icon: Icon(
-                      Icons.today, 
+                      Icons.today,
                       color: const Color(0xFF2563EB),
                       size: screenWidth * 0.07,
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
@@ -123,11 +125,13 @@ class _HomeState extends State<Home> {
                 itemBuilder: (context, index) {
                   DateTime date = _startDate.add(Duration(days: index));
 
-                  bool isSelected = date.year == _selectedDate.year &&
+                  bool isSelected =
+                      date.year == _selectedDate.year &&
                       date.month == _selectedDate.month &&
                       date.day == _selectedDate.day;
 
-                  bool isToday = date.year == DateTime.now().year &&
+                  bool isToday =
+                      date.year == DateTime.now().year &&
                       date.month == DateTime.now().month &&
                       date.day == DateTime.now().day;
 
@@ -140,12 +144,16 @@ class _HomeState extends State<Home> {
                       width: _itemWidth,
                       margin: EdgeInsets.symmetric(horizontal: _itemMargin),
                       decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFF2563EB) : Colors.white,
+                        color: isSelected
+                            ? const Color(0xFF2563EB)
+                            : Colors.white,
                         borderRadius: BorderRadius.circular(15),
                         border: Border.all(
                           color: isSelected
                               ? const Color(0xFF2563EB)
-                              : (isToday ? const Color(0xFF2563EB) : Colors.grey.shade100),
+                              : (isToday
+                                    ? const Color(0xFF2563EB)
+                                    : Colors.grey.shade100),
                           width: 1.5,
                         ),
                       ),
@@ -157,7 +165,9 @@ class _HomeState extends State<Home> {
                             style: TextStyle(
                               color: isSelected ? Colors.white : Colors.grey,
                               fontSize: 12,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -183,17 +193,17 @@ class _HomeState extends State<Home> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.medication_liquid, 
-                      size: screenWidth * 0.15, 
-                      color: Colors.black12
+                      Icons.medication_liquid,
+                      size: screenWidth * 0.15,
+                      color: Colors.black12,
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      "해당 날짜의 복약 기록이 없습니다.", 
+                      "해당 날짜의 복약 기록이 없습니다.",
                       style: TextStyle(
                         color: Colors.grey,
                         fontSize: screenWidth * 0.035,
-                      )
+                      ),
                     ),
                   ],
                 ),
