@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-
+import '../../controller/controller.dart';
 import '../../widgets/custom_text_field.dart';
+import '../main.dart';
 
 class Verification extends StatefulWidget {
   const Verification({super.key});
@@ -10,8 +11,27 @@ class Verification extends StatefulWidget {
 }
 
 class _VerificationState extends State<Verification> {
+  final codeController = TextEditingController();
+
+  void _handleVerify() {
+    if (codeController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("인증번호를 입력해주세요.")),
+      );
+      return;
+    }
+
+    Controller.setOnboardingCompleted(true);
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute<void>(builder: (context) => const Main()),
+          (route) => false,
+    );
+  }
+
   @override
   void dispose() {
+    codeController.dispose();
     super.dispose();
   }
 
@@ -56,7 +76,7 @@ class _VerificationState extends State<Verification> {
                 ],
               ),
               Text(
-                "PillNote에 오신것을 환영합니다.",
+                "인증번호를 입력해주세요.",
                 style: TextStyle(
                   fontFamily: 'Pretendard',
                   fontSize: screenWidth * 0.06,
@@ -65,17 +85,17 @@ class _VerificationState extends State<Verification> {
               ),
               SizedBox(height: screenHeight * 0.08),
               CustomTextField(
-                label: '이메일',
-                hint: 'example@email.com',
-                keyboardType: TextInputType.emailAddress,
-                // controller: emailController,
+                label: '인증번호',
+                hint: '000000',
+                keyboardType: TextInputType.number,
+                controller: codeController,
               ),
               SizedBox(height: screenHeight * 0.4),
               SizedBox(
                 width: double.infinity,
                 height: screenHeight * 0.07,
                 child: ElevatedButton(
-                  onPressed: (){},
+                  onPressed: _handleVerify,
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),

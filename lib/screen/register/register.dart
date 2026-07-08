@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pillnote/controller/controller.dart';
 import 'package:pillnote/screen/main.dart';
+import 'package:pillnote/screen/register/verification.dart';
 import 'package:pillnote/widgets/custom_text_field.dart';
 
 class Register extends StatefulWidget {
@@ -22,10 +23,9 @@ class _RegisterState extends State<Register> {
     }
 
     // Controller.setOnboardingCompleted(true);
-    Navigator.pushAndRemoveUntil(
+    Navigator.push(
       context,
-      MaterialPageRoute<void>(builder: (context) => const VerticalDivider()),
-          (route) => false,
+      MaterialPageRoute<void>(builder: (context) => const Verification()),
     );
   }
 
