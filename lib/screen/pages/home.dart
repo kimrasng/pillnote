@@ -44,17 +44,22 @@ class _HomeState extends State<Home> {
 
     final screenWidth = MediaQuery.of(context).size.width;
     final itemTotalWidth = _itemWidth + (_itemMargin * 2);
-    final offset =
+    double targetOffset =
         (index * itemTotalWidth) - (screenWidth / 2) + (itemTotalWidth / 2);
 
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final minScroll = _scrollController.position.minScrollExtent;
+    targetOffset = targetOffset.clamp(minScroll, maxScroll);
+
     if (isAnimated) {
+      if ((_scrollController.offset - targetOffset).abs() < 1.0) return;
       _scrollController.animateTo(
-        offset,
-        duration: Duration(milliseconds: 500),
+        targetOffset,
+        duration: const Duration(milliseconds: 500),
         curve: Curves.easeInOut,
       );
     } else {
-      _scrollController.jumpTo(offset);
+      _scrollController.jumpTo(targetOffset);
     }
   }
 
