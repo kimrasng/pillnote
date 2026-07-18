@@ -15,6 +15,7 @@ class _MenuState extends State<Menu> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final double screenWidth = size.width;
+    final double screenHeight = size.height;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -22,9 +23,13 @@ class _MenuState extends State<Menu> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           "메뉴",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: screenWidth * 0.05,
+          ),
         ),
       ),
       body: SafeArea(
@@ -34,7 +39,7 @@ class _MenuState extends State<Menu> {
               width: screenWidth * 0.9,
               child: Column(
                 children: [
-                  SizedBox(height: 20),
+                  SizedBox(height: screenHeight * 0.02),
                   if (Controller.isLoggedIn())
                     MenubarItme(
                       title: "내 계정",
@@ -45,6 +50,7 @@ class _MenuState extends State<Menu> {
                   else
                     SizedBox(
                       width: double.infinity,
+                      height: 56,
                       child: ElevatedButton(
                         onPressed: () => Navigator.push(
                           context,
@@ -62,27 +68,27 @@ class _MenuState extends State<Menu> {
                           "로그인",
                           style: TextStyle(
                             fontFamily: 'Pretendard',
-                            fontSize: screenWidth * 0.05,
+                            fontSize: screenWidth * 0.045,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                     ),
-                  SizedBox(height: 15),
+                  SizedBox(height: screenHeight * 0.02),
                   MenubarItme(
                     title: "알림 설정",
                     iconsvg: Icons.notifications_none,
                     itemName: ["푸시 알림", "알림 시간 설정"],
                     pages: [],
                   ),
-                  SizedBox(height: 15),
+                  SizedBox(height: screenHeight * 0.02),
                   MenubarItme(
                     title: "기타",
                     iconsvg: Icons.info_outline,
                     itemName: ["버전 정보"],
                     pages: [],
                   ),
-                  SizedBox(height: 40),
+                  SizedBox(height: screenHeight * 0.05),
                 ],
               ),
             ),

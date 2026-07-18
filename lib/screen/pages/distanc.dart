@@ -350,9 +350,20 @@ class _DistancState extends State<Distanc> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final screenWidth = size.width;
+    final screenHeight = size.height;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('주변 약국 확인', style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+        title: Text(
+          '주변 약국 확인',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: screenWidth * 0.045,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -389,23 +400,29 @@ class _DistancState extends State<Distanc> {
               ],
             ),
             if (_isLoading)
-              const Center(
+              Center(
                 child: Card(
                   elevation: 4,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: CircularProgressIndicator(),
+                    padding: EdgeInsets.all(screenWidth * 0.04),
+                    child: const CircularProgressIndicator(),
                   ),
                 ),
               ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        mini: true,
-        backgroundColor: Colors.white,
-        child: const Icon(Icons.my_location, color: Colors.black),
-        onPressed: () => _initializeLocation(),
+      floatingActionButton: SizedBox(
+        width: screenWidth * 0.12,
+        height: screenWidth * 0.12,
+        child: FloatingActionButton(
+          mini: true,
+          backgroundColor: Colors.white,
+          elevation: 4,
+          child: Icon(Icons.my_location, color: Colors.black, size: screenWidth * 0.05),
+          onPressed: () => _initializeLocation(),
+        ),
       ),
     );
   }

@@ -5,7 +5,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pillnote/widgets/custom_text_field.dart';
 import 'package:http/http.dart' as http;
 import 'package:pillnote/screen/features/pillinfo.dart';
-import 'package:pillnote/screen/features/pillinfo.dart';
 
 class Pillsearch extends StatefulWidget {
   const Pillsearch({super.key});
@@ -24,7 +23,7 @@ class _PillsearchState extends State<Pillsearch> {
 
   void _onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-    
+
     _debounce = Timer(const Duration(milliseconds: 500), () {
       if (query.isNotEmpty) {
         _searchPills(query);
@@ -85,17 +84,19 @@ class _PillsearchState extends State<Pillsearch> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final size = MediaQuery.of(context).size;
+    final screenWidth = size.width;
+    final screenHeight = size.height;
 
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_new,
             color: Colors.black,
-            size: 20,
+            size: screenWidth * 0.05,
           ),
         ),
       ),
@@ -111,21 +112,24 @@ class _PillsearchState extends State<Pillsearch> {
                 onChanged: _onSearchChanged,
                 onSubmitted: _searchPills,
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: screenHeight * 0.02),
               Expanded(
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : _searchResults.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text(
                           "검색 결과가 없습니다.",
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: screenWidth * 0.04,
+                          ),
                         ),
                       )
                     : ListView.separated(
                         itemCount: _searchResults.length,
                         separatorBuilder: (context, index) =>
-                            const SizedBox(height: 10),
+                            SizedBox(height: screenHeight * 0.015),
                         itemBuilder: (context, index) {
                           final item = _searchResults[index];
                           final imageUrl = item['ITEM_IMAGE'] ?? '';
@@ -135,12 +139,13 @@ class _PillsearchState extends State<Pillsearch> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => Pillinfo(pillData: item),
+                                  builder: (context) =>
+                                      Pillinfo(pillSEQ: item['ITEM_SEQ']),
                                 ),
                               );
                             },
                             child: Container(
-                              padding: const EdgeInsets.all(12),
+                              padding: EdgeInsets.all(screenWidth * 0.03),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(12),
@@ -159,23 +164,27 @@ class _PillsearchState extends State<Pillsearch> {
                                             errorBuilder:
                                                 (context, error, stackTrace) =>
                                                     Container(
-                                                      color: Colors.grey.shade100,
-                                                      child: const Icon(
+                                                      width: screenWidth * 0.25,
+                                                      color:
+                                                          Colors.grey.shade100,
+                                                      child: Icon(
                                                         Icons.broken_image,
                                                         color: Colors.grey,
+                                                        size: screenWidth * 0.08,
                                                       ),
                                                     ),
                                           )
                                         : Container(
                                             width: screenWidth * 0.25,
                                             color: Colors.grey.shade100,
-                                            child: const Icon(
+                                            child: Icon(
                                               Icons.image_not_supported,
                                               color: Colors.grey,
+                                              size: screenWidth * 0.08,
                                             ),
                                           ),
                                   ),
-                                  const SizedBox(width: 15),
+                                  SizedBox(width: screenWidth * 0.04),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment:
@@ -183,20 +192,20 @@ class _PillsearchState extends State<Pillsearch> {
                                       children: [
                                         Text(
                                           item['ITEM_NAME'] ?? '이름 없음',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 14,
+                                            fontSize: screenWidth * 0.04,
                                             color: Colors.black87,
                                           ),
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                         ),
-                                        const SizedBox(height: 6),
+                                        SizedBox(height: screenHeight * 0.005),
                                         Text(
                                           item['ENTP_NAME'] ?? '업체명 없음',
                                           style: TextStyle(
                                             color: Colors.grey.shade600,
-                                            fontSize: 13,
+                                            fontSize: screenWidth * 0.035,
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,

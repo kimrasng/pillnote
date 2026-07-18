@@ -73,6 +73,7 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final double screenWidth = size.width;
+    final double screenHeight = size.height;
     _itemWidth = screenWidth * 0.12;
 
     return Scaffold(
@@ -121,7 +122,7 @@ class _HomeState extends State<Home> {
             ),
 
             SizedBox(
-              height: 90,
+              height: screenHeight * 0.12,
               child: ListView.builder(
                 controller: _scrollController,
                 scrollDirection: Axis.horizontal,
@@ -169,19 +170,19 @@ class _HomeState extends State<Home> {
                             _weekDays[date.weekday - 1],
                             style: TextStyle(
                               color: isSelected ? Colors.white : Colors.grey,
-                              fontSize: 12,
+                              fontSize: screenWidth * 0.03,
                               fontWeight: isSelected
                                   ? FontWeight.bold
                                   : FontWeight.normal,
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          SizedBox(height: screenHeight * 0.005),
                           Text(
                             date.day.toString(),
                             style: TextStyle(
                               color: isSelected ? Colors.white : Colors.black,
                               fontWeight: FontWeight.bold,
-                              fontSize: 18,
+                              fontSize: screenWidth * 0.045,
                             ),
                           ),
                         ],
@@ -202,7 +203,7 @@ class _HomeState extends State<Home> {
                       size: screenWidth * 0.15,
                       color: Colors.black12,
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: screenHeight * 0.015),
                     Text(
                       "해당 날짜의 복약 기록이 없습니다.",
                       style: TextStyle(
