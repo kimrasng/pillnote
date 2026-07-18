@@ -51,6 +51,7 @@ class _RegisterState extends State<Register> {
     final double screenHeight = size.height;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         elevation: 0,
         leading: IconButton(
