@@ -139,8 +139,10 @@ class _PillsearchState extends State<Pillsearch> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      Pillinfo(pillSEQ: item['ITEM_SEQ']),
+                                  builder: (context) => Pillinfo(
+                                    pillSEQ: item['ITEM_SEQ'],
+                                    isLocal: false,
+                                  ),
                                 ),
                               );
                             },
@@ -162,17 +164,19 @@ class _PillsearchState extends State<Pillsearch> {
                                             width: screenWidth * 0.25,
                                             fit: BoxFit.cover,
                                             errorBuilder:
-                                                (context, error, stackTrace) =>
-                                                    Container(
-                                                      width: screenWidth * 0.25,
-                                                      color:
-                                                          Colors.grey.shade100,
-                                                      child: Icon(
-                                                        Icons.broken_image,
-                                                        color: Colors.grey,
-                                                        size: screenWidth * 0.08,
-                                                      ),
-                                                    ),
+                                                (
+                                                  context,
+                                                  error,
+                                                  stackTrace,
+                                                ) => Container(
+                                                  width: screenWidth * 0.25,
+                                                  color: Colors.grey.shade100,
+                                                  child: Icon(
+                                                    Icons.broken_image,
+                                                    color: Colors.grey,
+                                                    size: screenWidth * 0.08,
+                                                  ),
+                                                ),
                                           )
                                         : Container(
                                             width: screenWidth * 0.25,

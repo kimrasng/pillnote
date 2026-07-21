@@ -107,8 +107,7 @@ class _PillState extends State<Pill> {
           child: ListTile(
             contentPadding: const EdgeInsets.all(12),
             leading: Container(
-              width: 60,
-              height: 60,
+              width: screenWidth * 0.2,
               decoration: BoxDecoration(
                 color: Colors.grey.shade50,
                 borderRadius: BorderRadius.circular(8),
@@ -120,9 +119,9 @@ class _PillState extends State<Pill> {
                         pill['ITEM_IMAGE'],
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.medication, color: Colors.grey),
+                            Icon(Icons.medication, color: Colors.grey),
                       )
-                    : const Icon(Icons.medication, color: Colors.grey),
+                    : Icon(Icons.medication, color: Colors.grey),
               ),
             ),
             title: Text(
@@ -139,7 +138,7 @@ class _PillState extends State<Pill> {
               style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
             ),
             trailing: IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+              icon: Icon(Icons.delete_outline, color: Colors.redAccent),
               onPressed: () async {
                 final confirm = await showDialog<bool>(
                   context: context,

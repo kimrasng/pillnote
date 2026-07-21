@@ -58,6 +58,7 @@ class _VerificationState extends State<Verification> {
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
         ),
       ),
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Stack(
           children: [

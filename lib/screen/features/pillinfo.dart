@@ -7,8 +7,9 @@ import 'package:pillnote/widgets/item_row.dart';
 
 class Pillinfo extends StatefulWidget {
   final String pillSEQ;
+  final bool isLocal;
 
-  const Pillinfo({super.key, required this.pillSEQ});
+  const Pillinfo({super.key, required this.pillSEQ, required this.isLocal});
 
   @override
   State<Pillinfo> createState() => _PillinfoState();
@@ -26,12 +27,36 @@ class _PillinfoState extends State<Pillinfo> {
   }
 
   Future<void> _fetchPillData() async {
+    if (widget.isLocal) {
+      final localPills = Controller.getPills();
+      final localPill = localPills.firstWhere(
+        (p) => p['ITEM_SEQ'] == widget.pillSEQ || p['id'] == widget.pillSEQ,
+        orElse: () => {},
+      );
+
+      if (localPill.isNotEmpty) {
+        setState(() {
+          pillData = localPill;
+          isLoading = false;
+        });
+        return;
+      }
+    }
+
     final apiKey = dotenv.env['API_KEY'];
+    if (apiKey == null || apiKey.isEmpty) {
+      setState(() {
+        errorMessage = "API 키가 설정되지 않았습니다.";
+        isLoading = false;
+      });
+      return;
+    }
+
     final url = Uri.parse(
       'https://apis.data.go.kr/1471000/MdcinGrnIdntfcInfoService03/getMdcinGrnIdntfcInfoList03'
-      '?serviceKey=$apiKey'
-      '&item_seq=${widget.pillSEQ}'
-      '&type=json',
+          '?serviceKey=$apiKey'
+          '&item_seq=${widget.pillSEQ}'
+          '&type=json',
     );
 
     try {
@@ -121,11 +146,12 @@ class _PillinfoState extends State<Pillinfo> {
                           width: double.infinity,
                           height: screenHeight * 0.25,
                           fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) => Icon(
-                            Icons.broken_image,
-                            size: screenWidth * 0.2,
-                            color: Colors.grey,
-                          ),
+                          errorBuilder: (context, error, stackTrace) =>
+                              Icon(
+                                Icons.broken_image,
+                                size: screenWidth * 0.2,
+                                color: Colors.grey,
+                              ),
                         ),
                       ),
                     ),
@@ -154,42 +180,44 @@ class _PillinfoState extends State<Pillinfo> {
                 ],
               ),
             ),
-            Positioned(
-              left: screenWidth * 0.05,
-              right: screenWidth * 0.05,
-              bottom: 0,
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () async {
-                  await Controller.addPill(item);
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('약이 추가되었습니다.')),
-                    );
-                    Navigator.pop(context);
-                  }
-                },
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+            // 이미 내 약 목록에 있는 경우 추가 버튼을 숨깁니다.
+            if (!widget.isLocal)
+              Positioned(
+                left: screenWidth * 0.05,
+                right: screenWidth * 0.05,
+                bottom: 20,
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      await Controller.addPill(item);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('약이 추가되었습니다.')),
+                        );
+                        Navigator.pop(context);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      backgroundColor: const Color(0xFF2563EB),
+                      foregroundColor: Colors.white,
+                      elevation: 5,
+                      shadowColor: Colors.black26,
                     ),
-                    backgroundColor: const Color(0xFF2563EB),
-                    foregroundColor: Colors.white,
-                    elevation: 5,
-                    shadowColor: Colors.black26,
-                  ),
-                  child: Text(
-                    "약 추가하기",
-                    style: TextStyle(
-                      fontSize: screenWidth * 0.045,
-                      fontWeight: FontWeight.bold,
+                    child: Text(
+                      "약 추가하기",
+                      style: TextStyle(
+                        fontSize: screenWidth * 0.045,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),
