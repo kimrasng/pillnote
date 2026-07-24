@@ -4,21 +4,21 @@ class ItemRow extends StatelessWidget {
   final String label;
   final String? value;
 
-  const ItemRow(this.label, this.value, {super.key});
+  ItemRow(this.label, this.value, {super.key});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: .symmetric(vertical: 8.0),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         children: [
           SizedBox(
             width: 80,
             child: Text(
               label,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
+              style: TextStyle(
+                fontWeight: .bold,
                 color: Colors.grey,
               ),
             ),
@@ -26,7 +26,7 @@ class ItemRow extends StatelessWidget {
           Expanded(
             child: Text(
               value?.toString() ?? '-',
-              style: const TextStyle(fontSize: 15),
+              style: TextStyle(fontSize: 15),
             ),
           ),
         ],

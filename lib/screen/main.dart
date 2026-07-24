@@ -6,7 +6,7 @@ import 'package:pillnote/screen/pages/pill.dart';
 import 'package:pillnote/screen/pages/menu.dart';
 
 class Main extends StatefulWidget {
-  const Main({super.key});
+  Main({super.key});
 
   @override
   State<Main> createState() => _MainState();
@@ -23,10 +23,10 @@ class _MainState extends State<Main> {
   ];
 
   final List<Widget> _pages = [
-    const Home(),
-    const Distanc(),
-    const Pill(),
-    const Menu(),
+    Home(),
+    Distanc(),
+    Pill(),
+    Menu(),
   ];
 
   @override
@@ -44,14 +44,14 @@ class _MainState extends State<Main> {
       onDestinationSelected: (i) => setState(() => _currentIndex = i),
       backgroundColor: Colors.white,
       elevation: 0,
-      indicatorColor: const Color(0xFF2563EB).withValues(alpha: 0.1),
+      indicatorColor: Color(0xFF2563EB).withValues(alpha: 0.1),
       destinations: _navItems.map((item) => NavigationDestination(
         icon: SvgPicture.asset(
           item.icon,
           width: 24,
           height: 24,
           colorFilter: ColorFilter.mode(
-              _currentIndex == _navItems.indexOf(item) ? const Color(0xFF2563EB) : Colors.black54,
+              _currentIndex == _navItems.indexOf(item) ? Color(0xFF2563EB) : Colors.black54,
               BlendMode.srcIn
           ),
         ),

@@ -9,7 +9,7 @@ class CustomTextField extends StatelessWidget {
   final Function(String)? onSubmitted;
   final Function(String)? onChanged;
 
-  const CustomTextField({
+  CustomTextField({
     super.key,
     required this.label,
     required this.hint,
@@ -23,9 +23,9 @@ class CustomTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: .start,
       children: [
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         TextField(
           controller: controller,
           obscureText: isPassword,
@@ -36,10 +36,10 @@ class CustomTextField extends StatelessWidget {
             labelText: label,
             hintText: hint,
             hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-            contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 0),
+            contentPadding: .symmetric(vertical: 15, horizontal: 0),
             suffixIcon: onSubmitted != null
                 ? IconButton(
-                    icon: const Icon(Icons.search),
+                    icon: Icon(Icons.search),
                     onPressed: () {
                       if (controller != null) {
                         onSubmitted!(controller!.text);
@@ -50,7 +50,7 @@ class CustomTextField extends StatelessWidget {
             enabledBorder: UnderlineInputBorder(
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
-            focusedBorder: const UnderlineInputBorder(
+            focusedBorder: UnderlineInputBorder(
               borderSide: BorderSide(color: Color(0xFF2563EB), width: 1.5),
             ),
           ),

@@ -4,7 +4,7 @@ import 'package:pillnote/widgets/menubar_itme.dart';
 import '../register/register.dart';
 
 class Menu extends StatefulWidget {
-  const Menu({super.key});
+  Menu({super.key});
 
   @override
   State<Menu> createState() => _MenuState();
@@ -27,7 +27,7 @@ class _MenuState extends State<Menu> {
           "메뉴",
           style: TextStyle(
             color: Colors.black,
-            fontWeight: FontWeight.bold,
+            fontWeight: .bold,
             fontSize: screenWidth * 0.05,
           ),
         ),
@@ -54,13 +54,13 @@ class _MenuState extends State<Menu> {
                       child: ElevatedButton(
                         onPressed: () => Navigator.push(
                           context,
-                          MaterialPageRoute<void>(builder: (context) => const Register()),
+                          MaterialPageRoute<void>(builder: (context) => Register()),
                         ),
                         style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
+                            borderRadius: .circular(15),
                           ),
-                          backgroundColor: const Color(0xFF2563EB),
+                          backgroundColor: Color(0xFF2563EB),
                           foregroundColor: Colors.white,
                           elevation: 0,
                         ),
@@ -69,7 +69,7 @@ class _MenuState extends State<Menu> {
                           style: TextStyle(
                             fontFamily: 'Pretendard',
                             fontSize: screenWidth * 0.045,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: .bold,
                           ),
                         ),
                       ),

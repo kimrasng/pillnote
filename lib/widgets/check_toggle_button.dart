@@ -6,7 +6,7 @@ class CheckToggleButton extends StatefulWidget {
   final IconData icon;
   final double size;
 
-  const CheckToggleButton({
+  CheckToggleButton({
     super.key,
     required this.isCheck,
     this.onChanged,

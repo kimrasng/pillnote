@@ -4,7 +4,7 @@ import '../../widgets/custom_text_field.dart';
 import '../main.dart';
 
 class Verification extends StatefulWidget {
-  const Verification({super.key});
+  Verification({super.key});
 
   @override
   State<Verification> createState() => _VerificationState();
@@ -16,7 +16,7 @@ class _VerificationState extends State<Verification> {
   void _handleVerify() {
     if (codeController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("인증번호를 입력해주세요.")),
+        SnackBar(content: Text("인증번호를 입력해주세요.")),
       );
       return;
     }
@@ -24,7 +24,7 @@ class _VerificationState extends State<Verification> {
     Controller.setOnboardingCompleted(true);
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute<void>(builder: (context) => const Main()),
+      MaterialPageRoute<void>(builder: (context) => Main()),
           (route) => false,
     );
   }
@@ -33,7 +33,7 @@ class _VerificationState extends State<Verification> {
     Controller.setOnboardingCompleted(true);
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute<void>(builder: (context) => const Main()),
+      MaterialPageRoute<void>(builder: (context) => Main()),
           (route) => false,
     );
   }
@@ -55,7 +55,7 @@ class _VerificationState extends State<Verification> {
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          icon: Icon(Icons.arrow_back_ios_new, color: Colors.black),
         ),
       ),
       resizeToAvoidBottomInset: false,
@@ -63,27 +63,27 @@ class _VerificationState extends State<Verification> {
         child: Stack(
           children: [
             SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+              padding: .symmetric(horizontal: screenWidth * 0.05),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: .start,
                 children: [
                   SizedBox(height: screenHeight * 0.02),
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    crossAxisAlignment: .center,
                     children: [
                       Text(
                         "안녕하세요!",
                         style: TextStyle(
                           fontFamily: 'Pretendard',
                           fontSize: screenWidth * 0.07,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: .bold,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Image.asset(
                         'assets/images/wave.gif',
                         width: screenWidth * 0.1,
-                        errorBuilder: (context, error, stackTrace) => const SizedBox(),
+                        errorBuilder: (context, error, stackTrace) => SizedBox(),
                       ),
                     ],
                   ),
@@ -92,7 +92,7 @@ class _VerificationState extends State<Verification> {
                     style: TextStyle(
                       fontFamily: 'Pretendard',
                       fontSize: screenWidth * 0.06,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: .bold,
                     ),
                   ),
                   SizedBox(height: screenHeight * 0.05),
@@ -112,7 +112,7 @@ class _VerificationState extends State<Verification> {
               right: screenWidth * 0.05,
               bottom: screenHeight * 0.04,
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisSize: .min,
                 children: [
                   SizedBox(
                     width: double.infinity,
@@ -121,9 +121,9 @@ class _VerificationState extends State<Verification> {
                       onPressed: _handleVerify,
                       style: ElevatedButton.styleFrom(
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
+                          borderRadius: .circular(15),
                         ),
-                        backgroundColor: const Color(0xFF2563EB),
+                        backgroundColor: Color(0xFF2563EB),
                         foregroundColor: Colors.white,
                         elevation: 0,
                       ),
@@ -132,22 +132,22 @@ class _VerificationState extends State<Verification> {
                         style: TextStyle(
                           fontFamily: 'Pretendard',
                           fontSize: screenWidth * 0.05,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: .bold,
                         ),
                       ),
                     ),
                   ),
                   SizedBox(height: screenHeight * 0.01),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: .center,
                     children: [
                       TextButton(
                         onPressed: _startWithoutLogin,
                         child: Text(
                           "로그인 없이 시작하기",
                           style: TextStyle(
-                            color: const Color(0XFF7CA5FF),
-                            fontWeight: FontWeight.bold,
+                            color: Color(0XFF7CA5FF),
+                            fontWeight: .bold,
                             fontSize: screenWidth * 0.035,
                           ),
                         ),

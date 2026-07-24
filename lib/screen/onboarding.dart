@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pillnote/screen/register/register.dart';
 
 class Onboarding extends StatefulWidget {
-  const Onboarding({super.key});
+  Onboarding({super.key});
 
   @override
   State<Onboarding> createState() => _OnboardingState();
@@ -19,41 +19,41 @@ class _OnboardingState extends State<Onboarding> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.08),
+          padding: .symmetric(horizontal: screenWidth * 0.08),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: .center,
             children: [
-              const Spacer(flex: 2),
+              Spacer(flex: 2),
               Image.asset(
                 'assets/images/onboarding-img.png',
                 width: screenWidth * 0.7,
-                fit: BoxFit.contain,
+                fit: .contain,
               ),
-              const Spacer(),
+              Spacer(),
               Text(
                 "약과 영양제를 더 쉽게\nPillNote 하나로",
-                textAlign: TextAlign.center,
+                textAlign: .center,
                 style: TextStyle(
                   fontFamily: 'Pretendard',
                   fontSize: screenWidth * 0.08,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: .bold,
                   color: Colors.black,
                 ),
               ),
-              const Spacer(flex: 2),
+              Spacer(flex: 2),
               SizedBox(
                 width: double.infinity,
                 height: 60,
                 child: ElevatedButton(
                   onPressed: () => Navigator.push(
                     context,
-                    MaterialPageRoute<void>(builder: (context) => const Register()),
+                    MaterialPageRoute<void>(builder: (context) => Register()),
                   ),
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+                      borderRadius: .circular(15),
                     ),
-                    backgroundColor: const Color(0xFF2563EB),
+                    backgroundColor: Color(0xFF2563EB),
                     foregroundColor: Colors.white,
                     elevation: 0,
                   ),
@@ -62,12 +62,12 @@ class _OnboardingState extends State<Onboarding> {
                     style: TextStyle(
                       fontFamily: 'Pretendard',
                       fontSize: screenWidth * 0.05,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: .bold,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 40),
+              SizedBox(height: 40),
             ],
           ),
         ),

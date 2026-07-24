@@ -8,7 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 
 class Distanc extends StatefulWidget {
-  const Distanc({super.key});
+  Distanc({super.key});
 
   @override
   State<Distanc> createState() => _DistancState();
@@ -44,7 +44,7 @@ class _DistancState extends State<Distanc> {
     if (!serviceEnabled) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('위치 서비스가 비활성화되어 있습니다.')),
+          SnackBar(content: Text('위치 서비스가 비활성화되어 있습니다.')),
         );
       }
       _fetchPharmacies(37.5665, 126.9780);
@@ -57,7 +57,7 @@ class _DistancState extends State<Distanc> {
       if (permission == LocationPermission.denied) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('위치 권한이 거부되었습니다.')),
+            SnackBar(content: Text('위치 권한이 거부되었습니다.')),
           );
         }
         _fetchPharmacies(37.5665, 126.9780);
@@ -68,7 +68,7 @@ class _DistancState extends State<Distanc> {
     if (permission == LocationPermission.deniedForever) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('위치 권한이 영구적으로 거부되었습니다.')),
+          SnackBar(content: Text('위치 권한이 영구적으로 거부되었습니다.')),
         );
       }
       _fetchPharmacies(37.5665, 126.9780);
@@ -113,7 +113,7 @@ class _DistancState extends State<Distanc> {
           if (decodedBody.contains('SERVICE_KEY_IS_NOT_REGISTERED')) {
             throw Exception('SERVICE_KEY_IS_NOT_REGISTERED_ERROR');
           }
-          throw const FormatException('API 응답 오류');
+          throw FormatException('API 응답 오류');
         }
 
         final data = json.decode(decodedBody);
@@ -201,27 +201,27 @@ class _DistancState extends State<Distanc> {
         point: LatLng(pLat, pLng),
         width: showName ? 140 : 50,
         height: showName ? 80 : 50,
-        alignment: Alignment.bottomCenter,
+        alignment: .bottomCenter,
         child: GestureDetector(
           onTap: () => _showPharmacyInfoList(pharmacyList),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisSize: .min,
+            mainAxisAlignment: .end,
             children: [
               if (showName)
                 Container(
-                  margin: const EdgeInsets.only(bottom: 2),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  margin: .only(bottom: 2),
+                  padding: .symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                    borderRadius: .circular(12),
+                    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
                     border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3), width: 1),
                   ),
                   child: Text(
                     first['yadmNm'] ?? '',
-                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black87),
-                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 10, fontWeight: .bold, color: Colors.black87),
+                    overflow: .ellipsis,
                     maxLines: 1,
                   ),
                 ),
@@ -238,21 +238,21 @@ class _DistancState extends State<Distanc> {
                       right: -2,
                       top: -2,
                       child: Container(
-                        padding: const EdgeInsets.all(2),
+                        padding: .all(2),
                         decoration: BoxDecoration(
                           color: Colors.red,
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 1.5),
-                          boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 2)],
+                          boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 2)],
                         ),
-                        constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                        constraints: BoxConstraints(minWidth: 20, minHeight: 20),
                         child: Center(
                           child: Text(
                             '${pharmacyList.length}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
                               fontSize: 10,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: .bold,
                             ),
                           ),
                         ),
@@ -278,10 +278,10 @@ class _DistancState extends State<Distanc> {
       builder: (context) {
         return Container(
           height: 250,
-          margin: const EdgeInsets.all(16),
+          margin: .all(16),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: .circular(20),
             boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, spreadRadius: 5)],
           ),
           child: PageView.builder(
@@ -289,52 +289,52 @@ class _DistancState extends State<Distanc> {
             itemBuilder: (context, index) {
               final item = items[index];
               return Padding(
-                padding: const EdgeInsets.all(24),
+                padding: .all(24),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: .min,
+                  crossAxisAlignment: .start,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: .spaceBetween,
                       children: [
                         Expanded(
                           child: Text(
                             item['yadmNm'] ?? '정보 없음',
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 20, fontWeight: .bold),
+                            overflow: .ellipsis,
                           ),
                         ),
                         if (items.length > 1)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: .symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: Colors.blue[50],
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: .circular(12),
                             ),
                             child: Text('${index + 1} / ${items.length}', 
-                              style: const TextStyle(fontSize: 12, color: Colors.blue, fontWeight: FontWeight.bold)),
+                              style: TextStyle(fontSize: 12, color: Colors.blue, fontWeight: .bold)),
                           ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     Row(
                       children: [
-                        const Icon(Icons.location_on, size: 18, color: Colors.grey),
-                        const SizedBox(width: 8),
-                        Expanded(child: Text(item['addr'] ?? '주소 정보 없음', maxLines: 2, overflow: TextOverflow.ellipsis)),
+                        Icon(Icons.location_on, size: 18, color: Colors.grey),
+                        SizedBox(width: 8),
+                        Expanded(child: Text(item['addr'] ?? '주소 정보 없음', maxLines: 2, overflow: .ellipsis)),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.phone, size: 18, color: Colors.grey),
-                        const SizedBox(width: 8),
+                        Icon(Icons.phone, size: 18, color: Colors.grey),
+                        SizedBox(width: 8),
                         Text(item['telno'] ?? '전화번호 정보 없음'),
                       ],
                     ),
-                    const Spacer(),
+                    Spacer(),
                     if (items.length > 1)
-                      const Center(
+                      Center(
                         child: Text('← 좌우로 스와이프하여 다음 약국 보기 →', 
                           style: TextStyle(color: Colors.grey, fontSize: 12, fontStyle: FontStyle.italic)),
                       ),
@@ -361,7 +361,7 @@ class _DistancState extends State<Distanc> {
           style: TextStyle(
             color: Colors.black,
             fontSize: screenWidth * 0.045,
-            fontWeight: FontWeight.bold,
+            fontWeight: .bold,
           ),
         ),
         backgroundColor: Colors.white,
@@ -374,13 +374,13 @@ class _DistancState extends State<Distanc> {
             FlutterMap(
               mapController: _mapController,
               options: MapOptions(
-                initialCenter: const LatLng(37.5665, 126.9780),
+                initialCenter: LatLng(37.5665, 126.9780),
                 initialZoom: 14.0,
                 onPositionChanged: (camera, hasGesture) {
                   if (hasGesture) {
                     _updateMarkers(camera.zoom);
                     _debounceTimer?.cancel();
-                    _debounceTimer = Timer(const Duration(milliseconds: 600), () {
+                    _debounceTimer = Timer(Duration(milliseconds: 600), () {
                       _fetchPharmacies(camera.center.latitude, camera.center.longitude);
                     });
                   }
@@ -403,10 +403,10 @@ class _DistancState extends State<Distanc> {
               Center(
                 child: Card(
                   elevation: 4,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(borderRadius: .circular(12)),
                   child: Padding(
-                    padding: EdgeInsets.all(screenWidth * 0.04),
-                    child: const CircularProgressIndicator(),
+                    padding: .all(screenWidth * 0.04),
+                    child: CircularProgressIndicator(),
                   ),
                 ),
               ),

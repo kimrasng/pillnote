@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:pillnote/screen/features/pillinfo.dart';
 
 class Pillsearch extends StatefulWidget {
-  const Pillsearch({super.key});
+  Pillsearch({super.key});
 
   @override
   State<Pillsearch> createState() => _PillsearchState();
@@ -24,7 +24,7 @@ class _PillsearchState extends State<Pillsearch> {
   void _onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
 
-    _debounce = Timer(const Duration(milliseconds: 500), () {
+    _debounce = Timer(Duration(milliseconds: 500), () {
       if (query.isNotEmpty) {
         _searchPills(query);
       } else {
@@ -115,7 +115,7 @@ class _PillsearchState extends State<Pillsearch> {
               SizedBox(height: screenHeight * 0.02),
               Expanded(
                 child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? Center(child: CircularProgressIndicator())
                     : _searchResults.isEmpty
                     ? Center(
                         child: Text(
@@ -147,22 +147,22 @@ class _PillsearchState extends State<Pillsearch> {
                               );
                             },
                             child: Container(
-                              padding: EdgeInsets.all(screenWidth * 0.03),
+                              padding: .all(screenWidth * 0.03),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: .circular(12),
                                 border: Border.all(color: Colors.grey.shade200),
                               ),
                               child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
+                                crossAxisAlignment: .center,
                                 children: [
                                   ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: .circular(8),
                                     child: imageUrl.isNotEmpty
                                         ? Image.network(
                                             imageUrl,
                                             width: screenWidth * 0.25,
-                                            fit: BoxFit.cover,
+                                            fit: .cover,
                                             errorBuilder:
                                                 (
                                                   context,
@@ -192,17 +192,17 @@ class _PillsearchState extends State<Pillsearch> {
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                          .start,
                                       children: [
                                         Text(
                                           item['ITEM_NAME'] ?? '이름 없음',
                                           style: TextStyle(
-                                            fontWeight: FontWeight.bold,
+                                            fontWeight: .bold,
                                             fontSize: screenWidth * 0.04,
                                             color: Colors.black87,
                                           ),
                                           maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
+                                          overflow: .ellipsis,
                                         ),
                                         SizedBox(height: screenHeight * 0.005),
                                         Text(
@@ -212,7 +212,7 @@ class _PillsearchState extends State<Pillsearch> {
                                             fontSize: screenWidth * 0.035,
                                           ),
                                           maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
+                                          overflow: .ellipsis,
                                         ),
                                       ],
                                     ),

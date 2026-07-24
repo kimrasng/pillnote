@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class Alarmtime extends StatefulWidget {
-  const Alarmtime({super.key});
+  Alarmtime({super.key});
 
   @override
   State<Alarmtime> createState() => _AlarmtimeState();
@@ -10,6 +10,8 @@ class Alarmtime extends StatefulWidget {
 class _AlarmtimeState extends State<Alarmtime> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold();
+    return Scaffold(
+      body: Column(),
+    );
   }
 }

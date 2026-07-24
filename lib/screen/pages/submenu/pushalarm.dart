@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class Pushalarm extends StatefulWidget {
-  const Pushalarm({super.key});
+  Pushalarm({super.key});
 
   @override
   State<Pushalarm> createState() => _PushalarmState();

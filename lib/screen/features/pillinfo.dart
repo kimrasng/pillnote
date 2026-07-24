@@ -9,7 +9,7 @@ class Pillinfo extends StatefulWidget {
   final String pillSEQ;
   final bool isLocal;
 
-  const Pillinfo({super.key, required this.pillSEQ, required this.isLocal});
+  Pillinfo({super.key, required this.pillSEQ, required this.isLocal});
 
   @override
   State<Pillinfo> createState() => _PillinfoState();
@@ -98,14 +98,14 @@ class _PillinfoState extends State<Pillinfo> {
 
     if (isLoading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('약 정보')),
-        body: const Center(child: CircularProgressIndicator()),
+        appBar: AppBar(title: Text('약 정보')),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
     if (errorMessage != null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('약 정보')),
+        appBar: AppBar(title: Text('약 정보')),
         body: Center(child: Text(errorMessage!)),
       );
     }
@@ -121,31 +121,31 @@ class _PillinfoState extends State<Pillinfo> {
         ),
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back_ios_new),
+          icon: Icon(Icons.arrow_back_ios_new),
         ),
       ),
       body: SafeArea(
         child: Stack(
           children: [
             SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
+              padding: .fromLTRB(
                 screenWidth * 0.04,
                 screenWidth * 0.04,
                 screenWidth * 0.04,
                 screenHeight * 0.15,
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: .start,
                 children: [
                   if (imageUrl.isNotEmpty)
                     Center(
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: .circular(12),
                         child: Image.network(
                           imageUrl,
                           width: double.infinity,
                           height: screenHeight * 0.25,
-                          fit: BoxFit.contain,
+                          fit: .contain,
                           errorBuilder: (context, error, stackTrace) =>
                               Icon(
                                 Icons.broken_image,
@@ -160,7 +160,7 @@ class _PillinfoState extends State<Pillinfo> {
                     item['ITEM_NAME'] ?? '이름 없음',
                     style: TextStyle(
                       fontSize: screenWidth * 0.05,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: .bold,
                     ),
                   ),
                   SizedBox(height: screenHeight * 0.01),
@@ -180,7 +180,6 @@ class _PillinfoState extends State<Pillinfo> {
                 ],
               ),
             ),
-            // 이미 내 약 목록에 있는 경우 추가 버튼을 숨깁니다.
             if (!widget.isLocal)
               Positioned(
                 left: screenWidth * 0.05,
@@ -194,16 +193,16 @@ class _PillinfoState extends State<Pillinfo> {
                       await Controller.addPill(item);
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('약이 추가되었습니다.')),
+                          SnackBar(content: Text('약이 추가되었습니다.')),
                         );
                         Navigator.pop(context);
                       }
                     },
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: .circular(15),
                       ),
-                      backgroundColor: const Color(0xFF2563EB),
+                      backgroundColor: Color(0xFF2563EB),
                       foregroundColor: Colors.white,
                       elevation: 5,
                       shadowColor: Colors.black26,
@@ -212,7 +211,7 @@ class _PillinfoState extends State<Pillinfo> {
                       "약 추가하기",
                       style: TextStyle(
                         fontSize: screenWidth * 0.045,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: .bold,
                       ),
                     ),
                   ),

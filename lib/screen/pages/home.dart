@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class Home extends StatefulWidget {
-  const Home({super.key});
+  Home({super.key});
 
   @override
   State<Home> createState() => _HomeState();
@@ -55,7 +55,7 @@ class _HomeState extends State<Home> {
       if ((_scrollController.offset - targetOffset).abs() < 1.0) return;
       _scrollController.animateTo(
         targetOffset,
-        duration: const Duration(milliseconds: 500),
+        duration: Duration(milliseconds: 500),
         curve: Curves.easeInOut,
       );
     } else {
@@ -81,26 +81,26 @@ class _HomeState extends State<Home> {
         child: Column(
           children: [
             Padding(
-              padding: EdgeInsets.all(screenWidth * 0.05),
+              padding: .all(screenWidth * 0.05),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: .spaceBetween,
                 children: [
                   Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: .start,
                     children: [
                       Text(
                         "${_selectedDate.year}년 ${_selectedDate.month}월",
                         style: TextStyle(
                           fontSize: screenWidth * 0.04,
                           color: Colors.grey,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: .w500,
                         ),
                       ),
                       Text(
                         "오늘의 복약",
                         style: TextStyle(
                           fontSize: screenWidth * 0.07,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: .bold,
                         ),
                       ),
                     ],
@@ -113,7 +113,7 @@ class _HomeState extends State<Home> {
                     },
                     icon: Icon(
                       Icons.today,
-                      color: const Color(0xFF2563EB),
+                      color: Color(0xFF2563EB),
                       size: screenWidth * 0.07,
                     ),
                   ),
@@ -126,7 +126,7 @@ class _HomeState extends State<Home> {
               child: ListView.builder(
                 controller: _scrollController,
                 scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
+                physics: BouncingScrollPhysics(),
                 itemCount: _totalDays,
                 itemBuilder: (context, index) {
                   DateTime date = _startDate.add(Duration(days: index));
@@ -148,23 +148,23 @@ class _HomeState extends State<Home> {
                     },
                     child: Container(
                       width: _itemWidth,
-                      margin: EdgeInsets.symmetric(horizontal: _itemMargin),
+                      margin: .symmetric(horizontal: _itemMargin),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? const Color(0xFF2563EB)
+                            ? Color(0xFF2563EB)
                             : Colors.white,
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: .circular(15),
                         border: Border.all(
                           color: isSelected
-                              ? const Color(0xFF2563EB)
+                              ? Color(0xFF2563EB)
                               : (isToday
-                                    ? const Color(0xFF2563EB)
+                                    ? Color(0xFF2563EB)
                                     : Colors.grey.shade100),
                           width: 1.5,
                         ),
                       ),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: .center,
                         children: [
                           Text(
                             _weekDays[date.weekday - 1],
@@ -172,8 +172,8 @@ class _HomeState extends State<Home> {
                               color: isSelected ? Colors.white : Colors.grey,
                               fontSize: screenWidth * 0.03,
                               fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
+                                  ? .bold
+                                  : .normal,
                             ),
                           ),
                           SizedBox(height: screenHeight * 0.005),
@@ -181,7 +181,7 @@ class _HomeState extends State<Home> {
                             date.day.toString(),
                             style: TextStyle(
                               color: isSelected ? Colors.white : Colors.black,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: .bold,
                               fontSize: screenWidth * 0.045,
                             ),
                           ),
@@ -196,7 +196,7 @@ class _HomeState extends State<Home> {
             Expanded(
               child: Center(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: .center,
                   children: [
                     Icon(
                       Icons.medication_liquid,

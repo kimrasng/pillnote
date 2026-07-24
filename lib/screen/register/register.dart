@@ -5,7 +5,7 @@ import 'package:pillnote/screen/register/verification.dart';
 import 'package:pillnote/widgets/custom_text_field.dart';
 
 class Register extends StatefulWidget {
-  const Register({super.key});
+  Register({super.key});
 
   @override
   State<Register> createState() => _RegisterState();
@@ -17,7 +17,7 @@ class _RegisterState extends State<Register> {
   void _handleRegister() {
     if (emailController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("이메일을 입력해주세요.")),
+        SnackBar(content: Text("이메일을 입력해주세요.")),
       );
       return;
     }
@@ -25,7 +25,7 @@ class _RegisterState extends State<Register> {
     // Controller.setOnboardingCompleted(true);
     Navigator.push(
       context,
-      MaterialPageRoute<void>(builder: (context) => const Verification()),
+      MaterialPageRoute<void>(builder: (context) => Verification()),
     );
   }
 
@@ -33,7 +33,7 @@ class _RegisterState extends State<Register> {
     Controller.setOnboardingCompleted(true);
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute<void>(builder: (context) => const Main()),
+      MaterialPageRoute<void>(builder: (context) => Main()),
           (route) => false,
     );
   }
@@ -56,34 +56,34 @@ class _RegisterState extends State<Register> {
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          icon: Icon(Icons.arrow_back_ios_new, color: Colors.black),
         ),
       ),
       body: SafeArea(
         child: Stack(
           children: [
             SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+              padding: .symmetric(horizontal: screenWidth * 0.05),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: .start,
                 children: [
                   SizedBox(height: screenHeight * 0.02),
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    crossAxisAlignment: .center,
                     children: [
                       Text(
                         "안녕하세요!",
                         style: TextStyle(
                           fontFamily: 'Pretendard',
                           fontSize: screenWidth * 0.07,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: .bold,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Image.asset(
                         'assets/images/wave.gif',
                         width: screenWidth * 0.1,
-                        errorBuilder: (context, error, stackTrace) => const SizedBox(),
+                        errorBuilder: (context, error, stackTrace) => SizedBox(),
                       ),
                     ],
                   ),
@@ -92,7 +92,7 @@ class _RegisterState extends State<Register> {
                     style: TextStyle(
                       fontFamily: 'Pretendard',
                       fontSize: screenWidth * 0.06,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: .bold,
                     ),
                   ),
                   SizedBox(height: screenHeight * 0.05),
@@ -111,7 +111,7 @@ class _RegisterState extends State<Register> {
               right: screenWidth * 0.05,
               bottom: screenHeight * 0.04,
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisSize: .min,
                 children: [
                   SizedBox(
                     width: double.infinity,
@@ -120,9 +120,9 @@ class _RegisterState extends State<Register> {
                       onPressed: _handleRegister,
                      style: ElevatedButton.styleFrom(
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
+                          borderRadius: .circular(15),
                         ),
-                        backgroundColor: const Color(0xFF2563EB),
+                        backgroundColor: Color(0xFF2563EB),
                         foregroundColor: Colors.white,
                         elevation: 0,
                       ),
@@ -131,22 +131,22 @@ class _RegisterState extends State<Register> {
                         style: TextStyle(
                           fontFamily: 'Pretendard',
                           fontSize: screenWidth * 0.05,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: .bold,
                         ),
                       ),
                     ),
                   ),
                   SizedBox(height: screenHeight * 0.01),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: .center,
                     children: [
                       TextButton(
                         onPressed: _startWithoutLogin,
                         child: Text(
                           "로그인 없이 시작하기",
                           style: TextStyle(
-                            color: const Color(0XFF7CA5FF),
-                            fontWeight: FontWeight.bold,
+                            color: Color(0XFF7CA5FF),
+                            fontWeight: .bold,
                             fontSize: screenWidth * 0.035,
                           ),
                         ),
