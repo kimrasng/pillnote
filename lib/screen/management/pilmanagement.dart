@@ -161,6 +161,12 @@ class _PilmanagementState extends State<Pilmanagement> {
                         if (confirm == true) {
                           await Controller.removePill(pill['id']);
                           if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text("약이 삭제되었습니다."),
+                                behavior: .floating,
+                              ),
+                            );
                             Navigator.pop(context);
                           }
                         }

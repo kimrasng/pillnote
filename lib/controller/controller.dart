@@ -4,10 +4,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class Controller {
   static late SharedPreferences _prefs;
-  static const String _onboardingKey = 'onboarding_completed';
-  static const String _sessionKey = 'session_token';
-  static const String _pillsKey = 'user_pills';
-  static const String _historyKey = 'intake_history';
+  static final String _onboardingKey = 'onboarding_completed';
+  static final String _sessionKey = 'session_token';
+  static final String _pillsKey = 'user_pills';
+  static final String _historyKey = 'intake_history';
 
   static Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();

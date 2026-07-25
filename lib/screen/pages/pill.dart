@@ -96,53 +96,57 @@ class _PillState extends State<Pill> {
         return Container(
           margin: .only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
             borderRadius: .circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.03),
+                color: Colors.black.withValues(alpha: 0.03),
                 blurRadius: 10,
                 offset: Offset(0, 4),
               ),
             ],
           ),
-          child: ListTile(
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => Pilmanagement(pill: pill)),
-              );
-              setState(() {});
-            },
-            contentPadding: .all(12),
-            leading: Container(
-              width: screenWidth * 0.2,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: .circular(8),
+          child: Material(
+            color: Colors.white,
+            borderRadius: .circular(12),
+            clipBehavior: Clip.antiAlias,
+            child: ListTile(
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => Pilmanagement(pill: pill)),
+                );
+                setState(() {});
+              },
+              contentPadding: .all(12),
+              leading: Container(
+                width: screenWidth * 0.2,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: .circular(8),
+                ),
+                child: ClipRRect(
+                  borderRadius: .circular(8),
+                  child:
+                      pill['ITEM_IMAGE'] != null && pill['ITEM_IMAGE'].isNotEmpty
+                      ? Image.network(
+                          pill['ITEM_IMAGE'],
+                          fit: .contain,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Icon(Icons.medication, color: Colors.grey),
+                        )
+                      : Icon(Icons.medication, color: Colors.grey),
+                ),
               ),
-              child: ClipRRect(
-                borderRadius: .circular(8),
-                child:
-                    pill['ITEM_IMAGE'] != null && pill['ITEM_IMAGE'].isNotEmpty
-                    ? Image.network(
-                        pill['ITEM_IMAGE'],
-                        fit: .contain,
-                        errorBuilder: (context, error, stackTrace) =>
-                            Icon(Icons.medication, color: Colors.grey),
-                      )
-                    : Icon(Icons.medication, color: Colors.grey),
+              title: Text(
+                pill['ITEM_NAME'] ?? '이름 없음',
+                style: TextStyle(fontWeight: .bold, fontSize: 16),
+                maxLines: 1,
+                overflow: .ellipsis,
               ),
-            ),
-            title: Text(
-              pill['ITEM_NAME'] ?? '이름 없음',
-              style: TextStyle(fontWeight: .bold, fontSize: 16),
-              maxLines: 1,
-              overflow: .ellipsis,
-            ),
-            subtitle: Text(
-              pill['ENTP_NAME'] ?? '',
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+              subtitle: Text(
+                pill['ENTP_NAME'] ?? '',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+              ),
             ),
           ),
         );

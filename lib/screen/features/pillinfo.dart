@@ -61,6 +61,7 @@ class _PillinfoState extends State<Pillinfo> {
 
     try {
       final response = await http.get(url);
+      if (!mounted) return;
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final items = data['body']['items'] as List?;
@@ -83,10 +84,12 @@ class _PillinfoState extends State<Pillinfo> {
         });
       }
     } catch (e) {
-      setState(() {
-        errorMessage = "오류가 발생했습니다: $e";
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          errorMessage = "오류가 발생했습니다: $e";
+          isLoading = false;
+        });
+      }
     }
   }
 

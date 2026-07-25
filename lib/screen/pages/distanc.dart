@@ -83,7 +83,9 @@ class _DistancState extends State<Distanc> {
       }
     } catch (e) {
       debugPrint('Error getting location: $e');
-      _fetchPharmacies(37.5665, 126.9780);
+      if (mounted) {
+        _fetchPharmacies(37.5665, 126.9780);
+      }
     }
   }
 
@@ -93,6 +95,7 @@ class _DistancState extends State<Distanc> {
       return;
     }
 
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
     final String urlString = 'https://apis.data.go.kr/B551182/pharmacyInfoService/getParmacyBasisList'
@@ -266,6 +269,7 @@ class _DistancState extends State<Distanc> {
       );
     }).toList();
 
+    if (!mounted) return;
     setState(() {
       _markers = newMarkers;
     });
