@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pillnote/screen/register/register.dart';
 
 class Onboarding extends StatefulWidget {
-  Onboarding({super.key});
+  const Onboarding({super.key});
 
   @override
   State<Onboarding> createState() => _OnboardingState();
@@ -19,55 +19,64 @@ class _OnboardingState extends State<Onboarding> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: .symmetric(horizontal: screenWidth * 0.08),
+          padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
           child: Column(
-            mainAxisAlignment: .center,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Spacer(flex: 2),
+              const Spacer(flex: 3),
               Image.asset(
                 'assets/images/onboarding-img.png',
-                width: screenWidth * 0.7,
+                width: screenWidth * 0.6,
                 fit: .contain,
               ),
-              Spacer(),
+              const Spacer(flex: 2),
               Text(
-                "약과 영양제를 더 쉽게\nPillNote 하나로",
+                "복약 관리의 시작\nPillNote",
                 textAlign: .center,
                 style: TextStyle(
                   fontFamily: 'Pretendard',
                   fontSize: screenWidth * 0.08,
-                  fontWeight: .bold,
+                  fontWeight: FontWeight.bold,
                   color: Colors.black,
+                  height: 1.4,
                 ),
               ),
-              Spacer(flex: 2),
+              const SizedBox(height: 16),
+              Text(
+                "매일 챙겨야 하는 약과 영양제\n이제 잊지 말고 관리하세요",
+                textAlign: .center,
+                style: TextStyle(
+                  fontSize: screenWidth * 0.04,
+                  color: Colors.black54,
+                  height: 1.6,
+                ),
+              ),
+              const Spacer(flex: 3),
               SizedBox(
                 width: double.infinity,
                 height: screenHeight * 0.07,
-                child: ElevatedButton(
+                child: FilledButton(
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute<void>(builder: (context) => Register()),
                   ),
-                  style: ElevatedButton.styleFrom(
+                  style: FilledButton.styleFrom(
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(screenWidth * 0.035),
+                      borderRadius: BorderRadius.circular(screenWidth * 0.04),
                     ),
-                    backgroundColor: Color(0xFF2563EB),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
+                    backgroundColor: const Color(0xFF2563EB),
                   ),
                   child: Text(
                     "시작하기",
                     style: TextStyle(
                       fontFamily: 'Pretendard',
-                      fontSize: screenWidth * 0.05,
+                      fontSize: screenWidth * 0.045,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
-              SizedBox(height: screenHeight * 0.05),
+              SizedBox(height: screenHeight * 0.06),
             ],
           ),
         ),

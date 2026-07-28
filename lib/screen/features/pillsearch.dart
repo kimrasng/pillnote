@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:pillnote/screen/features/pillinfo.dart';
 
 class Pillsearch extends StatefulWidget {
-  Pillsearch({super.key});
+  const Pillsearch({super.key});
 
   @override
   State<Pillsearch> createState() => _PillsearchState();
@@ -24,7 +24,7 @@ class _PillsearchState extends State<Pillsearch> {
   void _onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
 
-    _debounce = Timer(Duration(milliseconds: 500), () {
+    _debounce = Timer(const Duration(milliseconds: 500), () {
       if (query.isNotEmpty) {
         _searchPills(query);
       } else {
@@ -99,6 +99,14 @@ class _PillsearchState extends State<Pillsearch> {
             size: screenWidth * 0.05,
           ),
         ),
+        title: Text(
+          "약 검색",
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: screenWidth * 0.05,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: Center(
         child: SizedBox(
@@ -106,8 +114,8 @@ class _PillsearchState extends State<Pillsearch> {
           child: Column(
             children: [
               CustomTextField(
-                label: '약 검색',
-                hint: "약 이름을 입력 해주세요.",
+                label: '약 이름',
+                hint: "검색어를 입력하세요",
                 controller: searchController,
                 onChanged: _onSearchChanged,
                 onSubmitted: _searchPills,
@@ -115,63 +123,58 @@ class _PillsearchState extends State<Pillsearch> {
               SizedBox(height: screenHeight * 0.02),
               Expanded(
                 child: _isLoading
-                    ? Center(child: CircularProgressIndicator())
+                    ? const Center(child: CircularProgressIndicator())
                     : _searchResults.isEmpty
-                    ? Center(
-                        child: Text(
-                          "검색 결과가 없습니다.",
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: screenWidth * 0.045,
-                          ),
-                        ),
-                      )
-                    : ListView.separated(
-                        itemCount: _searchResults.length,
-                        separatorBuilder: (context, index) =>
-                            SizedBox(height: screenHeight * 0.02),
-                        itemBuilder: (context, index) {
-                          final item = _searchResults[index];
-                          final imageUrl = item['ITEM_IMAGE'] ?? '';
-
-                          return GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => Pillinfo(
-                                    pillSEQ: item['ITEM_SEQ'],
-                                    isLocal: false,
-                                  ),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              padding: EdgeInsets.all(screenWidth * 0.04),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(screenWidth * 0.03),
-                                border: Border.all(color: Colors.grey.shade200),
+                        ? Center(
+                            child: Text(
+                              "검색 결과가 없습니다",
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: screenWidth * 0.045,
                               ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(screenWidth * 0.02),
-                                    child: imageUrl.isNotEmpty
-                                        ? Image.network(
-                                            imageUrl,
-                                            width: screenWidth * 0.25,
-                                            height: screenWidth * 0.25,
-                                            fit: BoxFit.cover,
-                                            errorBuilder:
-                                                (
-                                                  context,
-                                                  error,
-                                                  stackTrace,
-                                                ) => Container(
-                                                  width: screenWidth * 0.25,
-                                                  height: screenWidth * 0.25,
+                            ),
+                          )
+                        : ListView.separated(
+                            itemCount: _searchResults.length,
+                            separatorBuilder: (context, index) =>
+                                SizedBox(height: screenHeight * 0.02),
+                            itemBuilder: (context, index) {
+                              final item = _searchResults[index];
+                              final imageUrl = item['ITEM_IMAGE'] ?? '';
+
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => Pillinfo(
+                                        pillSEQ: item['ITEM_SEQ'],
+                                        isLocal: false,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.all(screenWidth * 0.04),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(screenWidth * 0.03),
+                                    border: Border.all(color: Colors.grey.shade200),
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(screenWidth * 0.02),
+                                        child: imageUrl.isNotEmpty
+                                            ? Image.network(
+                                                imageUrl,
+                                                width: screenWidth * 0.2,
+                                                height: screenWidth * 0.2,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (context, error, stackTrace) => Container(
+                                                  width: screenWidth * 0.2,
+                                                  height: screenWidth * 0.2,
                                                   color: Colors.grey.shade100,
                                                   child: Icon(
                                                     Icons.broken_image,
@@ -179,53 +182,53 @@ class _PillsearchState extends State<Pillsearch> {
                                                     size: screenWidth * 0.08,
                                                   ),
                                                 ),
-                                          )
-                                        : Container(
-                                            width: screenWidth * 0.25,
-                                            height: screenWidth * 0.25,
-                                            color: Colors.grey.shade100,
-                                            child: Icon(
-                                              Icons.image_not_supported,
-                                              color: Colors.grey,
-                                              size: screenWidth * 0.08,
+                                              )
+                                            : Container(
+                                                width: screenWidth * 0.2,
+                                                height: screenWidth * 0.2,
+                                                color: Colors.grey.shade100,
+                                                child: Icon(
+                                                  Icons.image_not_supported,
+                                                  color: Colors.grey,
+                                                  size: screenWidth * 0.08,
+                                                ),
+                                              ),
+                                      ),
+                                      SizedBox(width: screenWidth * 0.04),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              item['ITEM_NAME'] ?? '이름 없음',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: screenWidth * 0.042,
+                                                color: Colors.black87,
+                                              ),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                          ),
-                                  ),
-                                  SizedBox(width: screenWidth * 0.04),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          item['ITEM_NAME'] ?? '이름 없음',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: screenWidth * 0.045,
-                                            color: Colors.black87,
-                                          ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
+                                            SizedBox(height: screenHeight * 0.005),
+                                            Text(
+                                              item['ENTP_NAME'] ?? '업체명 정보 없음',
+                                              style: TextStyle(
+                                                color: Colors.grey.shade600,
+                                                fontSize: screenWidth * 0.035,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
                                         ),
-                                        SizedBox(height: screenHeight * 0.005),
-                                        Text(
-                                          item['ENTP_NAME'] ?? '업체명 없음',
-                                          style: TextStyle(
-                                            color: Colors.grey.shade600,
-                                            fontSize: screenWidth * 0.035,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ),
+                                      ),
+                                      Icon(Icons.chevron_right, color: Colors.grey.shade300, size: screenWidth * 0.05),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                                ),
+                              );
+                            },
+                          ),
               ),
             ],
           ),

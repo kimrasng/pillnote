@@ -5,7 +5,7 @@ import '../../widgets/item_row.dart';
 class Pilmanagement extends StatefulWidget {
   final Map pill;
 
-  Pilmanagement({super.key, required this.pill});
+  const Pilmanagement({super.key, required this.pill});
 
   @override
   State<Pilmanagement> createState() => _PilmanagementState();
@@ -29,7 +29,9 @@ class _PilmanagementState extends State<Pilmanagement> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2563EB)),
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF2563EB),
+            ),
           ),
           child: child!,
         );
@@ -53,8 +55,11 @@ class _PilmanagementState extends State<Pilmanagement> {
           builder: (context, setDialogState) {
             return AlertDialog(
               title: Text(
-                "언제 먹을까요?",
-                style: TextStyle(fontSize: screenWidth * 0.05, fontWeight: FontWeight.bold),
+                "복용 일정 설정",
+                style: TextStyle(
+                  fontSize: screenWidth * 0.05,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               content: SizedBox(
                 width: double.maxFinite,
@@ -63,13 +68,17 @@ class _PilmanagementState extends State<Pilmanagement> {
                   children: [
                     TextField(
                       controller: dosageController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       style: TextStyle(fontSize: screenWidth * 0.045),
                       decoration: InputDecoration(
-                        labelText: "한 번에 몇 알 먹나요?",
+                        labelText: "1회 복용량",
                         labelStyle: TextStyle(fontSize: screenWidth * 0.04),
                         suffixText: "정",
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         filled: true,
                         fillColor: Colors.grey.shade50,
                       ),
@@ -78,7 +87,13 @@ class _PilmanagementState extends State<Pilmanagement> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text("⏰ 먹는 시간", style: TextStyle(fontWeight: FontWeight.bold, fontSize: screenWidth * 0.045)),
+                        Text(
+                          "복용 시간",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: screenWidth * 0.045,
+                          ),
+                        ),
                         IconButton(
                           onPressed: () async {
                             TimeOfDay? pickedTime = await showTimePicker(
@@ -86,7 +101,8 @@ class _PilmanagementState extends State<Pilmanagement> {
                               initialTime: TimeOfDay.now(),
                             );
                             if (pickedTime != null) {
-                              final String formatted = "${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}";
+                              final String formatted =
+                                  "${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}";
                               if (!tempTimes.contains(formatted)) {
                                 setDialogState(() {
                                   tempTimes.add(formatted);
@@ -95,7 +111,10 @@ class _PilmanagementState extends State<Pilmanagement> {
                               }
                             }
                           },
-                          icon: const Icon(Icons.add_circle_outline, color: Color(0xFF2563EB)),
+                          icon: const Icon(
+                            Icons.add_circle_outline,
+                            color: Color(0xFF2563EB),
+                          ),
                         ),
                       ],
                     ),
@@ -108,10 +127,16 @@ class _PilmanagementState extends State<Pilmanagement> {
                           return ListTile(
                             title: Text(
                               tempTimes[index],
-                              style: TextStyle(fontSize: screenWidth * 0.045, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: screenWidth * 0.045,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             trailing: IconButton(
-                              icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
+                              icon: const Icon(
+                                Icons.remove_circle_outline,
+                                color: Colors.redAccent,
+                              ),
                               onPressed: () {
                                 setDialogState(() => tempTimes.removeAt(index));
                               },
@@ -126,7 +151,10 @@ class _PilmanagementState extends State<Pilmanagement> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text("취소", style: TextStyle(fontSize: screenWidth * 0.04)),
+                  child: Text(
+                    "취소",
+                    style: TextStyle(fontSize: screenWidth * 0.04),
+                  ),
                 ),
                 FilledButton(
                   onPressed: () => Navigator.pop(context, {
@@ -135,9 +163,14 @@ class _PilmanagementState extends State<Pilmanagement> {
                   }),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF2563EB),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: Text("저장하기", style: TextStyle(fontSize: screenWidth * 0.04)),
+                  child: Text(
+                    "저장하기",
+                    style: TextStyle(fontSize: screenWidth * 0.04),
+                  ),
                 ),
               ],
             );
@@ -167,7 +200,9 @@ class _PilmanagementState extends State<Pilmanagement> {
           SnackBar(
             content: const Text("복용 일정이 저장되었습니다."),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -222,12 +257,17 @@ class _PilmanagementState extends State<Pilmanagement> {
                             width: double.infinity,
                             height: screenHeight * 0.28,
                             fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              width: double.infinity,
-                              height: screenHeight * 0.28,
-                              color: Colors.grey.shade50,
-                              child: Icon(Icons.broken_image_outlined, size: screenWidth * 0.2, color: Colors.grey.shade300),
-                            ),
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  width: double.infinity,
+                                  height: screenHeight * 0.28,
+                                  color: Colors.grey.shade50,
+                                  child: Icon(
+                                    Icons.broken_image_outlined,
+                                    size: screenWidth * 0.2,
+                                    color: Colors.grey.shade300,
+                                  ),
+                                ),
                           ),
                         ),
                       ),
@@ -251,7 +291,7 @@ class _PilmanagementState extends State<Pilmanagement> {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  _buildSectionHeader("📦 남은 약", screenWidth),
+                  _buildSectionHeader("남은 수량", screenWidth),
                   Container(
                     width: double.infinity,
                     padding: EdgeInsets.all(screenWidth * 0.05),
@@ -261,7 +301,7 @@ class _PilmanagementState extends State<Pilmanagement> {
                       border: Border.all(color: Colors.grey.shade100),
                     ),
                     child: Text(
-                      "${pill['stock'] ?? 0} 정/캡슐 남았어요",
+                      "${pill['stock'] ?? 0} 정/캡슐 남음",
                       style: TextStyle(
                         fontSize: screenWidth * 0.05,
                         color: const Color(0xFF2563EB),
@@ -271,7 +311,7 @@ class _PilmanagementState extends State<Pilmanagement> {
                   ),
                   if (pill['startDate'] != null) ...[
                     const SizedBox(height: 32),
-                    _buildSectionHeader("⏰ 복용 시간", screenWidth),
+                    _buildSectionHeader("복용 일정", screenWidth),
                     Container(
                       width: double.infinity,
                       padding: EdgeInsets.all(screenWidth * 0.05),
@@ -283,18 +323,34 @@ class _PilmanagementState extends State<Pilmanagement> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildInfoRow(Icons.calendar_today_outlined, "날짜", "${pill['startDate']} ~ ${pill['endDate']}", screenWidth),
+                          _buildInfoRow(
+                            Icons.calendar_today_outlined,
+                            "기간",
+                            "${pill['startDate']} ~ ${pill['endDate']}",
+                            screenWidth,
+                          ),
                           const SizedBox(height: 12),
-                          _buildInfoRow(Icons.scale_outlined, "용량", "한 번에 ${pill['dosage'] ?? 1.0}정씩", screenWidth, isBold: true),
+                          _buildInfoRow(
+                            Icons.scale_outlined,
+                            "용량",
+                            "1회 ${pill['dosage'] ?? 1.0}정",
+                            screenWidth,
+                            isBold: true,
+                          ),
                           const SizedBox(height: 12),
-                          _buildInfoRow(Icons.access_time_outlined, "시간", (pill['times'] as List).join(", "), screenWidth),
+                          _buildInfoRow(
+                            Icons.access_time_outlined,
+                            "시간",
+                            (pill['times'] as List).join(", "),
+                            screenWidth,
+                          ),
                         ],
                       ),
                     ),
                   ],
                   const SizedBox(height: 40),
                   Text(
-                    "상세 정보",
+                    "기본 정보",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: screenWidth * 0.045,
@@ -302,8 +358,8 @@ class _PilmanagementState extends State<Pilmanagement> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  ItemRow('종류', pill['CLASS_NAME'] ?? '-'),
-                  ItemRow('색깔', pill['COLOR_CLASS1'] ?? '-'),
+                  ItemRow('분류', pill['CLASS_NAME'] ?? '-'),
+                  ItemRow('색상', pill['COLOR_CLASS1'] ?? '-'),
                   ItemRow('모양', pill['DRUG_SHAPE'] ?? '-'),
                   const SizedBox(height: 20),
                 ],
@@ -314,7 +370,7 @@ class _PilmanagementState extends State<Pilmanagement> {
               right: screenWidth * 0.06,
               bottom: 30,
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisSize: .min,
                 children: [
                   SizedBox(
                     width: double.infinity,
@@ -323,12 +379,17 @@ class _PilmanagementState extends State<Pilmanagement> {
                       onPressed: () => _showScheduleDialog(context),
                       style: FilledButton.styleFrom(
                         backgroundColor: const Color(0xFF2563EB),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         elevation: 0,
                       ),
                       child: Text(
-                        pill['startDate'] == null ? "복용 시간 설정하기" : "복용 시간 변경하기",
-                        style: TextStyle(fontSize: screenWidth * 0.045, fontWeight: FontWeight.bold),
+                        pill['startDate'] == null ? "복용 일정 등록" : "복용 일정 수정",
+                        style: TextStyle(
+                          fontSize: screenWidth * 0.045,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -336,31 +397,41 @@ class _PilmanagementState extends State<Pilmanagement> {
                   SizedBox(
                     width: double.infinity,
                     height: screenHeight * 0.07,
-                    child: TextButton.icon(
+                    child: FilledButton(
                       onPressed: () async {
-                        final confirm = await _showDeleteConfirmDialog(context, screenWidth);
+                        final confirm = await _showDeleteConfirmDialog(
+                          context,
+                          screenWidth,
+                        );
                         if (confirm == true) {
                           await Controller.removePill(pill['id']);
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: const Text("약을 삭제했습니다."),
+                                content: const Text("삭제되었습니다."),
                                 behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                             );
                             Navigator.pop(context);
                           }
                         }
                       },
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.redAccent,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.red[700],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                       ),
-                      icon: const Icon(Icons.delete_outline),
-                      label: Text(
+                      child: Text(
                         "이 약 삭제하기",
-                        style: TextStyle(fontSize: screenWidth * 0.04, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: screenWidth * 0.04,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -387,7 +458,13 @@ class _PilmanagementState extends State<Pilmanagement> {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value, double screenWidth, {bool isBold = false}) {
+  Widget _buildInfoRow(
+    IconData icon,
+    String label,
+    String value,
+    double screenWidth, {
+    bool isBold = false,
+  }) {
     return Row(
       children: [
         Icon(icon, size: screenWidth * 0.045, color: Colors.black45),
@@ -410,30 +487,44 @@ class _PilmanagementState extends State<Pilmanagement> {
     );
   }
 
-  Future<bool?> _showDeleteConfirmDialog(BuildContext context, double screenWidth) {
+  Future<bool?> _showDeleteConfirmDialog(
+    BuildContext context,
+    double screenWidth,
+  ) {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          "정말 삭제할까요?",
-          style: TextStyle(fontSize: screenWidth * 0.05, fontWeight: FontWeight.bold),
+          "삭제 확인",
+          style: TextStyle(
+            fontSize: screenWidth * 0.05,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: Text(
-          "목록에서 이 약을 지웁니다. 다시 복구할 수 없습니다.",
+          "이 약을 목록에서 삭제하시겠습니까?",
           style: TextStyle(fontSize: screenWidth * 0.04),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text("아니오", style: TextStyle(fontSize: screenWidth * 0.04)),
+            child: Text("취소", style: TextStyle(fontSize: screenWidth * 0.04)),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
               backgroundColor: Colors.redAccent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            child: Text("삭제", style: TextStyle(fontSize: screenWidth * 0.04, fontWeight: FontWeight.bold)),
+            child: Text(
+              "삭제",
+              style: TextStyle(
+                fontSize: screenWidth * 0.04,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),

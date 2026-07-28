@@ -5,7 +5,7 @@ import 'package:pillnote/screen/management/pilmanagement.dart';
 import 'package:pillnote/screen/management/pill_group_edit.dart';
 
 class Pill extends StatefulWidget {
-  Pill({super.key});
+  const Pill({super.key});
 
   @override
   State<Pill> createState() => _PillState();
@@ -19,407 +19,40 @@ class _PillState extends State<Pill> {
     final double screenHeight = size.height;
     final pills = Controller.getPills();
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
-        appBar: AppBar(
-          title: Text(
-            "복약 관리",
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-              fontSize: screenWidth * 0.05,
-            ),
-          ),
-          backgroundColor: Colors.white,
-          elevation: 0,
-          bottom: TabBar(
-            labelColor: const Color(0xFF2563EB),
-            unselectedLabelColor: Colors.grey,
-            indicatorColor: const Color(0xFF2563EB),
-            indicatorSize: TabBarIndicatorSize.label,
-            labelStyle: TextStyle(
-              fontSize: screenWidth * 0.042,
-              fontWeight: FontWeight.bold,
-            ),
-            unselectedLabelStyle: TextStyle(fontSize: screenWidth * 0.04),
-            tabs: const [
-              Tab(text: "오늘 먹을 약"),
-              Tab(text: "내 약 상자"),
-            ],
-          ),
-          actions: [
-            IconButton(
-              onPressed: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(builder: (context) => Pillsearch()),
-                );
-                setState(() {});
-              },
-              icon: Icon(
-                Icons.add_circle_outline,
-                color: Colors.black,
-                size: screenWidth * 0.07,
-              ),
-            ),
-            SizedBox(width: screenWidth * 0.02),
-          ],
-        ),
-        body: TabBarView(
-          children: [
-            _buildTodaySchedule(pills, screenWidth, screenHeight),
-            pills.isEmpty
-                ? _buildEmptyState(screenWidth, screenHeight)
-                : _buildPillList(pills, screenWidth, screenHeight),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTodaySchedule(
-    List<Map<String, dynamic>> pills,
-    double screenWidth,
-    double screenHeight,
-  ) {
-    final today = DateTime.now().toString().split(' ')[0];
-    final history = Controller.getHistoryByDate(today);
-
-    final activePills = pills.where((p) {
-      if (p['startDate'] == null || p['endDate'] == null) return false;
-      return today.compareTo(p['startDate']) >= 0 &&
-          today.compareTo(p['endDate']) <= 0;
-    }).toList();
-
-    final groups = Controller.getGroups();
-    final activeGroups = groups.where((g) {
-      if (g['startDate'] == null || g['endDate'] == null) return false;
-      return today.compareTo(g['startDate']) >= 0 &&
-          today.compareTo(g['endDate']) <= 0;
-    }).toList();
-
-    if (activePills.isEmpty && activeGroups.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: EdgeInsets.all(screenWidth * 0.08),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.calendar_today_outlined,
-                size: screenWidth * 0.15,
-                color: Colors.grey.shade300,
-              ),
-            ),
-            SizedBox(height: screenHeight * 0.03),
-            Text(
-              "오늘 먹을 약이 없습니다.",
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: screenWidth * 0.045,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView(
-      padding: EdgeInsets.all(screenWidth * 0.05),
-      children: [
-        ...activeGroups.map(
-          (group) => _buildGroupCard(group, history, screenWidth, screenHeight),
-        ),
-        ...activePills.map(
-          (pill) => _buildPillCard(pill, history, screenWidth, screenHeight),
-        ),
-        SizedBox(height: screenHeight * 0.1),
-      ],
-    );
-  }
-
-  Widget _buildGroupCard(
-    Map<String, dynamic> group,
-    List<Map<String, dynamic>> history,
-    double screenWidth,
-    double screenHeight,
-  ) {
-    final times = group['times'] as List? ?? [];
-    return Container(
-      margin: EdgeInsets.only(bottom: screenHeight * 0.02),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFDBEAFE), width: 1),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(screenWidth * 0.06),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(screenWidth * 0.03),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2563EB),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    Icons.inventory_2_outlined,
-                    color: Colors.white,
-                    size: screenWidth * 0.06,
-                  ),
-                ),
-                SizedBox(width: screenWidth * 0.04),
-                Expanded(
-                  child: Text(
-                    group['name'] ?? '처방전 묶음',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: screenWidth * 0.048,
-                      color: const Color(0xFF1E3A8A),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: screenHeight * 0.025),
-            ...times.map((time) {
-              final isTaken = history.any(
-                (h) =>
-                    h['groupId'] == group['id'] && h['scheduledTime'] == time,
-              );
-              return _buildIntakeButton(
-                time: time,
-                isTaken: isTaken,
-                onTap: () async {
-                  await Controller.recordGroupIntake(group['id'], time);
-                  setState(() {});
-                  _showSuccessSnackBar("$time 복용을 완료했습니다!");
-                },
-                dosageText: "묶음 약 전체 복용",
-                screenWidth: screenWidth,
-                screenHeight: screenHeight,
-              );
-            }).toList(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPillCard(
-    Map<String, dynamic> pill,
-    List<Map<String, dynamic>> history,
-    double screenWidth,
-    double screenHeight,
-  ) {
-    final times = pill['times'] as List? ?? [];
-    return Container(
-      margin: EdgeInsets.only(bottom: screenHeight * 0.02),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.grey.shade200, width: 1),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(screenWidth * 0.06),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(screenWidth * 0.03),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    Icons.medication_outlined,
-                    color: Colors.black87,
-                    size: screenWidth * 0.06,
-                  ),
-                ),
-                SizedBox(width: screenWidth * 0.04),
-                Expanded(
-                  child: Text(
-                    pill['ITEM_NAME'] ?? '',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: screenWidth * 0.045,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: screenHeight * 0.025),
-            ...times.map((time) {
-              final isTaken = history.any(
-                (h) => h['pillId'] == pill['id'] && h['scheduledTime'] == time,
-              );
-              return _buildIntakeButton(
-                time: time,
-                isTaken: isTaken,
-                onTap: () async {
-                  final double currentStock = (pill['stock'] ?? 0).toDouble();
-                  final double dosage = (pill['dosage'] ?? 1.0).toDouble();
-                  if (currentStock < dosage) {
-                    _showStockWarning(screenWidth, screenHeight);
-                    return;
-                  }
-                  await Controller.recordIntake(pill['id'], time);
-                  setState(() {});
-                  _showSuccessSnackBar(
-                    "$time 복용 완료! (남은 약: ${(currentStock - dosage).toStringAsFixed(1)}정)",
-                  );
-                },
-                dosageText: "1회 ${pill['dosage'] ?? 1.0}정 먹기",
-                screenWidth: screenWidth,
-                screenHeight: screenHeight,
-              );
-            }).toList(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildIntakeButton({
-    required String time,
-    required bool isTaken,
-    required VoidCallback onTap,
-    required String dosageText,
-    required double screenWidth,
-    required double screenHeight,
-  }) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: screenHeight * 0.012),
-      child: InkWell(
-        onTap: isTaken ? null : onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: EdgeInsets.symmetric(
-            vertical: screenHeight * 0.018,
-            horizontal: screenWidth * 0.05,
-          ),
-          decoration: BoxDecoration(
-            color: isTaken ? const Color(0xFFF0FDF4) : const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isTaken ? const Color(0xFFBBF7D0) : Colors.grey.shade200,
-              width: 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                isTaken ? Icons.check_circle : Icons.add_circle_outline,
-                color: isTaken
-                    ? const Color(0xFF16A34A)
-                    : const Color(0xFF2563EB),
-                size: screenWidth * 0.07,
-              ),
-              SizedBox(width: screenWidth * 0.04),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "$time 복용",
-                    style: TextStyle(
-                      fontSize: screenWidth * 0.04,
-                      fontWeight: FontWeight.bold,
-                      color: isTaken ? const Color(0xFF16A34A) : Colors.black87,
-                    ),
-                  ),
-                  Text(
-                    dosageText,
-                    style: TextStyle(
-                      fontSize: screenWidth * 0.032,
-                      color: Colors.black54,
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              if (isTaken)
-                Text(
-                  "완료",
-                  style: TextStyle(
-                    color: const Color(0xFF16A34A),
-                    fontSize: screenWidth * 0.035,
-                    fontWeight: FontWeight.bold,
-                  ),
-                )
-              else
-                Icon(
-                  Icons.chevron_right,
-                  color: Colors.grey.shade400,
-                  size: screenWidth * 0.05,
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showSuccessSnackBar(String message) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: TextStyle(
-            fontSize: screenWidth * 0.038,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: const Color(0xFF16A34A),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
-
-  void _showStockWarning(double screenWidth, double screenHeight) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
         title: Text(
-          "약이 부족해요!",
+          "내 약 상자",
           style: TextStyle(
-            fontSize: screenWidth * 0.05,
+            color: Colors.black,
             fontWeight: FontWeight.bold,
+            fontSize: screenWidth * 0.05,
           ),
         ),
-        content: Text(
-          "남은 약이 거의 없어요. 새로 처방받거나 사오셔야 해요.",
-          style: TextStyle(fontSize: screenWidth * 0.042),
-        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              "알겠어요",
-              style: TextStyle(
-                fontSize: screenWidth * 0.04,
-                fontWeight: FontWeight.bold,
-              ),
+          IconButton(
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute<void>(builder: (context) => const Pillsearch()),
+              );
+              setState(() {});
+            },
+            icon: Icon(
+              Icons.add_circle_outline,
+              color: Colors.black,
+              size: screenWidth * 0.07,
             ),
           ),
+          SizedBox(width: screenWidth * 0.02),
         ],
       ),
+      body: pills.isEmpty
+          ? _buildEmptyState(screenWidth, screenHeight)
+          : _buildPillList(pills, screenWidth, screenHeight),
     );
   }
 
@@ -454,7 +87,7 @@ class _PillState extends State<Pill> {
             onPressed: () async {
               await Navigator.push(
                 context,
-                MaterialPageRoute<void>(builder: (context) => Pillsearch()),
+                MaterialPageRoute<void>(builder: (context) => const Pillsearch()),
               );
               setState(() {});
             },
@@ -499,7 +132,7 @@ class _PillState extends State<Pill> {
               bottom: screenHeight * 0.015,
             ),
             child: Text(
-              "약 묶음 (처방전)",
+              "처방전 묶음",
               style: TextStyle(
                 fontSize: screenWidth * 0.045,
                 fontWeight: FontWeight.bold,
@@ -520,7 +153,7 @@ class _PillState extends State<Pill> {
             bottom: screenHeight * 0.015,
           ),
           child: Text(
-            "내 약 목록",
+            "등록된 개별 약",
             style: TextStyle(
               fontSize: screenWidth * 0.045,
               fontWeight: FontWeight.bold,
@@ -535,7 +168,7 @@ class _PillState extends State<Pill> {
         SizedBox(height: screenHeight * 0.04),
         FilledButton.tonalIcon(
           onPressed: () => _navigateToGroupEdit(context),
-          icon: Icon(Icons.auto_fix_high_outlined, size: screenWidth * 0.05),
+          icon: Icon(Icons.link, size: screenWidth * 0.05),
           label: Text(
             "여러 약 하나로 묶기",
             style: TextStyle(
@@ -565,9 +198,9 @@ class _PillState extends State<Pill> {
     return Container(
       margin: EdgeInsets.only(bottom: screenHeight * 0.015),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFEFF6FF),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey.shade100, width: 1),
+        border: Border.all(color: const Color(0xFFDBEAFE), width: 1),
       ),
       child: Material(
         color: Colors.transparent,
@@ -592,12 +225,13 @@ class _PillState extends State<Pill> {
             style: TextStyle(
               fontSize: screenWidth * 0.042,
               fontWeight: FontWeight.bold,
+              color: const Color(0xFF1E3A8A),
             ),
           ),
           subtitle: Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
-              "${(group['pillIds'] as List).length}개의 약이 들어있어요",
+              "${(group['pillIds'] as List).length}개의 약이 포함됨",
               style: TextStyle(
                 fontSize: screenWidth * 0.035,
                 color: Colors.black54,
@@ -623,9 +257,9 @@ class _PillState extends State<Pill> {
     return Container(
       margin: EdgeInsets.only(bottom: screenHeight * 0.015),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFEFF6FF),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey.shade100, width: 1),
+        border: Border.all(color: const Color(0xFFDBEAFE), width: 1),
       ),
       child: Material(
         color: Colors.transparent,
@@ -665,6 +299,7 @@ class _PillState extends State<Pill> {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: screenWidth * 0.042,
+              color: const Color(0xFF1E3A8A),
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -683,23 +318,47 @@ class _PillState extends State<Pill> {
               if (pill['startDate'] != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 6),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2563EB).withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      "복용  (~${pill['endDate']})",
-                      style: TextStyle(
-                        color: const Color(0xFF2563EB),
-                        fontSize: screenWidth * 0.028,
-                        fontWeight: FontWeight.bold,
+                  child: Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2563EB).withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          "${pill['dosage'] ?? 1.0}정씩",
+                          style: TextStyle(
+                            color: const Color(0xFF2563EB),
+                            fontSize: screenWidth * 0.028,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ),
+                      ...(pill['times'] as List? ?? []).map((time) => Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          time.toString(),
+                          style: TextStyle(
+                            color: Colors.black54,
+                            fontSize: screenWidth * 0.028,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      )).toList(),
+                    ],
                   ),
                 ),
             ],

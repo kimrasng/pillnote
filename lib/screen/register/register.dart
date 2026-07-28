@@ -5,7 +5,7 @@ import 'package:pillnote/screen/register/verification.dart';
 import 'package:pillnote/widgets/custom_text_field.dart';
 
 class Register extends StatefulWidget {
-  Register({super.key});
+  const Register({super.key});
 
   @override
   State<Register> createState() => _RegisterState();
@@ -17,14 +17,14 @@ class _RegisterState extends State<Register> {
   void _handleRegister() {
     if (emailController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("이메일을 입력해주세요.")),
+        const SnackBar(content: Text("이메일을 입력해주세요")),
       );
       return;
     }
 
     Navigator.push(
       context,
-      MaterialPageRoute<void>(builder: (context) => Verification()),
+      MaterialPageRoute<void>(builder: (context) => const Verification()),
     );
   }
 
@@ -33,7 +33,7 @@ class _RegisterState extends State<Register> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute<void>(builder: (context) => Main()),
-          (route) => false,
+      (route) => false,
     );
   }
 
@@ -50,112 +50,85 @@ class _RegisterState extends State<Register> {
     final double screenHeight = size.height;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
         ),
       ),
       body: SafeArea(
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: .symmetric(horizontal: screenWidth * 0.05),
-              child: Column(
-                crossAxisAlignment: .start,
-                children: [
-                  SizedBox(height: screenHeight * 0.02),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        "안녕하세요!",
-                        style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: screenWidth * 0.08,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(width: screenWidth * 0.02),
-                      Image.asset(
-                        'assets/images/wave.gif',
-                        width: screenWidth * 0.1,
-                        errorBuilder: (context, error, stackTrace) => SizedBox(),
-                      ),
-                    ],
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.08),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: screenHeight * 0.04),
+              Text(
+                "로그인",
+                style: TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: screenWidth * 0.08,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "이메일을 입력하여 서비스를 시작하세요",
+                style: TextStyle(
+                  fontSize: screenWidth * 0.04,
+                  color: Colors.black54,
+                ),
+              ),
+              SizedBox(height: screenHeight * 0.06),
+              CustomTextField(
+                label: '이메일 주소',
+                hint: 'example@email.com',
+                keyboardType: TextInputType.emailAddress,
+                controller: emailController,
+              ),
+              const Spacer(),
+              SizedBox(
+                width: double.infinity,
+                height: screenHeight * 0.07,
+                child: FilledButton(
+                  onPressed: _handleRegister,
+                  style: FilledButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(screenWidth * 0.04),
+                    ),
+                    backgroundColor: const Color(0xFF2563EB),
                   ),
-                  Text(
-                    "PillNote에 오신것을 환영합니다.",
+                  child: Text(
+                    "계속하기",
                     style: TextStyle(
                       fontFamily: 'Pretendard',
-                      fontSize: screenWidth * 0.065,
+                      fontSize: screenWidth * 0.045,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: screenHeight * 0.05),
-                  CustomTextField(
-                    label: '이메일',
-                    hint: 'example@email.com',
-                    keyboardType: TextInputType.emailAddress,
-                    controller: emailController,
-                  ),
-                  SizedBox(height: screenHeight * 0.2),
-                ],
+                ),
               ),
-            ),
-            Positioned(
-              left: screenWidth * 0.05,
-              right: screenWidth * 0.05,
-              bottom: screenHeight * 0.04,
-              child: Column(
-                mainAxisSize: .min,
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    height: screenHeight * 0.07,
-                    child: ElevatedButton(
-                      onPressed: _handleRegister,
-                     style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: .circular(15),
-                        ),
-                        backgroundColor: Color(0xFF2563EB),
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        "로그인",
-                        style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: screenWidth * 0.05,
-                          fontWeight: .bold,
-                        ),
-                      ),
+              const SizedBox(height: 12),
+              Center(
+                child: TextButton(
+                  onPressed: _startWithoutLogin,
+                  child: Text(
+                    "로그인 없이 시작하기",
+                    style: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontWeight: FontWeight.bold,
+                      fontSize: screenWidth * 0.035,
                     ),
                   ),
-                  SizedBox(height: screenHeight * 0.01),
-                  Row(
-                    mainAxisAlignment: .center,
-                    children: [
-                      TextButton(
-                        onPressed: _startWithoutLogin,
-                        child: Text(
-                          "로그인 없이 시작하기",
-                          style: TextStyle(
-                            color: Color(0XFF7CA5FF),
-                            fontWeight: .bold,
-                            fontSize: screenWidth * 0.035,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
+              SizedBox(height: screenHeight * 0.05),
+            ],
+          ),
         ),
       ),
     );

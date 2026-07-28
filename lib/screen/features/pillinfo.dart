@@ -3,14 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pillnote/controller/controller.dart';
-import 'package:pillnote/screen/features/add/pillcount.dart';
 import 'package:pillnote/widgets/item_row.dart';
 
 class Pillinfo extends StatefulWidget {
   final String pillSEQ;
   final bool isLocal;
 
-  Pillinfo({super.key, required this.pillSEQ, required this.isLocal});
+  const Pillinfo({super.key, required this.pillSEQ, required this.isLocal});
 
   @override
   State<Pillinfo> createState() => _PillinfoState();
@@ -47,7 +46,7 @@ class _PillinfoState extends State<Pillinfo> {
     final apiKey = dotenv.env['API_KEY'];
     if (apiKey == null || apiKey.isEmpty) {
       setState(() {
-        errorMessage = "API 키가 설정되지 않았습니다.";
+        errorMessage = "API 설정 오류";
         isLoading = false;
       });
       return;
@@ -74,20 +73,20 @@ class _PillinfoState extends State<Pillinfo> {
           });
         } else {
           setState(() {
-            errorMessage = "정보를 찾을 수 없습니다.";
+            errorMessage = "정보를 찾을 수 없습니다";
             isLoading = false;
           });
         }
       } else {
         setState(() {
-          errorMessage = "데이터를 불러오는 데 실패했습니다. (${response.statusCode})";
+          errorMessage = "데이터 로드 실패";
           isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          errorMessage = "오류가 발생했습니다: $e";
+          errorMessage = "오류가 발생했습니다";
           isLoading = false;
         });
       }
@@ -108,7 +107,7 @@ class _PillinfoState extends State<Pillinfo> {
             style: TextStyle(fontSize: screenWidth * 0.05),
           ),
         ),
-        body: Center(child: CircularProgressIndicator()),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -123,7 +122,7 @@ class _PillinfoState extends State<Pillinfo> {
         body: Center(
           child: Text(
             errorMessage!,
-            style: TextStyle(fontSize: screenWidth * 0.045),
+            style: TextStyle(fontSize: screenWidth * 0.045, color: Colors.grey),
           ),
         ),
       );
@@ -133,6 +132,7 @@ class _PillinfoState extends State<Pillinfo> {
     final imageUrl = item['ITEM_IMAGE'] ?? '';
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
           item['ITEM_NAME'] ?? '약 정보',
@@ -148,9 +148,9 @@ class _PillinfoState extends State<Pillinfo> {
           children: [
             SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
+                screenWidth * 0.06,
                 screenWidth * 0.04,
-                screenWidth * 0.04,
-                screenWidth * 0.04,
+                screenWidth * 0.06,
                 screenHeight * 0.15,
               ),
               child: Column(
@@ -158,27 +158,35 @@ class _PillinfoState extends State<Pillinfo> {
                 children: [
                   if (imageUrl.isNotEmpty)
                     Center(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(screenWidth * 0.03),
-                        child: Image.network(
-                          imageUrl,
-                          width: double.infinity,
-                          height: screenHeight * 0.25,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) => Icon(
-                            Icons.broken_image,
-                            size: screenWidth * 0.2,
-                            color: Colors.grey,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                          border: Border.all(color: Colors.grey.shade100),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                          child: Image.network(
+                            imageUrl,
+                            width: double.infinity,
+                            height: screenHeight * 0.25,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              width: double.infinity,
+                              height: screenHeight * 0.25,
+                              color: Colors.grey.shade50,
+                              child: Icon(Icons.broken_image_outlined, size: screenWidth * 0.15, color: Colors.grey.shade300),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  SizedBox(height: screenHeight * 0.02),
+                  SizedBox(height: screenHeight * 0.03),
                   Text(
                     item['ITEM_NAME'] ?? '이름 없음',
                     style: TextStyle(
-                      fontSize: screenWidth * 0.05,
+                      fontSize: screenWidth * 0.055,
                       fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
                   ),
                   SizedBox(height: screenHeight * 0.01),
@@ -186,52 +194,49 @@ class _PillinfoState extends State<Pillinfo> {
                     item['ENTP_NAME'] ?? '업체명 없음',
                     style: TextStyle(
                       fontSize: screenWidth * 0.04,
-                      color: Colors.grey.shade700,
+                      color: Colors.grey.shade600,
                     ),
                   ),
-                  Divider(height: screenHeight * 0.04),
-                  ItemRow('분류명', item['CLASS_NAME']),
-                  ItemRow('성상', item['COLOR_CLASS1']),
-                  ItemRow('모양', item['DRUG_SHAPE']),
-                  ItemRow('표시앞', item['PRINT_FRONT']),
-                  ItemRow('표시뒤', item['PRINT_BACK']),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24.0),
+                    child: Divider(),
+                  ),
+                  _buildDetailRow('분류명', item['CLASS_NAME'], screenWidth),
+                  _buildDetailRow('성상', item['COLOR_CLASS1'], screenWidth),
+                  _buildDetailRow('모양', item['DRUG_SHAPE'], screenWidth),
+                  _buildDetailRow('표시앞', item['PRINT_FRONT'], screenWidth),
+                  _buildDetailRow('표시뒤', item['PRINT_BACK'], screenWidth),
                 ],
               ),
             ),
             if (!widget.isLocal)
               Positioned(
-                left: screenWidth * 0.05,
-                right: screenWidth * 0.05,
+                left: screenWidth * 0.06,
+                right: screenWidth * 0.06,
                 bottom: 20,
                 child: SizedBox(
                   width: double.infinity,
                   height: screenHeight * 0.07,
-                  child: ElevatedButton(
+                  child: FilledButton(
                     onPressed: () async {
                       final TextEditingController stockController =
                           TextEditingController(text: "30");
                       final bool? confirm = await showDialog<bool>(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: Text(
-                            "보유 수량 입력",
-                            style: TextStyle(fontSize: screenWidth * 0.05),
-                          ),
+                          title: const Text("보유 수량 입력", style: TextStyle(fontWeight: FontWeight.bold)),
                           content: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                "현재 가지고 계신 약의 총 수량을 입력해주세요.",
-                                style: TextStyle(fontSize: screenWidth * 0.04),
-                              ),
+                              const Text("보유하고 계신 약의 총 수량을 입력해주세요"),
                               SizedBox(height: screenHeight * 0.02),
                               TextField(
                                 controller: stockController,
                                 keyboardType: TextInputType.number,
                                 style: TextStyle(fontSize: screenWidth * 0.045),
-                                decoration: InputDecoration(
+                                decoration: const InputDecoration(
                                   labelText: "보유 수량",
-                                  suffixText: "정/캡슐",
+                                  suffixText: "정",
                                   border: OutlineInputBorder(),
                                 ),
                               ),
@@ -240,17 +245,11 @@ class _PillinfoState extends State<Pillinfo> {
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context, false),
-                              child: Text(
-                                "취소",
-                                style: TextStyle(fontSize: screenWidth * 0.04),
-                              ),
+                              child: const Text("취소"),
                             ),
-                            ElevatedButton(
+                            FilledButton(
                               onPressed: () => Navigator.pop(context, true),
-                              child: Text(
-                                "추가",
-                                style: TextStyle(fontSize: screenWidth * 0.04),
-                              ),
+                              child: const Text("추가"),
                             ),
                           ],
                         ),
@@ -261,28 +260,23 @@ class _PillinfoState extends State<Pillinfo> {
                         await Controller.addPill(item, stock);
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                '약이 추가되었습니다.',
-                                style: TextStyle(fontSize: screenWidth * 0.04),
-                              ),
+                            const SnackBar(
+                              content: Text('등록되었습니다'),
+                              behavior: SnackBarBehavior.floating,
                             ),
                           );
                           Navigator.pop(context);
                         }
                       }
                     },
-                    style: ElevatedButton.styleFrom(
+                    style: FilledButton.styleFrom(
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(screenWidth * 0.035),
+                        borderRadius: BorderRadius.circular(screenWidth * 0.04),
                       ),
-                      backgroundColor: Color(0xFF2563EB),
-                      foregroundColor: Colors.white,
-                      elevation: 5,
-                      shadowColor: Colors.black26,
+                      backgroundColor: const Color(0xFF2563EB),
                     ),
                     child: Text(
-                      "약 추가하기",
+                      "내 약 상자에 추가",
                       style: TextStyle(
                         fontSize: screenWidth * 0.045,
                         fontWeight: FontWeight.bold,
@@ -293,6 +287,30 @@ class _PillinfoState extends State<Pillinfo> {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, dynamic value, double screenWidth) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: screenWidth * 0.2,
+            child: Text(
+              label,
+              style: TextStyle(fontSize: screenWidth * 0.038, color: Colors.grey.shade500),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              (value ?? '-').toString(),
+              style: TextStyle(fontSize: screenWidth * 0.038, color: Colors.black87, fontWeight: FontWeight.w500),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -4,7 +4,7 @@ import 'package:pillnote/controller/controller.dart';
 class PillGroupEdit extends StatefulWidget {
   final Map<String, dynamic>? group;
 
-  PillGroupEdit({super.key, this.group});
+  const PillGroupEdit({super.key, this.group});
 
   @override
   State<PillGroupEdit> createState() => _PillGroupEditState();
@@ -61,7 +61,7 @@ class _PillGroupEditState extends State<PillGroupEdit> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text("언제 먹을까요?", style: TextStyle(fontWeight: FontWeight.bold)),
+              title: const Text("복용 시간 설정", style: TextStyle(fontWeight: FontWeight.bold)),
               content: SizedBox(
                 width: double.maxFinite,
                 child: Column(
@@ -97,7 +97,7 @@ class _PillGroupEditState extends State<PillGroupEdit> {
                         }
                       },
                       icon: const Icon(Icons.add_circle_outline),
-                      label: const Text("시간 추가하기"),
+                      label: const Text("시간 추가"),
                     ),
                   ],
                 ),
@@ -132,7 +132,7 @@ class _PillGroupEditState extends State<PillGroupEdit> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
-          widget.group == null ? "약 묶음 만들기" : "약 묶음 수정",
+          widget.group == null ? "처방전 묶음 만들기" : "처방전 수정",
           style: TextStyle(fontSize: screenWidth * 0.05, fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -143,9 +143,10 @@ class _PillGroupEditState extends State<PillGroupEdit> {
                 final confirm = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: const Text("묶음을 삭제할까요?"),
+                    title: const Text("묶음 삭제"),
+                    content: const Text("이 처방전 묶음을 삭제하시겠습니까?"),
                     actions: [
-                      TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("아니오")),
+                      TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("취소")),
                       FilledButton(
                         onPressed: () => Navigator.pop(context, true),
                         style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
@@ -156,7 +157,7 @@ class _PillGroupEditState extends State<PillGroupEdit> {
                 );
                 if (confirm == true) {
                   await Controller.removeGroup(widget.group!['id']);
-                  Navigator.pop(context);
+                  if (mounted) Navigator.pop(context);
                 }
               },
             )
@@ -181,7 +182,7 @@ class _PillGroupEditState extends State<PillGroupEdit> {
             ),
           ),
           SizedBox(height: screenHeight * 0.04),
-          _buildLabel("함께 묶을 약 선택", screenWidth),
+          _buildLabel("포함할 약 선택", screenWidth),
           if (pills.isEmpty)
             Container(
               padding: EdgeInsets.all(screenWidth * 0.05),
@@ -190,7 +191,7 @@ class _PillGroupEditState extends State<PillGroupEdit> {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
-                "등록된 약이 없어요. 먼저 약을 등록해주세요.",
+                "등록된 약이 없습니다. 먼저 개별 약을 등록해주세요.",
                 style: TextStyle(fontSize: screenWidth * 0.04, color: Colors.red.shade700),
               ),
             )
@@ -232,7 +233,7 @@ class _PillGroupEditState extends State<PillGroupEdit> {
               ),
             ),
           SizedBox(height: screenHeight * 0.04),
-          _buildLabel("언제 먹을까요?", screenWidth),
+          _buildLabel("복용 일정", screenWidth),
           InkWell(
             onTap: _showScheduleDialog,
             borderRadius: BorderRadius.circular(20),
@@ -289,7 +290,7 @@ class _PillGroupEditState extends State<PillGroupEdit> {
                   return;
                 }
                 if (_selectedPillIds.isEmpty) {
-                  _showError("묶을 약을 최소 하나 이상 선택해주세요");
+                  _showError("최소 하나 이상의 약을 선택해주세요");
                   return;
                 }
                 if (_startDate == null) {

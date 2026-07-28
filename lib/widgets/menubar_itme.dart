@@ -7,7 +7,7 @@ class MenubarItme extends StatelessWidget {
   final List<Widget> pages;
   final List<String> itemName;
 
-  MenubarItme({
+  const MenubarItme({
     super.key,
     required this.title,
     required this.iconsvg,
@@ -17,50 +17,60 @@ class MenubarItme extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    
     Widget iconWidget;
-
     if (iconsvg is IconData) {
-      iconWidget = Icon(iconsvg as IconData, color: Colors.black);
+      iconWidget = Icon(iconsvg as IconData, color: const Color(0xFF2563EB), size: screenWidth * 0.06);
     } else if (iconsvg is String) {
       iconWidget = SvgPicture.asset(
         iconsvg as String,
-        colorFilter: ColorFilter.mode(Colors.black, BlendMode.srcIn),
-        width: 24,
-        height: 24,
+        colorFilter: const ColorFilter.mode(Color(0xFF2563EB), BlendMode.srcIn),
+        width: screenWidth * 0.06,
+        height: screenWidth * 0.06,
       );
     } else {
-      iconWidget = SizedBox.shrink();
+      iconWidget = const SizedBox.shrink();
     }
 
     return Container(
-      padding: .all(20),
+      width: double.infinity,
+      padding: EdgeInsets.all(screenWidth * 0.05),
       decoration: BoxDecoration(
-        color: Color(0xFFF4F5F7),
-        borderRadius: .circular(15),
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.shade100),
       ),
       child: Column(
-        crossAxisAlignment: .start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              iconWidget,
-              SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: iconWidget,
+              ),
+              SizedBox(width: screenWidth * 0.04),
               Text(
                 title,
                 style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 16,
-                  fontWeight: .bold,
+                  color: Colors.black87,
+                  fontSize: screenWidth * 0.045,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
           if (itemName.isNotEmpty) ...[
-            SizedBox(height: 20),
+            SizedBox(height: screenWidth * 0.04),
             ...List.generate(itemName.length, (index) {
               return Column(
                 children: [
-                  GestureDetector(
+                  InkWell(
                     onTap: () {
                       if (index < pages.length) {
                         Navigator.push(
@@ -69,22 +79,23 @@ class MenubarItme extends StatelessWidget {
                         );
                       }
                     },
-                    behavior: .opaque,
+                    borderRadius: BorderRadius.circular(12),
                     child: Padding(
-                      padding: .symmetric(vertical: 8.0),
+                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 4),
                       child: Row(
-                        mainAxisAlignment: .spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             itemName[index],
                             style: TextStyle(
-                              fontSize: 15,
+                              fontSize: screenWidth * 0.04,
                               color: Colors.black87,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                           Icon(
-                            Icons.arrow_forward_ios,
-                            size: 14,
+                            Icons.chevron_right,
+                            size: screenWidth * 0.05,
                             color: Colors.black26,
                           ),
                         ],
@@ -92,7 +103,7 @@ class MenubarItme extends StatelessWidget {
                     ),
                   ),
                   if (index < itemName.length - 1)
-                    Divider(color: Colors.black12, height: 20),
+                    Divider(color: Colors.grey.shade200, height: 1),
                 ],
               );
             }),

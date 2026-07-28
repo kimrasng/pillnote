@@ -91,8 +91,8 @@ class Controller {
     }
   }
 
-  static Future<void> recordIntake(String pillId, String scheduledTime) async {
-    final String date = DateTime.now().toString().split(' ')[0];
+  static Future<void> recordIntake(String pillId, String scheduledTime, {String? date}) async {
+    final String targetDate = date ?? DateTime.now().toString().split(' ')[0];
     final String? jsonString = _prefs.getString(_historyKey);
     
     Map<String, dynamic> fullHistory = {};
@@ -100,14 +100,14 @@ class Controller {
       fullHistory = Map<String, dynamic>.from(jsonDecode(jsonString));
     }
 
-    final List<dynamic> dayHistory = fullHistory[date] ?? [];
+    final List<dynamic> dayHistory = fullHistory[targetDate] ?? [];
     dayHistory.add({
       'pillId': pillId,
       'scheduledTime': scheduledTime,
       'takenAt': DateTime.now().toIso8601String(),
     });
 
-    fullHistory[date] = dayHistory;
+    fullHistory[targetDate] = dayHistory;
     await _prefs.setString(_historyKey, jsonEncode(fullHistory));
 
     final pills = getPills();
@@ -162,29 +162,29 @@ class Controller {
     await _prefs.setString(_groupsKey, jsonEncode(groups));
   }
 
-  static Future<void> recordGroupIntake(String groupId, String scheduledTime) async {
+  static Future<void> recordGroupIntake(String groupId, String scheduledTime, {String? date}) async {
     final groups = getGroups();
     final group = groups.firstWhere((g) => g['id'] == groupId, orElse: () => {});
     if (group.isEmpty) return;
 
     final List<dynamic> pillIds = group['pillIds'] ?? [];
     for (final pillId in pillIds) {
-      await recordIntake(pillId.toString(), scheduledTime);
+      await recordIntake(pillId.toString(), scheduledTime, date: date);
     }
 
-    final String date = DateTime.now().toString().split(' ')[0];
+    final String targetDate = date ?? DateTime.now().toString().split(' ')[0];
     final String? jsonString = _prefs.getString(_historyKey);
     Map<String, dynamic> fullHistory = {};
     if (jsonString != null) {
       fullHistory = Map<String, dynamic>.from(jsonDecode(jsonString));
     }
-    final List<dynamic> dayHistory = fullHistory[date] ?? [];
+    final List<dynamic> dayHistory = fullHistory[targetDate] ?? [];
     dayHistory.add({
       'groupId': groupId,
       'scheduledTime': scheduledTime,
       'takenAt': DateTime.now().toIso8601String(),
     });
-    fullHistory[date] = dayHistory;
+    fullHistory[targetDate] = dayHistory;
     await _prefs.setString(_historyKey, jsonEncode(fullHistory));
   }
 }
