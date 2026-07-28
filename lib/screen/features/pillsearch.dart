@@ -122,14 +122,14 @@ class _PillsearchState extends State<Pillsearch> {
                           "검색 결과가 없습니다.",
                           style: TextStyle(
                             color: Colors.grey,
-                            fontSize: screenWidth * 0.04,
+                            fontSize: screenWidth * 0.045,
                           ),
                         ),
                       )
                     : ListView.separated(
                         itemCount: _searchResults.length,
                         separatorBuilder: (context, index) =>
-                            SizedBox(height: screenHeight * 0.015),
+                            SizedBox(height: screenHeight * 0.02),
                         itemBuilder: (context, index) {
                           final item = _searchResults[index];
                           final imageUrl = item['ITEM_IMAGE'] ?? '';
@@ -147,22 +147,23 @@ class _PillsearchState extends State<Pillsearch> {
                               );
                             },
                             child: Container(
-                              padding: .all(screenWidth * 0.03),
+                              padding: EdgeInsets.all(screenWidth * 0.04),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: .circular(12),
+                                borderRadius: BorderRadius.circular(screenWidth * 0.03),
                                 border: Border.all(color: Colors.grey.shade200),
                               ),
                               child: Row(
-                                crossAxisAlignment: .center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   ClipRRect(
-                                    borderRadius: .circular(8),
+                                    borderRadius: BorderRadius.circular(screenWidth * 0.02),
                                     child: imageUrl.isNotEmpty
                                         ? Image.network(
                                             imageUrl,
                                             width: screenWidth * 0.25,
-                                            fit: .cover,
+                                            height: screenWidth * 0.25,
+                                            fit: BoxFit.cover,
                                             errorBuilder:
                                                 (
                                                   context,
@@ -170,6 +171,7 @@ class _PillsearchState extends State<Pillsearch> {
                                                   stackTrace,
                                                 ) => Container(
                                                   width: screenWidth * 0.25,
+                                                  height: screenWidth * 0.25,
                                                   color: Colors.grey.shade100,
                                                   child: Icon(
                                                     Icons.broken_image,
@@ -180,6 +182,7 @@ class _PillsearchState extends State<Pillsearch> {
                                           )
                                         : Container(
                                             width: screenWidth * 0.25,
+                                            height: screenWidth * 0.25,
                                             color: Colors.grey.shade100,
                                             child: Icon(
                                               Icons.image_not_supported,
@@ -192,17 +195,17 @@ class _PillsearchState extends State<Pillsearch> {
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment:
-                                          .start,
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           item['ITEM_NAME'] ?? '이름 없음',
                                           style: TextStyle(
-                                            fontWeight: .bold,
-                                            fontSize: screenWidth * 0.04,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: screenWidth * 0.045,
                                             color: Colors.black87,
                                           ),
                                           maxLines: 2,
-                                          overflow: .ellipsis,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                         SizedBox(height: screenHeight * 0.005),
                                         Text(
@@ -212,7 +215,7 @@ class _PillsearchState extends State<Pillsearch> {
                                             fontSize: screenWidth * 0.035,
                                           ),
                                           maxLines: 1,
-                                          overflow: .ellipsis,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ],
                                     ),

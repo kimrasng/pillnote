@@ -50,7 +50,7 @@ class _MenuState extends State<Menu> {
                   else
                     SizedBox(
                       width: double.infinity,
-                      height: 56,
+                      height: screenHeight * 0.07,
                       child: ElevatedButton(
                         onPressed: () => Navigator.push(
                           context,
@@ -58,7 +58,7 @@ class _MenuState extends State<Menu> {
                         ),
                         style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
-                            borderRadius: .circular(15),
+                            borderRadius: BorderRadius.circular(screenWidth * 0.035),
                           ),
                           backgroundColor: Color(0xFF2563EB),
                           foregroundColor: Colors.white,
@@ -69,7 +69,7 @@ class _MenuState extends State<Menu> {
                           style: TextStyle(
                             fontFamily: 'Pretendard',
                             fontSize: screenWidth * 0.045,
-                            fontWeight: .bold,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),

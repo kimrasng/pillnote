@@ -22,7 +22,6 @@ class _RegisterState extends State<Register> {
       return;
     }
 
-    // Controller.setOnboardingCompleted(true);
     Navigator.push(
       context,
       MaterialPageRoute<void>(builder: (context) => Verification()),
@@ -69,17 +68,17 @@ class _RegisterState extends State<Register> {
                 children: [
                   SizedBox(height: screenHeight * 0.02),
                   Row(
-                    crossAxisAlignment: .center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
                         "안녕하세요!",
                         style: TextStyle(
                           fontFamily: 'Pretendard',
-                          fontSize: screenWidth * 0.07,
-                          fontWeight: .bold,
+                          fontSize: screenWidth * 0.08,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(width: 8),
+                      SizedBox(width: screenWidth * 0.02),
                       Image.asset(
                         'assets/images/wave.gif',
                         width: screenWidth * 0.1,
@@ -91,8 +90,8 @@ class _RegisterState extends State<Register> {
                     "PillNote에 오신것을 환영합니다.",
                     style: TextStyle(
                       fontFamily: 'Pretendard',
-                      fontSize: screenWidth * 0.06,
-                      fontWeight: .bold,
+                      fontSize: screenWidth * 0.065,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   SizedBox(height: screenHeight * 0.05),
@@ -102,7 +101,7 @@ class _RegisterState extends State<Register> {
                     keyboardType: TextInputType.emailAddress,
                     controller: emailController,
                   ),
-                  SizedBox(height: screenHeight * 0.2), // 버튼 공간 확보
+                  SizedBox(height: screenHeight * 0.2),
                 ],
               ),
             ),

@@ -39,24 +39,43 @@ class _MainState extends State<Main> {
   }
 
   Widget _buildBottomBar() {
-    return NavigationBar(
-      selectedIndex: _currentIndex,
-      onDestinationSelected: (i) => setState(() => _currentIndex = i),
-      backgroundColor: Colors.white,
-      elevation: 0,
-      indicatorColor: Color(0xFF2563EB).withValues(alpha: 0.1),
-      destinations: _navItems.map((item) => NavigationDestination(
-        icon: SvgPicture.asset(
-          item.icon,
-          width: 24,
-          height: 24,
-          colorFilter: ColorFilter.mode(
-              _currentIndex == _navItems.indexOf(item) ? Color(0xFF2563EB) : Colors.black54,
-              BlendMode.srcIn
-          ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          top: BorderSide(color: Colors.grey.shade200, width: 1),
         ),
-        label: item.label,
-      )).toList(),
+      ),
+      child: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (i) => setState(() => _currentIndex = i),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        height: 70,
+        indicatorColor: const Color(0xFF2563EB).withValues(alpha: 0.1),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        destinations: _navItems.map((item) => NavigationDestination(
+          icon: SvgPicture.asset(
+            item.icon,
+            width: 24,
+            height: 24,
+            colorFilter: ColorFilter.mode(
+                Colors.black54,
+                BlendMode.srcIn
+            ),
+          ),
+          selectedIcon: SvgPicture.asset(
+            item.icon,
+            width: 24,
+            height: 24,
+            colorFilter: ColorFilter.mode(
+                const Color(0xFF2563EB),
+                BlendMode.srcIn
+            ),
+          ),
+          label: item.label,
+        )).toList(),
+      ),
     );
   }
 }

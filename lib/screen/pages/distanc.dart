@@ -276,24 +276,34 @@ class _DistancState extends State<Distanc> {
   }
 
   void _showPharmacyInfoList(List<dynamic> items) {
+    final size = MediaQuery.of(context).size;
+    final screenWidth = size.width;
+    final screenHeight = size.height;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
-          height: 250,
-          margin: .all(16),
+          height: screenHeight * 0.35,
+          margin: EdgeInsets.all(screenWidth * 0.04),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: .circular(20),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, spreadRadius: 5)],
+            borderRadius: BorderRadius.circular(screenWidth * 0.05),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 10,
+                spreadRadius: 5,
+              )
+            ],
           ),
           child: PageView.builder(
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];
               return Padding(
-                padding: .all(24),
+                padding: EdgeInsets.all(screenWidth * 0.06),
                 child: Column(
                   mainAxisSize: .min,
                   crossAxisAlignment: .start,
@@ -304,43 +314,71 @@ class _DistancState extends State<Distanc> {
                         Expanded(
                           child: Text(
                             item['yadmNm'] ?? '정보 없음',
-                            style: TextStyle(fontSize: 20, fontWeight: .bold),
-                            overflow: .ellipsis,
+                            style: TextStyle(
+                              fontSize: screenWidth * 0.05,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         if (items.length > 1)
                           Container(
-                            padding: .symmetric(horizontal: 8, vertical: 4),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.02,
+                              vertical: screenHeight * 0.005,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.blue[50],
-                              borderRadius: .circular(12),
+                              borderRadius: BorderRadius.circular(screenWidth * 0.03),
                             ),
-                            child: Text('${index + 1} / ${items.length}', 
-                              style: TextStyle(fontSize: 12, color: Colors.blue, fontWeight: .bold)),
+                            child: Text(
+                              '${index + 1} / ${items.length}',
+                              style: TextStyle(
+                                fontSize: screenWidth * 0.03,
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                       ],
                     ),
-                    SizedBox(height: 16),
+                    SizedBox(height: screenHeight * 0.02),
                     Row(
                       children: [
-                        Icon(Icons.location_on, size: 18, color: Colors.grey),
-                        SizedBox(width: 8),
-                        Expanded(child: Text(item['addr'] ?? '주소 정보 없음', maxLines: 2, overflow: .ellipsis)),
+                        Icon(Icons.location_on, size: screenWidth * 0.045, color: Colors.grey),
+                        SizedBox(width: screenWidth * 0.02),
+                        Expanded(
+                          child: Text(
+                            item['addr'] ?? '주소 정보 없음',
+                            style: TextStyle(fontSize: screenWidth * 0.035),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: screenHeight * 0.01),
                     Row(
                       children: [
-                        Icon(Icons.phone, size: 18, color: Colors.grey),
-                        SizedBox(width: 8),
-                        Text(item['telno'] ?? '전화번호 정보 없음'),
+                        Icon(Icons.phone, size: screenWidth * 0.045, color: Colors.grey),
+                        SizedBox(width: screenWidth * 0.02),
+                        Text(
+                          item['telno'] ?? '전화번호 정보 없음',
+                          style: TextStyle(fontSize: screenWidth * 0.035),
+                        ),
                       ],
                     ),
                     Spacer(),
                     if (items.length > 1)
                       Center(
-                        child: Text('← 좌우로 스와이프하여 다음 약국 보기 →', 
-                          style: TextStyle(color: Colors.grey, fontSize: 12, fontStyle: FontStyle.italic)),
+                        child: Text(
+                          '← 좌우로 스와이프하여 다음 약국 보기 →',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: screenWidth * 0.03,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
                       ),
                   ],
                 ),

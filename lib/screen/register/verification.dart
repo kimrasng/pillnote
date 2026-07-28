@@ -69,17 +69,17 @@ class _VerificationState extends State<Verification> {
                 children: [
                   SizedBox(height: screenHeight * 0.02),
                   Row(
-                    crossAxisAlignment: .center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
                         "안녕하세요!",
                         style: TextStyle(
                           fontFamily: 'Pretendard',
-                          fontSize: screenWidth * 0.07,
-                          fontWeight: .bold,
+                          fontSize: screenWidth * 0.08,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(width: 8),
+                      SizedBox(width: screenWidth * 0.02),
                       Image.asset(
                         'assets/images/wave.gif',
                         width: screenWidth * 0.1,
@@ -91,8 +91,8 @@ class _VerificationState extends State<Verification> {
                     "인증번호를 입력해주세요.",
                     style: TextStyle(
                       fontFamily: 'Pretendard',
-                      fontSize: screenWidth * 0.06,
-                      fontWeight: .bold,
+                      fontSize: screenWidth * 0.065,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   SizedBox(height: screenHeight * 0.05),
@@ -102,7 +102,6 @@ class _VerificationState extends State<Verification> {
                     keyboardType: TextInputType.number,
                     controller: codeController,
                   ),
-                  // 하단 버튼 공간 확보를 위한 여백
                   SizedBox(height: screenHeight * 0.2),
                 ],
               ),

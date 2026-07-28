@@ -26,8 +26,8 @@ class _HomeState extends State<Home> {
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    _startDate = today.subtract(Duration(days: 10));
-    _endDate = today.add(Duration(days: 10));
+    _startDate = today.subtract(const Duration(days: 10));
+    _endDate = today.add(const Duration(days: 10));
 
     _totalDays = _endDate.difference(_startDate).inDays + 1;
     _todayIndex = today.difference(_startDate).inDays;
@@ -43,7 +43,7 @@ class _HomeState extends State<Home> {
     if (!_scrollController.hasClients) return;
 
     final screenWidth = MediaQuery.of(context).size.width;
-    final itemTotalWidth = _itemWidth + (_itemMargin * 2);
+    final itemTotalWidth = (_itemWidth * 1.3) + (_itemMargin * 3);
     double targetOffset =
         (index * itemTotalWidth) - (screenWidth / 2) + (itemTotalWidth / 2);
 
@@ -55,7 +55,7 @@ class _HomeState extends State<Home> {
       if ((_scrollController.offset - targetOffset).abs() < 1.0) return;
       _scrollController.animateTo(
         targetOffset,
-        duration: Duration(milliseconds: 500),
+        duration: const Duration(milliseconds: 500),
         curve: Curves.easeInOut,
       );
     } else {
@@ -77,44 +77,53 @@ class _HomeState extends State<Home> {
     _itemWidth = screenWidth * 0.12;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
             Padding(
-              padding: .all(screenWidth * 0.05),
+              padding: EdgeInsets.all(screenWidth * 0.06),
               child: Row(
-                mainAxisAlignment: .spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Column(
-                    crossAxisAlignment: .start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         "${_selectedDate.year}년 ${_selectedDate.month}월",
                         style: TextStyle(
                           fontSize: screenWidth * 0.04,
-                          color: Colors.grey,
-                          fontWeight: .w500,
+                          color: Colors.black54,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
+                      const SizedBox(height: 4),
                       Text(
-                        "오늘의 복약",
+                        "오늘 먹을 약",
                         style: TextStyle(
-                          fontSize: screenWidth * 0.07,
-                          fontWeight: .bold,
+                          fontSize: screenWidth * 0.075,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
                         ),
                       ),
                     ],
                   ),
-                  IconButton(
-                    onPressed: () {
-                      final now = DateTime.now();
-                      setState(() => _selectedDate = now);
-                      _scrollToIndex(_todayIndex);
-                    },
-                    icon: Icon(
-                      Icons.today,
-                      color: Color(0xFF2563EB),
-                      size: screenWidth * 0.07,
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      onPressed: () {
+                        final now = DateTime.now();
+                        setState(() => _selectedDate = now);
+                        _scrollToIndex(_todayIndex);
+                      },
+                      icon: Icon(
+                        Icons.today_rounded,
+                        color: const Color(0xFF2563EB),
+                        size: screenWidth * 0.07,
+                      ),
                     ),
                   ),
                 ],
@@ -122,11 +131,12 @@ class _HomeState extends State<Home> {
             ),
 
             SizedBox(
-              height: screenHeight * 0.12,
+              height: screenHeight * 0.13,
               child: ListView.builder(
                 controller: _scrollController,
                 scrollDirection: Axis.horizontal,
-                physics: BouncingScrollPhysics(),
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
                 itemCount: _totalDays,
                 itemBuilder: (context, index) {
                   DateTime date = _startDate.add(Duration(days: index));
@@ -146,43 +156,41 @@ class _HomeState extends State<Home> {
                       setState(() => _selectedDate = date);
                       _scrollToIndex(index);
                     },
-                    child: Container(
-                      width: _itemWidth,
-                      margin: .symmetric(horizontal: _itemMargin),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: _itemWidth * 1.3,
+                      margin: EdgeInsets.symmetric(horizontal: _itemMargin * 1.5, vertical: 8),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? Color(0xFF2563EB)
-                            : Colors.white,
-                        borderRadius: .circular(15),
+                            ? const Color(0xFF2563EB)
+                            : (isToday ? const Color(0xFF2563EB).withValues(alpha: 0.05) : Colors.white),
+                        borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isSelected
-                              ? Color(0xFF2563EB)
-                              : (isToday
-                                    ? Color(0xFF2563EB)
-                                    : Colors.grey.shade100),
+                              ? const Color(0xFF2563EB)
+                              : (isToday ? const Color(0xFF2563EB).withValues(alpha: 0.3) : Colors.grey.shade100),
                           width: 1.5,
                         ),
+                        boxShadow: const [],
                       ),
                       child: Column(
-                        mainAxisAlignment: .center,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
                             _weekDays[date.weekday - 1],
                             style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.grey,
-                              fontSize: screenWidth * 0.03,
-                              fontWeight: isSelected
-                                  ? .bold
-                                  : .normal,
+                              color: isSelected ? Colors.white70 : Colors.black38,
+                              fontSize: screenWidth * 0.032,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             ),
                           ),
-                          SizedBox(height: screenHeight * 0.005),
+                          const SizedBox(height: 6),
                           Text(
                             date.day.toString(),
                             style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.black,
-                              fontWeight: .bold,
-                              fontSize: screenWidth * 0.045,
+                              color: isSelected ? Colors.white : Colors.black87,
+                              fontWeight: FontWeight.bold,
+                              fontSize: screenWidth * 0.048,
                             ),
                           ),
                         ],
@@ -194,24 +202,39 @@ class _HomeState extends State<Home> {
             ),
 
             Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: .center,
-                  children: [
-                    Icon(
-                      Icons.medication_liquid,
-                      size: screenWidth * 0.15,
-                      color: Colors.black12,
-                    ),
-                    SizedBox(height: screenHeight * 0.015),
-                    Text(
-                      "해당 날짜의 복약 기록이 없습니다.",
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: screenWidth * 0.035,
+              child: Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(screenWidth * 0.08),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.medication_liquid_outlined,
+                          size: screenWidth * 0.18,
+                          color: Colors.grey.shade200,
+                        ),
                       ),
-                    ),
-                  ],
+                      SizedBox(height: screenHeight * 0.03),
+                      Text(
+                        "오늘 복약 기록이 없어요.",
+                        style: TextStyle(
+                          color: Colors.grey.shade500,
+                          fontSize: screenWidth * 0.042,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

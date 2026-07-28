@@ -43,7 +43,7 @@ class _OnboardingState extends State<Onboarding> {
               Spacer(flex: 2),
               SizedBox(
                 width: double.infinity,
-                height: 60,
+                height: screenHeight * 0.07,
                 child: ElevatedButton(
                   onPressed: () => Navigator.push(
                     context,
@@ -51,7 +51,7 @@ class _OnboardingState extends State<Onboarding> {
                   ),
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
-                      borderRadius: .circular(15),
+                      borderRadius: BorderRadius.circular(screenWidth * 0.035),
                     ),
                     backgroundColor: Color(0xFF2563EB),
                     foregroundColor: Colors.white,
@@ -62,12 +62,12 @@ class _OnboardingState extends State<Onboarding> {
                     style: TextStyle(
                       fontFamily: 'Pretendard',
                       fontSize: screenWidth * 0.05,
-                      fontWeight: .bold,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
-              SizedBox(height: 40),
+              SizedBox(height: screenHeight * 0.05),
             ],
           ),
         ),
