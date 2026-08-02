@@ -70,35 +70,38 @@ class MenubarItme extends StatelessWidget {
             ...List.generate(itemName.length, (index) {
               return Column(
                 children: [
-                  InkWell(
-                    onTap: () {
-                      if (index < pages.length) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => pages[index]),
-                        );
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(12),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 4),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            itemName[index],
-                            style: TextStyle(
-                              fontSize: screenWidth * 0.04,
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w500,
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        if (index < pages.length) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => pages[index]),
+                          );
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 4),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              itemName[index],
+                              style: TextStyle(
+                                fontSize: screenWidth * 0.04,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                          Icon(
-                            Icons.chevron_right,
-                            size: screenWidth * 0.05,
-                            color: Colors.black26,
-                          ),
-                        ],
+                            Icon(
+                              Icons.chevron_right,
+                              size: screenWidth * 0.05,
+                              color: Colors.black26,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

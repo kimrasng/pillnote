@@ -82,6 +82,7 @@ class _HomeState extends State<Home> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      // backgroundColor: Color.(0xFFF8FAFC),
       body: SafeArea(
         child: Column(
           children: [
@@ -491,53 +492,56 @@ class _HomeState extends State<Home> {
     required double screenWidth,
     bool isSmall = false,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: isSmall ? 8 : 12),
-        child: Row(
-          children: [
-            Icon(
-              isTaken ? Icons.check_circle : Icons.radio_button_unchecked,
-              color: isTaken ? const Color(0xFF16A34A) : Colors.grey.shade400,
-              size: isSmall ? screenWidth * 0.06 : screenWidth * 0.07,
-            ),
-            SizedBox(width: screenWidth * 0.03),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: isSmall ? screenWidth * 0.038 : screenWidth * 0.042,
-                      fontWeight: isTaken ? FontWeight.normal : FontWeight.bold,
-                      color: isTaken ? Colors.black38 : Colors.black87,
-                      decoration: isTaken ? TextDecoration.lineThrough : null,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: screenWidth * 0.03,
-                      color: isTaken ? Colors.black26 : Colors.black54,
-                    ),
-                  ),
-                ],
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: isSmall ? 8 : 12),
+          child: Row(
+            children: [
+              Icon(
+                isTaken ? Icons.check_circle : Icons.radio_button_unchecked,
+                color: isTaken ? const Color(0xFF16A34A) : Colors.grey.shade400,
+                size: isSmall ? screenWidth * 0.06 : screenWidth * 0.07,
               ),
-            ),
-            if (isTaken)
-              Text(
-                "기록됨",
-                style: TextStyle(
-                  color: const Color(0xFF16A34A),
-                  fontSize: screenWidth * 0.032,
-                  fontWeight: FontWeight.bold,
+              SizedBox(width: screenWidth * 0.03),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: isSmall ? screenWidth * 0.038 : screenWidth * 0.042,
+                        fontWeight: isTaken ? FontWeight.normal : FontWeight.bold,
+                        color: isTaken ? Colors.black38 : Colors.black87,
+                        decoration: isTaken ? TextDecoration.lineThrough : null,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: screenWidth * 0.03,
+                        color: isTaken ? Colors.black26 : Colors.black54,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-          ],
+              if (isTaken)
+                Text(
+                  "기록됨",
+                  style: TextStyle(
+                    color: const Color(0xFF16A34A),
+                    fontSize: screenWidth * 0.032,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

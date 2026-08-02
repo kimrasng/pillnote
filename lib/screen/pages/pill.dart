@@ -153,7 +153,7 @@ class _PillState extends State<Pill> {
             bottom: screenHeight * 0.015,
           ),
           child: Text(
-            "등록된 개별 약",
+            "등록된 약",
             style: TextStyle(
               fontSize: screenWidth * 0.045,
               fontWeight: FontWeight.bold,
@@ -195,17 +195,15 @@ class _PillState extends State<Pill> {
     double screenWidth,
     double screenHeight,
   ) {
-    return Container(
-      margin: EdgeInsets.only(bottom: screenHeight * 0.015),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFDBEAFE), width: 1),
-      ),
+    return Padding(
+      padding: EdgeInsets.only(bottom: screenHeight * 0.015),
       child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(24),
+        color: const Color(0xFFEFF6FF),
         clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: Color(0xFFDBEAFE), width: 1),
+        ),
         child: ListTile(
           contentPadding: EdgeInsets.all(screenWidth * 0.045),
           leading: Container(
@@ -254,17 +252,15 @@ class _PillState extends State<Pill> {
     double screenWidth,
     double screenHeight,
   ) {
-    return Container(
-      margin: EdgeInsets.only(bottom: screenHeight * 0.015),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFDBEAFE), width: 1),
-      ),
+    return Padding(
+      padding: EdgeInsets.only(bottom: screenHeight * 0.015),
       child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(24),
+        color: const Color(0xFFEFF6FF),
         clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: Color(0xFFDBEAFE), width: 1),
+        ),
         child: ListTile(
           onTap: () async {
             await Navigator.push(
@@ -372,6 +368,7 @@ class _PillState extends State<Pill> {
       ),
     );
   }
+
 
   void _navigateToGroupEdit(
     BuildContext context, {

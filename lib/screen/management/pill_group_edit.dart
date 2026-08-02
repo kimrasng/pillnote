@@ -196,87 +196,97 @@ class _PillGroupEditState extends State<PillGroupEdit> {
               ),
             )
           else
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+            Material(
+              color: const Color(0xFFF8FAFC),
+              clipBehavior: Clip.antiAlias,
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey.shade100),
+                side: BorderSide(color: Colors.grey.shade100),
               ),
               child: Column(
                 children: pills.map((pill) {
                   final isSelected = _selectedPillIds.contains(pill['id']);
-                  return CheckboxListTile(
-                    title: Text(
-                      pill['ITEM_NAME'] ?? '',
-                      style: TextStyle(fontSize: screenWidth * 0.04, fontWeight: FontWeight.bold),
+                  return Material(
+                    color: Colors.transparent,
+                    child: CheckboxListTile(
+                      title: Text(
+                        pill['ITEM_NAME'] ?? '',
+                        style: TextStyle(fontSize: screenWidth * 0.04, fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        pill['ENTP_NAME'] ?? '',
+                        style: TextStyle(fontSize: screenWidth * 0.032),
+                      ),
+                      value: isSelected,
+                      activeColor: const Color(0xFF2563EB),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      onChanged: (val) {
+                        setState(() {
+                          if (val == true) {
+                            _selectedPillIds.add(pill['id']);
+                          } else {
+                            _selectedPillIds.remove(pill['id']);
+                          }
+                        });
+                      },
+                      contentPadding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
+                      controlAffinity: ListTileControlAffinity.leading,
                     ),
-                    subtitle: Text(
-                      pill['ENTP_NAME'] ?? '',
-                      style: TextStyle(fontSize: screenWidth * 0.032),
-                    ),
-                    value: isSelected,
-                    activeColor: const Color(0xFF2563EB),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    onChanged: (val) {
-                      setState(() {
-                        if (val == true) {
-                          _selectedPillIds.add(pill['id']);
-                        } else {
-                          _selectedPillIds.remove(pill['id']);
-                        }
-                      });
-                    },
-                    contentPadding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
-                    controlAffinity: ListTileControlAffinity.leading,
                   );
                 }).toList(),
               ),
             ),
           SizedBox(height: screenHeight * 0.04),
           _buildLabel("복용 일정", screenWidth),
-          InkWell(
-            onTap: _showScheduleDialog,
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              padding: EdgeInsets.all(screenWidth * 0.05),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF0FDF4),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFDCFCE7)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.calendar_today_outlined, color: Color(0xFF16A34A)),
-                  SizedBox(width: screenWidth * 0.04),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (_startDate == null)
-                          Text(
-                            "날짜와 시간을 설정하세요",
-                            style: TextStyle(fontSize: screenWidth * 0.04, color: const Color(0xFF16A34A), fontWeight: FontWeight.bold),
-                          )
-                        else ...[
-                          Text(
-                            "$_startDate ~ $_endDate",
-                            style: TextStyle(
-                              fontSize: screenWidth * 0.04,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF16A34A),
+          Material(
+            color: const Color(0xFFF0FDF4),
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(color: Color(0xFFDCFCE7)),
+            ),
+            child: InkWell(
+              onTap: _showScheduleDialog,
+              child: Container(
+                padding: EdgeInsets.all(screenWidth * 0.05),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today_outlined, color: Color(0xFF16A34A)),
+                    SizedBox(width: screenWidth * 0.04),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_startDate == null)
+                            Text(
+                              "날짜와 시간을 설정하세요",
+                              style: TextStyle(
+                                fontSize: screenWidth * 0.04,
+                                color: const Color(0xFF16A34A),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )
+                          else ...[
+                            Text(
+                              "$_startDate ~ $_endDate",
+                              style: TextStyle(
+                                fontSize: screenWidth * 0.04,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF16A34A),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "시간: ${_times.join(', ')}",
-                            style: TextStyle(fontSize: screenWidth * 0.035, color: Colors.black54),
-                          ),
-                        ]
-                      ],
+                            const SizedBox(height: 4),
+                            Text(
+                              "시간: ${_times.join(', ')}",
+                              style: TextStyle(fontSize: screenWidth * 0.035, color: Colors.black54),
+                            ),
+                          ]
+                        ],
+                      ),
                     ),
-                  ),
-                  const Icon(Icons.edit_calendar_outlined, color: Color(0xFF16A34A), size: 20),
-                ],
+                    const Icon(Icons.edit_calendar_outlined, color: Color(0xFF16A34A), size: 20),
+                  ],
+                ),
               ),
             ),
           ),
