@@ -399,12 +399,23 @@ class _PilmanagementState extends State<Pilmanagement> {
                     height: screenHeight * 0.07,
                     child: FilledButton(
                       onPressed: () async {
+                        final groups = Controller.getGroups();
+                        final linkedGroups = groups.where((g) {
+                          final pillIds = g['pillIds'] as List? ?? [];
+                          return pillIds.contains(pill['id']);
+                        }).toList();
+
                         final confirm = await _showDeleteConfirmDialog(
                           context,
                           screenWidth,
+                          linkedGroups: linkedGroups,
                         );
                         if (confirm == true) {
                           await Controller.removePill(pill['id']);
+                          if (linkedGroups.isNotEmpty) {
+                            await Controller.removePillFromGroups(pill['id']);
+                          }
+
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -489,8 +500,9 @@ class _PilmanagementState extends State<Pilmanagement> {
 
   Future<bool?> _showDeleteConfirmDialog(
     BuildContext context,
-    double screenWidth,
-  ) {
+    double screenWidth, {
+    List<Map<String, dynamic>> linkedGroups = const [],
+  }) {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -501,9 +513,47 @@ class _PilmanagementState extends State<Pilmanagement> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        content: Text(
-          "이 약을 목록에서 삭제하시겠습니까?",
-          style: TextStyle(fontSize: screenWidth * 0.04),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "이 약을 목록에서 삭제하시겠습니까?",
+              style: TextStyle(fontSize: screenWidth * 0.04),
+            ),
+            if (linkedGroups.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.red.shade100),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "주의",
+                      style: TextStyle(
+                        fontSize: screenWidth * 0.035,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red[900],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "이 약은 현재 '${linkedGroups.map((g) => g['name']).join(", ")}' 처방전 묶음에 포함되어 있습니다. 삭제 시 묶음에서도 함께 제외됩니다.",
+                      style: TextStyle(
+                        fontSize: screenWidth * 0.035,
+                        color: Colors.red[700],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
         ),
         actions: [
           TextButton(

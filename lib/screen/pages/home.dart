@@ -515,9 +515,8 @@ class _HomeState extends State<Home> {
                       title,
                       style: TextStyle(
                         fontSize: isSmall ? screenWidth * 0.038 : screenWidth * 0.042,
-                        fontWeight: isTaken ? FontWeight.normal : FontWeight.bold,
-                        color: isTaken ? Colors.black38 : Colors.black87,
-                        decoration: isTaken ? TextDecoration.lineThrough : null,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -533,7 +532,7 @@ class _HomeState extends State<Home> {
               ),
               if (isTaken)
                 Text(
-                  "기록됨",
+                  "복용 완료",
                   style: TextStyle(
                     color: const Color(0xFF16A34A),
                     fontSize: screenWidth * 0.032,

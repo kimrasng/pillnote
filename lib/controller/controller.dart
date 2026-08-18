@@ -78,6 +78,36 @@ class Controller {
     await _prefs.setString(_pillsKey, jsonEncode(pills));
   }
 
+  static Future<void> removePillFromGroups(String pillId) async {
+    final groups = getGroups();
+    bool changed = false;
+    final List<int> indicesToRemove = [];
+
+    for (int i = 0; i < groups.length; i++) {
+      if (groups[i]['pillIds'] is List) {
+        final List pillIds = groups[i]['pillIds'];
+        if (pillIds.contains(pillId)) {
+          pillIds.remove(pillId);
+          changed = true;
+          if (pillIds.isEmpty) {
+            indicesToRemove.add(i);
+          }
+        }
+      }
+    }
+
+    if (indicesToRemove.isNotEmpty) {
+      // 뒤에서부터 삭제해야 인덱스가 꼬이지 않음
+      for (var i in indicesToRemove.reversed) {
+        groups.removeAt(i);
+      }
+    }
+
+    if (changed) {
+      await _prefs.setString(_groupsKey, jsonEncode(groups));
+    }
+  }
+
   static List<Map<String, dynamic>> getHistoryByDate(String date) {
     final String? jsonString = _prefs.getString(_historyKey);
     if (jsonString == null) return [];

@@ -170,11 +170,9 @@ class _PillsearchState extends State<Pillsearch> {
                                             ? Image.network(
                                                 imageUrl,
                                                 width: screenWidth * 0.2,
-                                                height: screenWidth * 0.2,
                                                 fit: BoxFit.cover,
                                                 errorBuilder: (context, error, stackTrace) => Container(
                                                   width: screenWidth * 0.2,
-                                                  height: screenWidth * 0.2,
                                                   color: Colors.grey.shade100,
                                                   child: Icon(
                                                     Icons.broken_image,
@@ -185,7 +183,6 @@ class _PillsearchState extends State<Pillsearch> {
                                               )
                                             : Container(
                                                 width: screenWidth * 0.2,
-                                                height: screenWidth * 0.2,
                                                 color: Colors.grey.shade100,
                                                 child: Icon(
                                                   Icons.image_not_supported,
