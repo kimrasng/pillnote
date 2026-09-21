@@ -25,7 +25,9 @@ class _PillGroupEditState extends State<PillGroupEdit> {
       _selectedPillIds = List<String>.from(widget.group!['pillIds'] ?? []);
       _startDate = widget.group!['startDate'];
       _endDate = widget.group!['endDate'];
-      _times = List<String>.from(widget.group!['times'] ?? ["08:00", "13:00", "19:00"]);
+      _times = List<String>.from(
+        widget.group!['times'] ?? ["08:00", "13:00", "19:00"],
+      );
     }
   }
 
@@ -43,7 +45,9 @@ class _PillGroupEditState extends State<PillGroupEdit> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2563EB)),
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF2563EB),
+            ),
           ),
           child: child!,
         );
@@ -61,7 +65,10 @@ class _PillGroupEditState extends State<PillGroupEdit> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text("복용 시간 설정", style: TextStyle(fontWeight: FontWeight.bold)),
+              title: const Text(
+                "복용 시간 설정",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               content: SizedBox(
                 width: double.maxFinite,
                 child: Column(
@@ -73,10 +80,20 @@ class _PillGroupEditState extends State<PillGroupEdit> {
                         itemCount: tempTimes.length,
                         itemBuilder: (context, index) {
                           return ListTile(
-                            title: Text(tempTimes[index], style: const TextStyle(fontWeight: FontWeight.bold)),
+                            title: Text(
+                              tempTimes[index],
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                             trailing: IconButton(
-                              icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
-                              onPressed: () => setDialogState(() => tempTimes.removeAt(index)),
+                              icon: const Icon(
+                                Icons.remove_circle_outline,
+                                color: Colors.redAccent,
+                              ),
+                              onPressed: () => setDialogState(
+                                () => tempTimes.removeAt(index),
+                              ),
                             ),
                           );
                         },
@@ -85,9 +102,13 @@ class _PillGroupEditState extends State<PillGroupEdit> {
                     const Divider(),
                     TextButton.icon(
                       onPressed: () async {
-                        TimeOfDay? pickedTime = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+                        TimeOfDay? pickedTime = await showTimePicker(
+                          context: context,
+                          initialTime: TimeOfDay.now(),
+                        );
                         if (pickedTime != null) {
-                          final String formatted = "${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}";
+                          final String formatted =
+                              "${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}";
                           if (!tempTimes.contains(formatted)) {
                             setDialogState(() {
                               tempTimes.add(formatted);
@@ -103,8 +124,14 @@ class _PillGroupEditState extends State<PillGroupEdit> {
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(context), child: const Text("취소")),
-                FilledButton(onPressed: () => Navigator.pop(context, tempTimes), child: const Text("확인")),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("취소"),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(context, tempTimes),
+                  child: const Text("확인"),
+                ),
               ],
             );
           },
@@ -133,12 +160,19 @@ class _PillGroupEditState extends State<PillGroupEdit> {
       appBar: AppBar(
         title: Text(
           widget.group == null ? "처방전 묶음 만들기" : "처방전 수정",
-          style: TextStyle(fontSize: screenWidth * 0.05, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: screenWidth * 0.05,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
           if (widget.group != null)
             IconButton(
-              icon: Icon(Icons.delete_outline, color: Colors.redAccent, size: screenWidth * 0.06),
+              icon: Icon(
+                Icons.delete_outline,
+                color: Colors.redAccent,
+                size: screenWidth * 0.06,
+              ),
               onPressed: () async {
                 final confirm = await showDialog<bool>(
                   context: context,
@@ -146,10 +180,15 @@ class _PillGroupEditState extends State<PillGroupEdit> {
                     title: const Text("묶음 삭제"),
                     content: const Text("이 처방전 묶음을 삭제하시겠습니까?"),
                     actions: [
-                      TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("취소")),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text("취소"),
+                      ),
                       FilledButton(
                         onPressed: () => Navigator.pop(context, true),
-                        style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                        ),
                         child: const Text("삭제"),
                       ),
                     ],
@@ -157,10 +196,10 @@ class _PillGroupEditState extends State<PillGroupEdit> {
                 );
                 if (confirm == true) {
                   await Controller.removeGroup(widget.group!['id']);
-                  if (mounted) Navigator.pop(context);
+                  if (context.mounted) Navigator.pop(context);
                 }
               },
-            )
+            ),
         ],
       ),
       body: ListView(
@@ -192,7 +231,10 @@ class _PillGroupEditState extends State<PillGroupEdit> {
               ),
               child: Text(
                 "등록된 약이 없습니다. 먼저 개별 약을 등록해주세요.",
-                style: TextStyle(fontSize: screenWidth * 0.04, color: Colors.red.shade700),
+                style: TextStyle(
+                  fontSize: screenWidth * 0.04,
+                  color: Colors.red.shade700,
+                ),
               ),
             )
           else
@@ -211,7 +253,10 @@ class _PillGroupEditState extends State<PillGroupEdit> {
                     child: CheckboxListTile(
                       title: Text(
                         pill['ITEM_NAME'] ?? '',
-                        style: TextStyle(fontSize: screenWidth * 0.04, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: screenWidth * 0.04,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       subtitle: Text(
                         pill['ENTP_NAME'] ?? '',
@@ -219,7 +264,9 @@ class _PillGroupEditState extends State<PillGroupEdit> {
                       ),
                       value: isSelected,
                       activeColor: const Color(0xFF2563EB),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       onChanged: (val) {
                         setState(() {
                           if (val == true) {
@@ -229,7 +276,9 @@ class _PillGroupEditState extends State<PillGroupEdit> {
                           }
                         });
                       },
-                      contentPadding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.04,
+                      ),
                       controlAffinity: ListTileControlAffinity.leading,
                     ),
                   );
@@ -251,7 +300,10 @@ class _PillGroupEditState extends State<PillGroupEdit> {
                 padding: EdgeInsets.all(screenWidth * 0.05),
                 child: Row(
                   children: [
-                    const Icon(Icons.calendar_today_outlined, color: Color(0xFF16A34A)),
+                    const Icon(
+                      Icons.calendar_today_outlined,
+                      color: Color(0xFF16A34A),
+                    ),
                     SizedBox(width: screenWidth * 0.04),
                     Expanded(
                       child: Column(
@@ -278,13 +330,20 @@ class _PillGroupEditState extends State<PillGroupEdit> {
                             const SizedBox(height: 4),
                             Text(
                               "시간: ${_times.join(', ')}",
-                              style: TextStyle(fontSize: screenWidth * 0.035, color: Colors.black54),
+                              style: TextStyle(
+                                fontSize: screenWidth * 0.035,
+                                color: Colors.black54,
+                              ),
                             ),
-                          ]
+                          ],
                         ],
                       ),
                     ),
-                    const Icon(Icons.edit_calendar_outlined, color: Color(0xFF16A34A), size: 20),
+                    const Icon(
+                      Icons.edit_calendar_outlined,
+                      color: Color(0xFF16A34A),
+                      size: 20,
+                    ),
                   ],
                 ),
               ),
@@ -318,11 +377,13 @@ class _PillGroupEditState extends State<PillGroupEdit> {
                 };
 
                 await Controller.saveGroup(groupData);
-                if (mounted) Navigator.pop(context);
+                if (context.mounted) Navigator.pop(context);
               },
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF2563EB),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
               ),
               child: Text(
                 "저장하기",

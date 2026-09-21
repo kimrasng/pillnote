@@ -18,10 +18,14 @@ class MenubarItme extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    
+
     Widget iconWidget;
     if (iconsvg is IconData) {
-      iconWidget = Icon(iconsvg as IconData, color: const Color(0xFF2563EB), size: screenWidth * 0.06);
+      iconWidget = Icon(
+        iconsvg as IconData,
+        color: const Color(0xFF2563EB),
+        size: screenWidth * 0.06,
+      );
     } else if (iconsvg is String) {
       iconWidget = SvgPicture.asset(
         iconsvg as String,
@@ -77,13 +81,18 @@ class MenubarItme extends StatelessWidget {
                         if (index < pages.length) {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => pages[index]),
+                            MaterialPageRoute(
+                              builder: (context) => pages[index],
+                            ),
                           );
                         }
                       },
                       borderRadius: BorderRadius.circular(12),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 4),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12.0,
+                          horizontal: 4,
+                        ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [

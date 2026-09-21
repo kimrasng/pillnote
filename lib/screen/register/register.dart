@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pillnote/controller/controller.dart';
 import 'package:pillnote/screen/main.dart';
 import 'package:pillnote/screen/register/verification.dart';
+import 'package:pillnote/services/api_client.dart';
 import 'package:pillnote/widgets/custom_text_field.dart';
 
 class Register extends StatefulWidget {
@@ -13,26 +14,50 @@ class Register extends StatefulWidget {
 
 class _RegisterState extends State<Register> {
   final emailController = TextEditingController();
+  bool _isLoading = false;
 
-  void _handleRegister() {
-    if (emailController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("이메일을 입력해주세요")),
-      );
+  Future<void> _handleRegister() async {
+    final email = emailController.text.trim().toLowerCase();
+    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('올바른 이메일을 입력해주세요.')));
       return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute<void>(builder: (context) => const Verification()),
-    );
+    setState(() => _isLoading = true);
+    try {
+      final debugCode = await ApiClient.instance.startEmailLogin(email);
+      if (!mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (context) =>
+              Verification(email: email, debugCode: debugCode),
+        ),
+      );
+    } on ApiException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('서버에 연결할 수 없습니다.')));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   void _startWithoutLogin() {
     Controller.setOnboardingCompleted(true);
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute<void>(builder: (context) => Main()),
+      MaterialPageRoute<void>(builder: (context) => const Main()),
       (route) => false,
     );
   }
@@ -95,21 +120,29 @@ class _RegisterState extends State<Register> {
                 width: double.infinity,
                 height: screenHeight * 0.07,
                 child: FilledButton(
-                  onPressed: _handleRegister,
+                  onPressed: _isLoading ? null : _handleRegister,
                   style: FilledButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(screenWidth * 0.04),
                     ),
                     backgroundColor: const Color(0xFF2563EB),
                   ),
-                  child: Text(
-                    "계속하기",
-                    style: TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: screenWidth * 0.045,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox.square(
+                          dimension: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          '인증번호 받기',
+                          style: TextStyle(
+                            fontFamily: 'Pretendard',
+                            fontSize: screenWidth * 0.045,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 12),

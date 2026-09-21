@@ -39,7 +39,7 @@ class _PilmanagementState extends State<Pilmanagement> {
     );
 
     if (pickedRange == null) return;
-    if (!mounted) return;
+    if (!context.mounted) return;
 
     final TextEditingController dosageController = TextEditingController(
       text: (widget.pill['dosage'] ?? 1.0).toString(),
@@ -187,6 +187,7 @@ class _PilmanagementState extends State<Pilmanagement> {
         result['times'],
         result['dosage'],
       );
+      if (!context.mounted) return;
 
       setState(() {
         widget.pill['startDate'] = pickedRange.start.toString().split(' ')[0];
@@ -195,17 +196,15 @@ class _PilmanagementState extends State<Pilmanagement> {
         widget.pill['dosage'] = result['dosage'];
       });
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text("복용 일정이 저장되었습니다."),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text("복용 일정이 저장되었습니다."),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-        );
-      }
+        ),
+      );
     }
   }
 
@@ -415,19 +414,17 @@ class _PilmanagementState extends State<Pilmanagement> {
                           if (linkedGroups.isNotEmpty) {
                             await Controller.removePillFromGroups(pill['id']);
                           }
-
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: const Text("삭제되었습니다."),
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text("삭제되었습니다."),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                            );
-                            Navigator.pop(context);
-                          }
+                            ),
+                          );
+                          Navigator.pop(context);
                         }
                       },
                       style: FilledButton.styleFrom(

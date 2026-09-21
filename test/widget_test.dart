@@ -1,26 +1,34 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:pillnote/controller/controller.dart';
 import 'package:pillnote/main.dart';
+import 'package:pillnote/screen/register/register.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    await tester.pumpWidget(MyApp());
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    await Controller.init();
+  });
 
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  testWidgets('onboarding opens the email-only login flow', (tester) async {
+    await tester.pumpWidget(const MyApp());
 
-    await tester.tap(find.byIcon(Icons.add));
+    expect(find.text('복약 관리의 시작\nPillNote'), findsOneWidget);
+    await tester.tap(find.text('시작하기'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('로그인'), findsOneWidget);
+    expect(find.text('이메일 주소'), findsOneWidget);
+    expect(find.text('인증번호 받기'), findsOneWidget);
+  });
+
+  testWidgets('login validates an empty email without contacting the server', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: Register()));
+    await tester.tap(find.text('인증번호 받기'));
     await tester.pump();
-
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('올바른 이메일을 입력해주세요.'), findsOneWidget);
   });
 }

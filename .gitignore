@@ -46,3 +46,8 @@ app.*.map.json
 **/build/
 
 .env
+.dev.vars
+**/.dev.vars
+**/.wrangler/
+**/node_modules/
+app_config.local.json

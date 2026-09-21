@@ -111,7 +111,12 @@ class _HomeState extends State<Home> {
 
   Widget _buildHeader(double screenWidth, double screenHeight) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(screenWidth * 0.06, screenWidth * 0.06, screenWidth * 0.06, screenWidth * 0.04),
+      padding: EdgeInsets.fromLTRB(
+        screenWidth * 0.06,
+        screenWidth * 0.06,
+        screenWidth * 0.06,
+        screenWidth * 0.04,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -198,15 +203,15 @@ class _HomeState extends State<Home> {
                 color: isSelected
                     ? const Color(0xFF2563EB)
                     : (isToday
-                        ? const Color(0xFF2563EB).withValues(alpha: 0.05)
-                        : Colors.white),
+                          ? const Color(0xFF2563EB).withValues(alpha: 0.05)
+                          : Colors.white),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isSelected
                       ? const Color(0xFF2563EB)
                       : (isToday
-                          ? const Color(0xFF2563EB).withValues(alpha: 0.3)
-                          : Colors.grey.shade100),
+                            ? const Color(0xFF2563EB).withValues(alpha: 0.3)
+                            : Colors.grey.shade100),
                   width: 1.5,
                 ),
               ),
@@ -218,8 +223,9 @@ class _HomeState extends State<Home> {
                     style: TextStyle(
                       color: isSelected ? Colors.white70 : Colors.black38,
                       fontSize: screenWidth * 0.032,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -266,14 +272,20 @@ class _HomeState extends State<Home> {
     for (var pill in activePills) {
       final times = pill['times'] as List? ?? [];
       for (var time in times) {
-        timeGroups.putIfAbsent(time.toString(), () => []).add({'type': 'pill', 'data': pill});
+        timeGroups.putIfAbsent(time.toString(), () => []).add({
+          'type': 'pill',
+          'data': pill,
+        });
       }
     }
 
     for (var group in activeGroups) {
       final times = group['times'] as List? ?? [];
       for (var time in times) {
-        timeGroups.putIfAbsent(time.toString(), () => []).add({'type': 'group', 'data': group});
+        timeGroups.putIfAbsent(time.toString(), () => []).add({
+          'type': 'group',
+          'data': group,
+        });
       }
     }
 
@@ -321,7 +333,15 @@ class _HomeState extends State<Home> {
       itemBuilder: (context, index) {
         final time = sortedTimes[index];
         final items = timeGroups[time]!;
-        return _buildTimeSlotCard(time, items, history, pills, dateStr, screenWidth, screenHeight);
+        return _buildTimeSlotCard(
+          time,
+          items,
+          history,
+          pills,
+          dateStr,
+          screenWidth,
+          screenHeight,
+        );
       },
     );
   }
@@ -346,10 +366,19 @@ class _HomeState extends State<Home> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.fromLTRB(screenWidth * 0.06, screenWidth * 0.05, screenWidth * 0.06, 0),
+            padding: EdgeInsets.fromLTRB(
+              screenWidth * 0.06,
+              screenWidth * 0.05,
+              screenWidth * 0.06,
+              0,
+            ),
             child: Row(
               children: [
-                Icon(Icons.access_time_filled, color: const Color(0xFF2563EB), size: screenWidth * 0.05),
+                Icon(
+                  Icons.access_time_filled,
+                  color: const Color(0xFF2563EB),
+                  size: screenWidth * 0.05,
+                ),
                 SizedBox(width: screenWidth * 0.02),
                 Text(
                   "$time 복용",
@@ -365,11 +394,26 @@ class _HomeState extends State<Home> {
           const Divider(height: 32, indent: 24, endIndent: 24),
           ...items.map((item) {
             if (item['type'] == 'pill') {
-              return _buildIndividualPillRow(item['data'], time, dateStr, history, screenWidth, screenHeight);
+              return _buildIndividualPillRow(
+                item['data'],
+                time,
+                dateStr,
+                history,
+                screenWidth,
+                screenHeight,
+              );
             } else {
-              return _buildGroupPillBlock(item['data'], time, dateStr, history, allPills, screenWidth, screenHeight);
+              return _buildGroupPillBlock(
+                item['data'],
+                time,
+                dateStr,
+                history,
+                allPills,
+                screenWidth,
+                screenHeight,
+              );
             }
-          }).toList(),
+          }),
           SizedBox(height: screenHeight * 0.02),
         ],
       ),
@@ -384,9 +428,14 @@ class _HomeState extends State<Home> {
     double screenWidth,
     double screenHeight,
   ) {
-    final isTaken = history.any((h) => h['pillId'] == pill['id'] && h['scheduledTime'] == time);
+    final isTaken = history.any(
+      (h) => h['pillId'] == pill['id'] && h['scheduledTime'] == time,
+    );
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: screenHeight * 0.005),
+      padding: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.04,
+        vertical: screenHeight * 0.005,
+      ),
       child: _buildCheckItem(
         title: pill['ITEM_NAME'] ?? '약',
         subtitle: "1회 ${pill['dosage'] ?? 1.0}정",
@@ -417,16 +466,27 @@ class _HomeState extends State<Home> {
     double screenHeight,
   ) {
     final List<dynamic> pillIds = group['pillIds'] ?? [];
-    final takenCount = pillIds.where((pid) => history.any((h) => h['pillId'] == pid.toString() && h['scheduledTime'] == time)).length;
+    final takenCount = pillIds
+        .where(
+          (pid) => history.any(
+            (h) => h['pillId'] == pid.toString() && h['scheduledTime'] == time,
+          ),
+        )
+        .length;
     final allTaken = takenCount == pillIds.length;
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: screenHeight * 0.01),
+      margin: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.04,
+        vertical: screenHeight * 0.01,
+      ),
       padding: EdgeInsets.all(screenWidth * 0.03),
       decoration: BoxDecoration(
         color: allTaken ? const Color(0xFFF0FDF4) : const Color(0xFFEFF6FF),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: allTaken ? const Color(0xFFBBF7D0) : const Color(0xFFDBEAFE)),
+        border: Border.all(
+          color: allTaken ? const Color(0xFFBBF7D0) : const Color(0xFFDBEAFE),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -441,7 +501,9 @@ class _HomeState extends State<Home> {
                   style: TextStyle(
                     fontSize: screenWidth * 0.04,
                     fontWeight: FontWeight.bold,
-                    color: allTaken ? const Color(0xFF16A34A) : const Color(0xFF1E3A8A),
+                    color: allTaken
+                        ? const Color(0xFF16A34A)
+                        : const Color(0xFF1E3A8A),
                   ),
                 ),
                 if (pillIds.isNotEmpty)
@@ -450,16 +512,23 @@ class _HomeState extends State<Home> {
                     style: TextStyle(
                       fontSize: screenWidth * 0.03,
                       fontWeight: FontWeight.bold,
-                      color: allTaken ? const Color(0xFF16A34A) : Colors.black45,
+                      color: allTaken
+                          ? const Color(0xFF16A34A)
+                          : Colors.black45,
                     ),
                   ),
               ],
             ),
           ),
           ...pillIds.map((pid) {
-            final pill = allPills.firstWhere((p) => p['id'] == pid.toString(), orElse: () => {});
+            final pill = allPills.firstWhere(
+              (p) => p['id'] == pid.toString(),
+              orElse: () => {},
+            );
             if (pill.isEmpty) return const SizedBox.shrink();
-            final isTaken = history.any((h) => h['pillId'] == pill['id'] && h['scheduledTime'] == time);
+            final isTaken = history.any(
+              (h) => h['pillId'] == pill['id'] && h['scheduledTime'] == time,
+            );
             return _buildCheckItem(
               title: pill['ITEM_NAME'] ?? '약',
               subtitle: "1회 ${pill['dosage'] ?? 1.0}정",
@@ -478,7 +547,7 @@ class _HomeState extends State<Home> {
               screenWidth: screenWidth,
               isSmall: true,
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -498,7 +567,10 @@ class _HomeState extends State<Home> {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: isSmall ? 8 : 12),
+          padding: EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: isSmall ? 8 : 12,
+          ),
           child: Row(
             children: [
               Icon(
@@ -514,7 +586,9 @@ class _HomeState extends State<Home> {
                     Text(
                       title,
                       style: TextStyle(
-                        fontSize: isSmall ? screenWidth * 0.038 : screenWidth * 0.042,
+                        fontSize: isSmall
+                            ? screenWidth * 0.038
+                            : screenWidth * 0.042,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),

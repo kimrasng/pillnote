@@ -1,14 +1,13 @@
-import 'dart:convert';
 import 'dart:async';
+
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:http/http.dart' as http;
-import 'package:geolocator/geolocator.dart';
+import 'package:pillnote/services/api_client.dart';
 
 class Distanc extends StatefulWidget {
-  Distanc({super.key});
+  const Distanc({super.key});
 
   @override
   State<Distanc> createState() => _DistancState();
@@ -17,12 +16,10 @@ class Distanc extends StatefulWidget {
 class _DistancState extends State<Distanc> {
   final MapController _mapController = MapController();
   List<Marker> _markers = [];
-  List<dynamic> _allPharmacies = [];
+  List<Map<String, dynamic>> _allPharmacies = [];
   double _lastClusteredZoom = 0;
   bool _isLoading = false;
   Timer? _debounceTimer;
-
-  final String _apiKey = dotenv.get('API_KEY');
 
   @override
   void initState() {
@@ -43,9 +40,9 @@ class _DistancState extends State<Distanc> {
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('위치 서비스가 비활성화되어 있습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('위치 서비스가 비활성화되어 있습니다.')));
       }
       _fetchPharmacies(37.5665, 126.9780);
       return;
@@ -56,9 +53,9 @@ class _DistancState extends State<Distanc> {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('위치 권한이 거부되었습니다.')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('위치 권한이 거부되었습니다.')));
         }
         _fetchPharmacies(37.5665, 126.9780);
         return;
@@ -67,9 +64,9 @@ class _DistancState extends State<Distanc> {
 
     if (permission == LocationPermission.deniedForever) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('위치 권한이 영구적으로 거부되었습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('위치 권한이 영구적으로 거부되었습니다.')));
       }
       _fetchPharmacies(37.5665, 126.9780);
       return;
@@ -78,7 +75,10 @@ class _DistancState extends State<Distanc> {
     try {
       final position = await Geolocator.getCurrentPosition();
       if (mounted) {
-        _mapController.move(LatLng(position.latitude, position.longitude), 14.0);
+        _mapController.move(
+          LatLng(position.latitude, position.longitude),
+          14.0,
+        );
         _fetchPharmacies(position.latitude, position.longitude);
       }
     } catch (e) {
@@ -90,56 +90,29 @@ class _DistancState extends State<Distanc> {
   }
 
   Future<void> _fetchPharmacies(double lat, double lng) async {
-    if (_apiKey.isEmpty) {
-      debugPrint('API_KEY가 설정되지 않았습니다.');
-      return;
-    }
-
     if (!mounted) return;
     setState(() => _isLoading = true);
 
-    final String urlString = 'https://apis.data.go.kr/B551182/pharmacyInfoService/getParmacyBasisList'
-        '?serviceKey=$_apiKey'
-        '&_type=json'
-        '&xPos=$lng'
-        '&yPos=$lat'
-        '&radius=3000'
-        '&numOfRows=100';
-
     try {
-      final url = Uri.parse(urlString);
-      final response = await http.get(url);
-      final decodedBody = utf8.decode(response.bodyBytes);
-
-      if (response.statusCode == 200) {
-        if (decodedBody.trim().startsWith('<')) {
-          if (decodedBody.contains('SERVICE_KEY_IS_NOT_REGISTERED')) {
-            throw Exception('SERVICE_KEY_IS_NOT_REGISTERED_ERROR');
-          }
-          throw FormatException('API 응답 오류');
-        }
-
-        final data = json.decode(decodedBody);
-        final body = data['response']?['body'];
-        if (body == null || body['items'] == null || body['items'] == "") {
-           _allPharmacies = [];
-           _updateMarkers(_mapController.camera.zoom, force: true);
-           return;
-        }
-
-        final itemList = body['items']['item'];
-        List<dynamic> list = [];
-        if (itemList is List) {
-          list = itemList;
-        } else if (itemList is Map) {
-          list = [itemList];
-        }
-
-        _allPharmacies = list;
-        _updateMarkers(_mapController.camera.zoom, force: true);
+      _allPharmacies = await ApiClient.instance.searchPharmacies(
+        latitude: lat,
+        longitude: lng,
+      );
+      _updateMarkers(_mapController.camera.zoom, force: true);
+    } on ApiException catch (error) {
+      debugPrint('Pharmacy API error: ${error.code}');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
       }
-    } catch (e) {
-      debugPrint('Error: $e');
+    } catch (error) {
+      debugPrint('Pharmacy search error: $error');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('약국 정보를 불러오지 못했습니다.')));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -161,32 +134,32 @@ class _DistancState extends State<Distanc> {
       setState(() => _markers = []);
       return;
     }
-    
+
     if (!force && (zoom - _lastClusteredZoom).abs() < 0.1) return;
     _lastClusteredZoom = zoom;
 
     final double threshold = _getClusterThreshold(zoom);
-    final List<List<dynamic>> clusters = [];
+    final List<List<Map<String, dynamic>>> clusters = [];
 
     for (var pharmacy in _allPharmacies) {
-      final double lat = double.tryParse((pharmacy['YPos'] ?? pharmacy['yPos'] ?? '0').toString()) ?? 0;
-      final double lng = double.tryParse((pharmacy['XPos'] ?? pharmacy['xPos'] ?? '0').toString()) ?? 0;
-      
+      final double lat = (pharmacy['latitude'] as num?)?.toDouble() ?? 0;
+      final double lng = (pharmacy['longitude'] as num?)?.toDouble() ?? 0;
+
       if (lat == 0 || lng == 0) continue;
 
       bool addedToCluster = false;
       for (var cluster in clusters) {
         final first = cluster.first;
-        final double cLat = double.parse((first['YPos'] ?? first['yPos'] ?? '0').toString());
-        final double cLng = double.parse((first['XPos'] ?? first['xPos'] ?? '0').toString());
-        
+        final double cLat = (first['latitude'] as num).toDouble();
+        final double cLng = (first['longitude'] as num).toDouble();
+
         if ((lat - cLat).abs() + (lng - cLng).abs() < threshold) {
           cluster.add(pharmacy);
           addedToCluster = true;
           break;
         }
       }
-      
+
       if (!addedToCluster) {
         clusters.add([pharmacy]);
       }
@@ -194,8 +167,8 @@ class _DistancState extends State<Distanc> {
 
     final List<Marker> newMarkers = clusters.map((pharmacyList) {
       final first = pharmacyList.first;
-      final pLat = double.parse((first['YPos'] ?? first['yPos'] ?? '0').toString());
-      final pLng = double.parse((first['XPos'] ?? first['xPos'] ?? '0').toString());
+      final pLat = (first['latitude'] as num).toDouble();
+      final pLng = (first['longitude'] as num).toDouble();
 
       final bool isSingle = pharmacyList.length == 1;
       final bool showName = isSingle && zoom > 16.5;
@@ -218,12 +191,21 @@ class _DistancState extends State<Distanc> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: .circular(12),
-                    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
-                    border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3), width: 1),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black26, blurRadius: 4),
+                    ],
+                    border: Border.all(
+                      color: Colors.redAccent.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
                   ),
                   child: Text(
-                    first['yadmNm'] ?? '',
-                    style: TextStyle(fontSize: 10, fontWeight: .bold, color: Colors.black87),
+                    first['name'] ?? '',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: .bold,
+                      color: Colors.black87,
+                    ),
                     overflow: .ellipsis,
                     maxLines: 1,
                   ),
@@ -246,9 +228,14 @@ class _DistancState extends State<Distanc> {
                           color: Colors.red,
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 1.5),
-                          boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 2)],
+                          boxShadow: [
+                            BoxShadow(color: Colors.black26, blurRadius: 2),
+                          ],
                         ),
-                        constraints: BoxConstraints(minWidth: 20, minHeight: 20),
+                        constraints: BoxConstraints(
+                          minWidth: 20,
+                          minHeight: 20,
+                        ),
                         child: Center(
                           child: Text(
                             '${pharmacyList.length}',
@@ -275,7 +262,7 @@ class _DistancState extends State<Distanc> {
     });
   }
 
-  void _showPharmacyInfoList(List<dynamic> items) {
+  void _showPharmacyInfoList(List<Map<String, dynamic>> items) {
     final size = MediaQuery.of(context).size;
     final screenWidth = size.width;
     final screenHeight = size.height;
@@ -295,7 +282,7 @@ class _DistancState extends State<Distanc> {
                 color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 10,
                 spreadRadius: 5,
-              )
+              ),
             ],
           ),
           child: PageView.builder(
@@ -313,7 +300,7 @@ class _DistancState extends State<Distanc> {
                       children: [
                         Expanded(
                           child: Text(
-                            item['yadmNm'] ?? '정보 없음',
+                            item['name'] ?? '정보 없음',
                             style: TextStyle(
                               fontSize: screenWidth * 0.05,
                               fontWeight: FontWeight.bold,
@@ -329,7 +316,9 @@ class _DistancState extends State<Distanc> {
                             ),
                             decoration: BoxDecoration(
                               color: Colors.blue[50],
-                              borderRadius: BorderRadius.circular(screenWidth * 0.03),
+                              borderRadius: BorderRadius.circular(
+                                screenWidth * 0.03,
+                              ),
                             ),
                             child: Text(
                               '${index + 1} / ${items.length}',
@@ -345,11 +334,15 @@ class _DistancState extends State<Distanc> {
                     SizedBox(height: screenHeight * 0.02),
                     Row(
                       children: [
-                        Icon(Icons.location_on, size: screenWidth * 0.045, color: Colors.grey),
+                        Icon(
+                          Icons.location_on,
+                          size: screenWidth * 0.045,
+                          color: Colors.grey,
+                        ),
                         SizedBox(width: screenWidth * 0.02),
                         Expanded(
                           child: Text(
-                            item['addr'] ?? '주소 정보 없음',
+                            item['address'] ?? '주소 정보 없음',
                             style: TextStyle(fontSize: screenWidth * 0.035),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -360,10 +353,14 @@ class _DistancState extends State<Distanc> {
                     SizedBox(height: screenHeight * 0.01),
                     Row(
                       children: [
-                        Icon(Icons.phone, size: screenWidth * 0.045, color: Colors.grey),
+                        Icon(
+                          Icons.phone,
+                          size: screenWidth * 0.045,
+                          color: Colors.grey,
+                        ),
                         SizedBox(width: screenWidth * 0.02),
                         Text(
-                          item['telno'] ?? '전화번호 정보 없음',
+                          item['phone'] ?? '전화번호 정보 없음',
                           style: TextStyle(fontSize: screenWidth * 0.035),
                         ),
                       ],
@@ -394,7 +391,6 @@ class _DistancState extends State<Distanc> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final screenWidth = size.width;
-    final screenHeight = size.height;
 
     return Scaffold(
       appBar: AppBar(
@@ -423,7 +419,10 @@ class _DistancState extends State<Distanc> {
                     _updateMarkers(camera.zoom);
                     _debounceTimer?.cancel();
                     _debounceTimer = Timer(Duration(milliseconds: 600), () {
-                      _fetchPharmacies(camera.center.latitude, camera.center.longitude);
+                      _fetchPharmacies(
+                        camera.center.latitude,
+                        camera.center.longitude,
+                      );
                     });
                   }
                 },
@@ -437,7 +436,9 @@ class _DistancState extends State<Distanc> {
                 ),
                 MarkerLayer(markers: _markers),
                 RichAttributionWidget(
-                  attributions: [TextSourceAttribution('OpenStreetMap contributors')],
+                  attributions: [
+                    TextSourceAttribution('OpenStreetMap contributors'),
+                  ],
                 ),
               ],
             ),
@@ -462,7 +463,11 @@ class _DistancState extends State<Distanc> {
           mini: true,
           backgroundColor: Colors.white,
           elevation: 4,
-          child: Icon(Icons.my_location, color: Colors.black, size: screenWidth * 0.05),
+          child: Icon(
+            Icons.my_location,
+            color: Colors.black,
+            size: screenWidth * 0.05,
+          ),
           onPressed: () => _initializeLocation(),
         ),
       ),

@@ -9,7 +9,7 @@ class CustomTextField extends StatelessWidget {
   final Function(String)? onSubmitted;
   final Function(String)? onChanged;
 
-  CustomTextField({
+  const CustomTextField({
     super.key,
     required this.label,
     required this.hint,

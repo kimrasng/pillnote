@@ -37,7 +37,9 @@ class _PillState extends State<Pill> {
             onPressed: () async {
               await Navigator.push(
                 context,
-                MaterialPageRoute<void>(builder: (context) => const Pillsearch()),
+                MaterialPageRoute<void>(
+                  builder: (context) => const Pillsearch(),
+                ),
               );
               setState(() {});
             },
@@ -87,7 +89,9 @@ class _PillState extends State<Pill> {
             onPressed: () async {
               await Navigator.push(
                 context,
-                MaterialPageRoute<void>(builder: (context) => const Pillsearch()),
+                MaterialPageRoute<void>(
+                  builder: (context) => const Pillsearch(),
+                ),
               );
               setState(() {});
             },
@@ -324,7 +328,9 @@ class _PillState extends State<Pill> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF2563EB).withValues(alpha: 0.05),
+                          color: const Color(
+                            0xFF2563EB,
+                          ).withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -336,24 +342,26 @@ class _PillState extends State<Pill> {
                           ),
                         ),
                       ),
-                      ...(pill['times'] as List? ?? []).map((time) => Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          time.toString(),
-                          style: TextStyle(
-                            color: Colors.black54,
-                            fontSize: screenWidth * 0.028,
-                            fontWeight: FontWeight.w500,
+                      ...(pill['times'] as List? ?? []).map(
+                        (time) => Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            time.toString(),
+                            style: TextStyle(
+                              color: Colors.black54,
+                              fontSize: screenWidth * 0.028,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
-                      )).toList(),
+                      ),
                     ],
                   ),
                 ),
@@ -368,7 +376,6 @@ class _PillState extends State<Pill> {
       ),
     );
   }
-
 
   void _navigateToGroupEdit(
     BuildContext context, {

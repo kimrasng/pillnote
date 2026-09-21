@@ -1,9 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pillnote/controller/controller.dart';
-import 'package:pillnote/widgets/item_row.dart';
+import 'package:pillnote/services/api_client.dart';
 
 class Pillinfo extends StatefulWidget {
   final String pillSEQ;
@@ -43,50 +40,24 @@ class _PillinfoState extends State<Pillinfo> {
       }
     }
 
-    final apiKey = dotenv.env['API_KEY'];
-    if (apiKey == null || apiKey.isEmpty) {
+    try {
+      final item = await ApiClient.instance.drugDetail(widget.pillSEQ);
+      if (!mounted) return;
       setState(() {
-        errorMessage = "API 설정 오류";
+        pillData = item;
         isLoading = false;
       });
-      return;
-    }
-
-    final url = Uri.parse(
-      'https://apis.data.go.kr/1471000/MdcinGrnIdntfcInfoService03/getMdcinGrnIdntfcInfoList03'
-      '?serviceKey=$apiKey'
-      '&item_seq=${widget.pillSEQ}'
-      '&type=json',
-    );
-
-    try {
-      final response = await http.get(url);
-      if (!mounted) return;
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final items = data['body']['items'] as List?;
-
-        if (items != null && items.isNotEmpty) {
-          setState(() {
-            pillData = items[0];
-            isLoading = false;
-          });
-        } else {
-          setState(() {
-            errorMessage = "정보를 찾을 수 없습니다";
-            isLoading = false;
-          });
-        }
-      } else {
+    } on ApiException catch (error) {
+      if (mounted) {
         setState(() {
-          errorMessage = "데이터 로드 실패";
+          errorMessage = error.message;
           isLoading = false;
         });
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         setState(() {
-          errorMessage = "오류가 발생했습니다";
+          errorMessage = '서버에 연결할 수 없습니다.';
           isLoading = false;
         });
       }
@@ -102,10 +73,7 @@ class _PillinfoState extends State<Pillinfo> {
     if (isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(
-            '약 정보',
-            style: TextStyle(fontSize: screenWidth * 0.05),
-          ),
+          title: Text('약 정보', style: TextStyle(fontSize: screenWidth * 0.05)),
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -114,10 +82,7 @@ class _PillinfoState extends State<Pillinfo> {
     if (errorMessage != null) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(
-            '약 정보',
-            style: TextStyle(fontSize: screenWidth * 0.05),
-          ),
+          title: Text('약 정보', style: TextStyle(fontSize: screenWidth * 0.05)),
         ),
         body: Center(
           child: Text(
@@ -130,6 +95,9 @@ class _PillinfoState extends State<Pillinfo> {
 
     final item = pillData!;
     final imageUrl = item['ITEM_IMAGE'] ?? '';
+    final consumerInfo = Map<String, dynamic>.from(
+      item['consumerInfo'] as Map? ?? const {},
+    );
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -160,22 +128,31 @@ class _PillinfoState extends State<Pillinfo> {
                     Center(
                       child: Container(
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                          borderRadius: BorderRadius.circular(
+                            screenWidth * 0.05,
+                          ),
                           border: Border.all(color: Colors.grey.shade100),
                         ),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(screenWidth * 0.05),
+                          borderRadius: BorderRadius.circular(
+                            screenWidth * 0.05,
+                          ),
                           child: Image.network(
                             imageUrl,
                             width: double.infinity,
                             height: screenHeight * 0.25,
                             fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              width: double.infinity,
-                              height: screenHeight * 0.25,
-                              color: Colors.grey.shade50,
-                              child: Icon(Icons.broken_image_outlined, size: screenWidth * 0.15, color: Colors.grey.shade300),
-                            ),
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  width: double.infinity,
+                                  height: screenHeight * 0.25,
+                                  color: Colors.grey.shade50,
+                                  child: Icon(
+                                    Icons.broken_image_outlined,
+                                    size: screenWidth * 0.15,
+                                    color: Colors.grey.shade300,
+                                  ),
+                                ),
                           ),
                         ),
                       ),
@@ -206,6 +183,37 @@ class _PillinfoState extends State<Pillinfo> {
                   _buildDetailRow('모양', item['DRUG_SHAPE'], screenWidth),
                   _buildDetailRow('표시앞', item['PRINT_FRONT'], screenWidth),
                   _buildDetailRow('표시뒤', item['PRINT_BACK'], screenWidth),
+                  if (consumerInfo.isNotEmpty) ...[
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Divider(),
+                    ),
+                    _buildConsumerSection(
+                      '효능·효과',
+                      consumerInfo['efficacy'],
+                      screenWidth,
+                    ),
+                    _buildConsumerSection(
+                      '복용 방법',
+                      consumerInfo['usage'],
+                      screenWidth,
+                    ),
+                    _buildConsumerSection(
+                      '주의사항',
+                      consumerInfo['precautions'] ?? consumerInfo['warning'],
+                      screenWidth,
+                    ),
+                    _buildConsumerSection(
+                      '부작용',
+                      consumerInfo['sideEffects'],
+                      screenWidth,
+                    ),
+                    _buildConsumerSection(
+                      '보관 방법',
+                      consumerInfo['storage'],
+                      screenWidth,
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -224,7 +232,10 @@ class _PillinfoState extends State<Pillinfo> {
                       final bool? confirm = await showDialog<bool>(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: const Text("보유 수량 입력", style: TextStyle(fontWeight: FontWeight.bold)),
+                          title: const Text(
+                            "보유 수량 입력",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                           content: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -256,17 +267,17 @@ class _PillinfoState extends State<Pillinfo> {
                       );
 
                       if (confirm == true) {
-                        final int stock = int.tryParse(stockController.text) ?? 0;
+                        final int stock =
+                            int.tryParse(stockController.text) ?? 0;
                         await Controller.addPill(item, stock);
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('등록되었습니다'),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                          Navigator.pop(context);
-                        }
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('등록되었습니다'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        Navigator.pop(context);
                       }
                     },
                     style: FilledButton.styleFrom(
@@ -301,13 +312,53 @@ class _PillinfoState extends State<Pillinfo> {
             width: screenWidth * 0.2,
             child: Text(
               label,
-              style: TextStyle(fontSize: screenWidth * 0.038, color: Colors.grey.shade500),
+              style: TextStyle(
+                fontSize: screenWidth * 0.038,
+                color: Colors.grey.shade500,
+              ),
             ),
           ),
           Expanded(
             child: Text(
               (value ?? '-').toString(),
-              style: TextStyle(fontSize: screenWidth * 0.038, color: Colors.black87, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: screenWidth * 0.038,
+                color: Colors.black87,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConsumerSection(
+    String title,
+    dynamic value,
+    double screenWidth,
+  ) {
+    final text = value?.toString().trim() ?? '';
+    if (text.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: screenWidth * 0.042,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: screenWidth * 0.037,
+              height: 1.55,
+              color: Colors.black87,
             ),
           ),
         ],

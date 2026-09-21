@@ -4,7 +4,7 @@ class ItemRow extends StatelessWidget {
   final String label;
   final String? value;
 
-  ItemRow(this.label, this.value, {super.key});
+  const ItemRow(this.label, this.value, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,10 +17,7 @@ class ItemRow extends StatelessWidget {
             width: 80,
             child: Text(
               label,
-              style: TextStyle(
-                fontWeight: .bold,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontWeight: .bold, color: Colors.grey),
             ),
           ),
           Expanded(

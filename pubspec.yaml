@@ -36,11 +36,13 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.3.0
   shared_preferences: ^2.5.5
-  flutter_dotenv: ^6.0.1
   http: ^1.6.0
   flutter_map: ^8.3.1
   latlong2: ^0.10.1
   geolocator: ^13.0.1
+  firebase_core: ^4.15.0
+  firebase_messaging: ^16.7.0
+  flutter_secure_storage: ^11.2.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -68,7 +70,6 @@ flutter:
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
   assets:
-    - .env
     - assets/images/
     - assets/icon/
 

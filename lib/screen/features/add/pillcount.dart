@@ -12,7 +12,6 @@ class _PillCountState extends State<PillCount> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final double screenWidth = size.width;
-    final double screenHeight = size.height;
 
     return Scaffold(
       appBar: AppBar(
