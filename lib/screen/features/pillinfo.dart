@@ -79,15 +79,33 @@ class _PillinfoState extends State<Pillinfo> {
       );
     }
 
-    if (errorMessage != null) {
+    if (errorMessage != null || pillData == null) {
       return Scaffold(
         appBar: AppBar(
           title: Text('약 정보', style: TextStyle(fontSize: screenWidth * 0.05)),
         ),
         body: Center(
-          child: Text(
-            errorMessage!,
-            style: TextStyle(fontSize: screenWidth * 0.045, color: Colors.grey),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                errorMessage ?? '약 정보를 불러오지 못했습니다.',
+                style: TextStyle(
+                  fontSize: screenWidth * 0.045,
+                  color: Colors.grey,
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    isLoading = true;
+                    errorMessage = null;
+                  });
+                  _fetchPillData();
+                },
+                child: const Text('다시 시도'),
+              ),
+            ],
           ),
         ),
       );

@@ -71,7 +71,11 @@ class _MenuState extends State<Menu> {
     if (confirmed != true) return;
     setState(() => _isBusy = true);
     try {
-      await PushNotificationService.instance.unregisterCurrentDevice();
+      try {
+        await PushNotificationService.instance.unregisterCurrentDevice();
+      } catch (_) {
+        // 기기 등록 해제 실패가 계정 세션 종료를 막지 않도록 합니다.
+      }
       await ApiClient.instance.logoutAll();
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
@@ -170,7 +174,11 @@ class _MenuState extends State<Menu> {
 
     setState(() => _isBusy = true);
     try {
-      await PushNotificationService.instance.unregisterCurrentDevice();
+      try {
+        await PushNotificationService.instance.unregisterCurrentDevice();
+      } catch (_) {
+        // 서버의 계정 삭제가 기기 등록 해제보다 우선입니다.
+      }
       await ApiClient.instance.deleteAccount(code);
       await Controller.clearLocalData();
       if (!mounted) return;

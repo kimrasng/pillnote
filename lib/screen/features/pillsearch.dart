@@ -21,10 +21,11 @@ class _PillsearchState extends State<Pillsearch> {
 
   void _onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
+    final normalized = query.trim();
 
     _debounce = Timer(const Duration(milliseconds: 500), () {
-      if (query.trim().length >= 2) {
-        _searchPills(query);
+      if (normalized.length >= 2) {
+        _searchPills(normalized);
       } else {
         setState(() {
           _searchResults = [];
@@ -36,7 +37,8 @@ class _PillsearchState extends State<Pillsearch> {
   }
 
   Future<void> _searchPills(String itemName) async {
-    if (itemName.trim().length < 2) return;
+    final normalized = itemName.trim();
+    if (normalized.length < 2) return;
 
     setState(() {
       _isLoading = true;
@@ -44,8 +46,8 @@ class _PillsearchState extends State<Pillsearch> {
     });
 
     try {
-      final results = await ApiClient.instance.searchDrugs(itemName.trim());
-      if (!mounted) return;
+      final results = await ApiClient.instance.searchDrugs(normalized);
+      if (!mounted || searchController.text.trim() != normalized) return;
       setState(() => _searchResults = results);
     } on ApiException catch (error) {
       if (mounted) setState(() => _errorMessage = error.message);

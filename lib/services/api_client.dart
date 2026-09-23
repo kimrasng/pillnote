@@ -34,6 +34,7 @@ class ApiClient {
   final http.Client _client;
   final String _baseUrl;
   final SessionStore _sessionStore;
+  Future<bool>? _refreshInFlight;
 
   Future<Map<String, dynamic>> health() async =>
       _asMap(await _request('GET', '/health'));
@@ -360,6 +361,9 @@ class ApiClient {
         );
       }
     }
+    if (response.statusCode == 401 && authenticated && !retryAfterRefresh) {
+      await _sessionStore.clear(reason: SessionChangeReason.expired);
+    }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw _apiException(response);
     }
@@ -375,7 +379,18 @@ class ApiClient {
     }
   }
 
-  Future<bool> _refreshSession() async {
+  Future<bool> _refreshSession() {
+    final inFlight = _refreshInFlight;
+    if (inFlight != null) return inFlight;
+
+    final future = _performRefresh();
+    _refreshInFlight = future;
+    return future.whenComplete(() {
+      if (identical(_refreshInFlight, future)) _refreshInFlight = null;
+    });
+  }
+
+  Future<bool> _performRefresh() async {
     final current = _sessionStore.session;
     if (current == null) return false;
     try {
@@ -390,10 +405,11 @@ class ApiClient {
       await _sessionStore.save(UserSession.fromApi(_dataMap(response)));
       return true;
     } on ApiException catch (error) {
-      if (error.statusCode == 401) await _sessionStore.clear();
-      return false;
-    } catch (_) {
-      return false;
+      if (error.statusCode == 401) {
+        await _sessionStore.clear(reason: SessionChangeReason.expired);
+        return false;
+      }
+      rethrow;
     }
   }
 

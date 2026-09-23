@@ -6,6 +6,15 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val releaseKeystore = file("upload-keystore.jks")
+val releaseStorePassword = System.getenv("KEYSTORE_PASSWORD")
+val releaseKeyAlias = System.getenv("KEY_ALIAS")
+val releaseKeyPassword = System.getenv("KEY_PASSWORD")
+val hasReleaseSigning = releaseKeystore.exists() &&
+    !releaseStorePassword.isNullOrBlank() &&
+    !releaseKeyAlias.isNullOrBlank() &&
+    !releaseKeyPassword.isNullOrBlank()
+
 android {
     namespace = "kr.kimrasng.pillnote.pillnote"
     compileSdk = flutter.compileSdkVersion
@@ -26,27 +35,31 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystoreFile = file("upload-keystore.jks")
-            val password = System.getenv("KEYSTORE_PASSWORD")
-            
-            if (keystoreFile.exists() && !password.isNullOrEmpty()) {
-                storeFile = keystoreFile
-                storePassword = password
-                keyAlias = System.getenv("KEY_ALIAS")
-                keyPassword = System.getenv("KEY_PASSWORD")
+            if (hasReleaseSigning) {
+                storeFile = releaseKeystore
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
             }
         }
     }
 
     buildTypes {
         getByName("release") {
-            val releaseConfig = signingConfigs.getByName("release")
-            signingConfig = if (releaseConfig.storeFile != null) {
-                releaseConfig
-            } else {
-                signingConfigs.getByName("debug")
-            }
+            signingConfig = signingConfigs.getByName("release")
         }
+    }
+}
+
+gradle.taskGraph.whenReady {
+    val releaseRequested = allTasks.any {
+        it.name.contains("release", ignoreCase = true)
+    }
+    if (releaseRequested && !hasReleaseSigning) {
+        throw GradleException(
+            "Release signing requires android/app/upload-keystore.jks and " +
+                "KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD.",
+        )
     }
 }
 

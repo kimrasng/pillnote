@@ -10,8 +10,17 @@ class AppConfig {
 
   static String get apiBaseUrl {
     final configured = _configuredApiBaseUrl.trim();
-    if (configured.isNotEmpty) return _withoutTrailingSlash(configured);
-    return _defaultApiBaseUrl;
+    final value = configured.isNotEmpty ? configured : _defaultApiBaseUrl;
+    final uri = Uri.tryParse(value);
+    if (uri == null ||
+        !const {'http', 'https'}.contains(uri.scheme) ||
+        uri.host.isEmpty) {
+      throw StateError('API_BASE_URL must be an absolute HTTP(S) URL.');
+    }
+    if (kReleaseMode && uri.scheme != 'https') {
+      throw StateError('Release builds require an HTTPS API_BASE_URL.');
+    }
+    return _withoutTrailingSlash(value);
   }
 
   static bool get isFirebaseConfigured =>

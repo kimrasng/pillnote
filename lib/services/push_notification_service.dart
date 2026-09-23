@@ -53,11 +53,7 @@ class PushNotificationService {
         _foregroundMessages.add,
       );
       _tokenSubscription = FirebaseMessaging.instance.onTokenRefresh.listen(
-        (token) async {
-          if (SessionStore.instance.isLoggedIn) {
-            await _registerToken(token);
-          }
-        },
+        (token) => unawaited(_handleTokenRefresh(token)),
         onError: (Object error) {
           lastError = _friendlyError(error);
           debugPrint('FCM 토큰 갱신 실패: $error');
@@ -68,6 +64,24 @@ class PushNotificationService {
     } catch (error) {
       lastError = _friendlyError(error);
       debugPrint('Firebase 초기화 실패: $error');
+    }
+  }
+
+  static String foregroundMessageText(RemoteMessage message) {
+    return switch (message.data['type']) {
+      'missed-dose' => '확인이 필요한 복약 알림이 도착했습니다.',
+      _ => '새로운 알림이 도착했습니다.',
+    };
+  }
+
+  Future<void> _handleTokenRefresh(String token) async {
+    if (!SessionStore.instance.isLoggedIn) return;
+    try {
+      await _registerToken(token);
+      lastError = null;
+    } catch (error) {
+      lastError = _friendlyError(error);
+      debugPrint('FCM 토큰 서버 등록 실패: $error');
     }
   }
 

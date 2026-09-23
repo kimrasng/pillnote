@@ -50,6 +50,8 @@ PillNote는 **로컬 우선(local-first)** 으로 동작합니다. 로그인하�
 - 로그인하지 않아도 기본적인 복약 기록과 재고 관리를 사용할 수 있습니다.
 - 로그인하면 다른 기기에서도 복약 데이터를 이어서 사용할 수 있습니다.
 - 로그인 정보는 운영체제가 제공하는 보안 저장소에 보관됩니다.
+- iOS 로그인 정보는 다른 기기로 이전되지 않는 Keychain 영역에 저장하고, Android 앱 데이터는 OS 백업에서 제외합니다.
+- 운영 빌드는 HTTPS API만 허용하며, iOS의 임의 평문 통신과 Android의 평문 통신을 차단합니다.
 
 ## 앱 실행하기
 
@@ -141,7 +143,7 @@ pillnote/
 
 ```bash
 flutter analyze
-flutter test test/controller_test.dart test/widget_test.dart
+flutter test
 ```
 
 Android debug 빌드까지 확인하려면 다음 명령을 사용합니다.
@@ -149,6 +151,17 @@ Android debug 빌드까지 확인하려면 다음 명령을 사용합니다.
 ```bash
 flutter build apk --debug
 ```
+
+## 운영 릴리스
+
+Android 릴리스는 디버그 키로 대체 서명하지 않습니다. 다음 값을 모두 준비해야 릴리스 빌드가 진행됩니다.
+
+- `android/app/upload-keystore.jks`
+- `KEYSTORE_PASSWORD`
+- `KEY_ALIAS`
+- `KEY_PASSWORD`
+
+Git 태그(`v*`)로 실행되는 릴리스 워크플로는 정적 분석과 단위·위젯 테스트를 통과한 뒤 서명된 APK를 만듭니다. 서버의 새 세션 정책을 배포할 때는 동시 토큰 재발급을 막는 이 앱 버전을 먼저 배포한 다음 서버 마이그레이션과 배포를 진행합니다.
 
 ## 자주 막히는 부분
 

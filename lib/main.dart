@@ -36,24 +36,43 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final _messengerKey = GlobalKey<ScaffoldMessengerState>();
+  final _navigatorKey = GlobalKey<NavigatorState>();
   StreamSubscription<RemoteMessage>? _messageSubscription;
+  StreamSubscription<SessionChange>? _sessionSubscription;
 
   @override
   void initState() {
     super.initState();
     _messageSubscription = PushNotificationService.instance.foregroundMessages
         .listen((message) {
-          final notification = message.notification;
-          final text = notification?.body ?? '새로운 보호자 알림이 도착했습니다.';
+          final text = PushNotificationService.foregroundMessageText(message);
           _messengerKey.currentState
             ?..hideCurrentSnackBar()
             ..showSnackBar(SnackBar(content: Text(text)));
         });
+    _sessionSubscription = SessionStore.instance.changes.listen((change) {
+      if (change.reason != SessionChangeReason.expired) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _navigatorKey.currentState?.pushAndRemoveUntil(
+          MaterialPageRoute<void>(builder: (_) => const Main()),
+          (_) => false,
+        );
+        _messengerKey.currentState
+          ?..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('로그인 세션이 만료되었습니다. 로컬 데이터는 유지되며 다시 로그인할 수 있습니다.'),
+            ),
+          );
+      });
+    });
   }
 
   @override
   void dispose() {
     _messageSubscription?.cancel();
+    _sessionSubscription?.cancel();
     super.dispose();
   }
 
@@ -61,6 +80,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       scaffoldMessengerKey: _messengerKey,
+      navigatorKey: _navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'PillNote',
       theme: ThemeData(

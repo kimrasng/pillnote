@@ -1,4 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+enum SessionChangeReason { signedIn, signedOut, expired }
+
+class SessionChange {
+  const SessionChange({required this.reason, required this.session});
+
+  final SessionChangeReason reason;
+  final UserSession? session;
+}
 
 class UserSession {
   const UserSession({
@@ -34,7 +45,13 @@ class UserSession {
 
 class SessionStore {
   SessionStore._secure()
-    : _storage = const FlutterSecureStorage(),
+    : _storage = const FlutterSecureStorage(
+        iOptions: IOSOptions(
+          accessibility: KeychainAccessibility.unlocked_this_device,
+          synchronizable: false,
+        ),
+        aOptions: AndroidOptions(migrateWithBackup: true),
+      ),
       _memory = null;
 
   SessionStore.inMemory() : _storage = null, _memory = <String, String>{};
@@ -43,6 +60,7 @@ class SessionStore {
 
   final FlutterSecureStorage? _storage;
   final Map<String, String>? _memory;
+  final _changes = StreamController<SessionChange>.broadcast(sync: true);
 
   static const _userIdKey = 'session_user_id';
   static const _emailKey = 'session_email';
@@ -55,6 +73,7 @@ class SessionStore {
 
   UserSession? get session => _session;
   bool get isLoggedIn => _session != null;
+  Stream<SessionChange> get changes => _changes.stream;
 
   Future<void> initialize() async {
     final values = _memory ?? await _storage!.readAll();
@@ -95,18 +114,30 @@ class SessionStore {
       _write(_refreshTtlKey, session.refreshTokenExpiresIn.toString()),
     ]);
     _session = session;
+    _changes.add(
+      SessionChange(reason: SessionChangeReason.signedIn, session: session),
+    );
   }
 
-  Future<void> clear() async {
-    await Future.wait([
-      _delete(_userIdKey),
-      _delete(_emailKey),
-      _delete(_accessTokenKey),
-      _delete(_refreshTokenKey),
-      _delete(_accessTtlKey),
-      _delete(_refreshTtlKey),
-    ]);
+  Future<void> clear({
+    SessionChangeReason reason = SessionChangeReason.signedOut,
+  }) async {
+    final hadSession = _session != null;
     _session = null;
+    try {
+      await Future.wait([
+        _delete(_userIdKey),
+        _delete(_emailKey),
+        _delete(_accessTokenKey),
+        _delete(_refreshTokenKey),
+        _delete(_accessTtlKey),
+        _delete(_refreshTtlKey),
+      ]);
+    } finally {
+      if (hadSession) {
+        _changes.add(SessionChange(reason: reason, session: null));
+      }
+    }
   }
 
   Future<void> _write(String key, String value) async {
