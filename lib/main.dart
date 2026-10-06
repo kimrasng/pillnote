@@ -2,24 +2,30 @@ import 'dart:async';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:pillnote/controller/controller.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:pillnote/app/app_services.dart';
 import 'package:pillnote/screen/main.dart';
 import 'package:pillnote/screen/onboarding.dart';
 import 'package:pillnote/services/api_client.dart';
 import 'package:pillnote/services/push_notification_service.dart';
 import 'package:pillnote/services/session_store.dart';
+import 'package:pillnote/widgets/app_ui.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Controller.init();
+  await AppServices.initialize();
   await SessionStore.instance.initialize();
   await PushNotificationService.instance.initialize();
 
   if (SessionStore.instance.isLoggedIn) {
     try {
       await ApiClient.instance.me();
-      await Controller.reconcileWithServer();
-      await PushNotificationService.instance.registerCurrentDevice();
+      await AppServices.instance.sync.reconcileWithServer();
+      await PushNotificationService.instance.refreshPermissionStatus();
+      if (PushNotificationService.instance.permissionGranted == true) {
+        await PushNotificationService.instance.registerCurrentDevice();
+      }
     } catch (_) {
       // 네트워크가 없어도 로컬 우선 기능으로 앱을 시작합니다.
     }
@@ -83,6 +89,24 @@ class _MyAppState extends State<MyApp> {
       navigatorKey: _navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'PillNote',
+      locale: const Locale('ko', 'KR'),
+      supportedLocales: const [Locale('ko', 'KR')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      builder: (context, child) => kIsWeb
+          ? ColoredBox(
+              color: wash,
+              child: Center(
+                child: SizedBox(
+                  width: 480,
+                  child: ColoredBox(color: Colors.white, child: child),
+                ),
+              ),
+            )
+          : child!,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -91,22 +115,66 @@ class _MyAppState extends State<MyApp> {
           surface: Colors.white,
         ),
         fontFamily: 'Pretendard',
+        scaffoldBackgroundColor: Colors.white,
+        dividerTheme: const DividerThemeData(color: line, space: 1),
+        textTheme: const TextTheme(
+          bodyMedium: TextStyle(color: ink, fontSize: 15, height: 1.45),
+          bodyLarge: TextStyle(color: ink, fontSize: 16),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(0, 54),
+            textStyle: const TextStyle(
+              fontFamily: 'Pretendard',
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size(0, 48),
+            side: const BorderSide(color: line),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+        ),
+        inputDecorationTheme: const InputDecorationTheme(
+          contentPadding: EdgeInsets.symmetric(vertical: 16),
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: line),
+          ),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: blue, width: 1.5),
+          ),
+        ),
         cardTheme: CardThemeData(
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(20),
           ),
           color: const Color(0xFFF1F5F9),
         ),
         appBarTheme: const AppBarTheme(
-          centerTitle: true,
+          centerTitle: false,
+          titleTextStyle: TextStyle(
+            fontFamily: 'Pretendard',
+            color: ink,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
           backgroundColor: Colors.white,
           elevation: 0,
           scrolledUnderElevation: 0,
         ),
       ),
       home:
-          Controller.shouldShowOnboarding() && !SessionStore.instance.isLoggedIn
+          AppServices.instance.shouldShowOnboarding &&
+              !SessionStore.instance.isLoggedIn
           ? const Onboarding()
           : const Main(),
     );

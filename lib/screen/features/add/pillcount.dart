@@ -14,6 +14,7 @@ class _PillCountState extends State<PillCount> {
     final double screenWidth = size.width;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text('보유 수량', style: TextStyle(fontSize: screenWidth * 0.05)),
         leading: IconButton(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CustomTextField extends StatelessWidget {
   final String label;
@@ -8,6 +9,10 @@ class CustomTextField extends StatelessWidget {
   final TextEditingController? controller;
   final Function(String)? onSubmitted;
   final Function(String)? onChanged;
+  final Iterable<String>? autofillHints;
+  final List<TextInputFormatter>? inputFormatters;
+  final TextInputAction? textInputAction;
+  final bool showSearchIcon;
 
   const CustomTextField({
     super.key,
@@ -18,6 +23,10 @@ class CustomTextField extends StatelessWidget {
     this.controller,
     this.onSubmitted,
     this.onChanged,
+    this.autofillHints,
+    this.inputFormatters,
+    this.textInputAction,
+    this.showSearchIcon = false,
   });
 
   @override
@@ -32,12 +41,18 @@ class CustomTextField extends StatelessWidget {
           keyboardType: keyboardType,
           onSubmitted: onSubmitted,
           onChanged: onChanged,
+          autofillHints: autofillHints,
+          inputFormatters: inputFormatters,
+          textInputAction: textInputAction,
+          autocorrect:
+              keyboardType != TextInputType.emailAddress &&
+              keyboardType != TextInputType.number,
           decoration: InputDecoration(
             labelText: label,
             hintText: hint,
             hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
             contentPadding: .symmetric(vertical: 15, horizontal: 0),
-            suffixIcon: onSubmitted != null
+            suffixIcon: showSearchIcon && onSubmitted != null
                 ? IconButton(
                     icon: Icon(Icons.search),
                     onPressed: () {

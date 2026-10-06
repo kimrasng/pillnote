@@ -1,390 +1,271 @@
 import 'package:flutter/material.dart';
-import 'package:pillnote/controller/controller.dart';
+import 'package:pillnote/app/app_services.dart';
+import 'package:pillnote/models/medication.dart';
 import 'package:pillnote/screen/features/pillsearch.dart';
 import 'package:pillnote/screen/management/pilmanagement.dart';
-import 'package:pillnote/screen/management/pill_group_edit.dart';
+import 'package:pillnote/screen/management/pill_groups.dart';
+import 'package:pillnote/widgets/app_ui.dart';
 
 class Pill extends StatefulWidget {
   const Pill({super.key});
-
   @override
   State<Pill> createState() => _PillState();
 }
 
 class _PillState extends State<Pill> {
+  bool _showArchived = false;
+  String _query = '';
+  Future<void> _open(Widget page) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute<void>(builder: (_) => page),
+    );
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final double screenWidth = size.width;
-    final double screenHeight = size.height;
-    final pills = Controller.getPills();
-
+    final pills = AppServices.instance.medications.getPills();
+    final groups = AppServices.instance.medications.getGroups();
+    bool stored(Map<String, dynamic> p) => isStoredMedication(p, groups);
+    final active = pills.where((p) => !stored(p)).toList();
+    final archived = pills.where(stored).toList();
+    final displayed = (_showArchived ? archived : active)
+        .where(
+          (p) =>
+              Medication.name(p).toLowerCase().contains(_query.toLowerCase()),
+        )
+        .toList();
+    final attention = active
+        .where(
+          (p) =>
+              Medication.isLowStock(p) ||
+              scheduleSummary(p, groups) == '일정 설정하기',
+        )
+        .length;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: Text(
-          "내 약 상자",
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: screenWidth * 0.05,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (context) => const Pillsearch(),
-                ),
-              );
-              setState(() {});
-            },
-            icon: Icon(
-              Icons.add_circle_outline,
-              color: Colors.black,
-              size: screenWidth * 0.07,
-            ),
-          ),
-          SizedBox(width: screenWidth * 0.02),
-        ],
-      ),
-      body: pills.isEmpty
-          ? _buildEmptyState(screenWidth, screenHeight)
-          : _buildPillList(pills, screenWidth, screenHeight),
-    );
-  }
-
-  Widget _buildEmptyState(double screenWidth, double screenHeight) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: EdgeInsets.all(screenWidth * 0.08),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.medication_liquid_outlined,
-              size: screenWidth * 0.15,
-              color: Colors.grey.shade300,
-            ),
-          ),
-          SizedBox(height: screenHeight * 0.03),
-          Text(
-            "등록된 약이 없습니다.",
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: screenWidth * 0.045,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          SizedBox(height: screenHeight * 0.04),
-          FilledButton.icon(
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (context) => const Pillsearch(),
-                ),
-              );
-              setState(() {});
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF2563EB),
-              padding: EdgeInsets.symmetric(
-                horizontal: screenWidth * 0.08,
-                vertical: screenHeight * 0.018,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-            icon: const Icon(Icons.search),
-            label: Text(
-              "약 검색하러 가기",
-              style: TextStyle(
-                fontSize: screenWidth * 0.04,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPillList(
-    List<Map<String, dynamic>> pills,
-    double screenWidth,
-    double screenHeight,
-  ) {
-    final groups = Controller.getGroups();
-
-    return ListView(
-      padding: EdgeInsets.all(screenWidth * 0.05),
-      children: [
-        if (groups.isNotEmpty) ...[
-          Padding(
-            padding: EdgeInsets.only(
-              left: screenWidth * 0.02,
-              bottom: screenHeight * 0.015,
-            ),
-            child: Text(
-              "처방전 묶음",
-              style: TextStyle(
-                fontSize: screenWidth * 0.045,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-          ),
-          ...groups.map(
-            (group) =>
-                _buildGroupManagementCard(group, screenWidth, screenHeight),
-          ),
-          SizedBox(height: screenHeight * 0.03),
-        ],
-
-        Padding(
-          padding: EdgeInsets.only(
-            left: screenWidth * 0.02,
-            bottom: screenHeight * 0.015,
-          ),
-          child: Text(
-            "등록된 약",
-            style: TextStyle(
-              fontSize: screenWidth * 0.045,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-        ),
-        ...pills.map(
-          (pill) => _buildPillManagementCard(pill, screenWidth, screenHeight),
-        ),
-
-        SizedBox(height: screenHeight * 0.04),
-        FilledButton.tonalIcon(
-          onPressed: () => _navigateToGroupEdit(context),
-          icon: Icon(Icons.link, size: screenWidth * 0.05),
-          label: Text(
-            "여러 약 하나로 묶기",
-            style: TextStyle(
-              fontSize: screenWidth * 0.04,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF2563EB).withValues(alpha: 0.08),
-            foregroundColor: const Color(0xFF2563EB),
-            padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-        ),
-        SizedBox(height: screenHeight * 0.15),
-      ],
-    );
-  }
-
-  Widget _buildGroupManagementCard(
-    Map<String, dynamic> group,
-    double screenWidth,
-    double screenHeight,
-  ) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: screenHeight * 0.015),
-      child: Material(
-        color: const Color(0xFFEFF6FF),
-        clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: Color(0xFFDBEAFE), width: 1),
-        ),
-        child: ListTile(
-          contentPadding: EdgeInsets.all(screenWidth * 0.045),
-          leading: Container(
-            padding: EdgeInsets.all(screenWidth * 0.03),
-            decoration: BoxDecoration(
-              color: const Color(0xFF2563EB).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(
-              Icons.inventory_2_outlined,
-              color: const Color(0xFF2563EB),
-              size: screenWidth * 0.06,
-            ),
-          ),
-          title: Text(
-            group['name'] ?? '묶음',
-            style: TextStyle(
-              fontSize: screenWidth * 0.042,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF1E3A8A),
-            ),
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              "${(group['pillIds'] as List).length}개의 약이 포함됨",
-              style: TextStyle(
-                fontSize: screenWidth * 0.035,
-                color: Colors.black54,
-              ),
-            ),
-          ),
-          trailing: Icon(
-            Icons.chevron_right,
-            color: Colors.grey.shade400,
-            size: screenWidth * 0.05,
-          ),
-          onTap: () => _navigateToGroupEdit(context, group: group),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPillManagementCard(
-    Map<String, dynamic> pill,
-    double screenWidth,
-    double screenHeight,
-  ) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: screenHeight * 0.015),
-      child: Material(
-        color: const Color(0xFFEFF6FF),
-        clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: Color(0xFFDBEAFE), width: 1),
-        ),
-        child: ListTile(
-          onTap: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => Pilmanagement(pill: pill),
-              ),
-            );
-            setState(() {});
-          },
-          contentPadding: EdgeInsets.all(screenWidth * 0.045),
-          leading: Container(
-            width: screenWidth * 0.16,
-            height: screenWidth * 0.16,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: pill['ITEM_IMAGE'] != null && pill['ITEM_IMAGE'].isNotEmpty
-                  ? Image.network(pill['ITEM_IMAGE'], fit: BoxFit.contain)
-                  : Icon(
-                      Icons.medication_outlined,
-                      color: Colors.grey.shade400,
-                      size: screenWidth * 0.07,
-                    ),
-            ),
-          ),
-          title: Text(
-            pill['ITEM_NAME'] ?? '이름 없음',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: screenWidth * 0.042,
-              color: const Color(0xFF1E3A8A),
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 4),
-              Text(
-                pill['ENTP_NAME'] ?? '',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: screenWidth * 0.035,
-                ),
-              ),
-              if (pill['startDate'] != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Wrap(
-                    spacing: 4,
-                    runSpacing: 4,
+      resizeToAvoidBottomInset: false,
+      body: PageScrollView(
+        title: '내 약 상자',
+        subtitle: '약과 복용 일정을 한눈에 확인해요.',
+        padding: pills.isEmpty
+            ? const EdgeInsets.symmetric(horizontal: 24)
+            : const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        sliver: pills.isEmpty
+            ? SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(
-                            0xFF2563EB,
-                          ).withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          "${pill['dosage'] ?? 1.0}정씩",
-                          style: TextStyle(
-                            color: const Color(0xFF2563EB),
-                            fontSize: screenWidth * 0.028,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                      const EmptyState(
+                        title: '첫 번째 약을 등록해요',
+                        description:
+                            '약 이름을 검색하거나 직접 입력하면\n복용 일정까지 바로 설정할 수 있어요.',
+                        padding: EdgeInsets.symmetric(horizontal: 8),
                       ),
-                      ...(pill['times'] as List? ?? []).map(
-                        (time) => Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            time.toString(),
-                            style: TextStyle(
-                              color: Colors.black54,
-                              fontSize: screenWidth * 0.028,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ),
+                      const SizedBox(height: 24),
+                      _groupManagement(),
                     ],
                   ),
                 ),
+              )
+            : null,
+        children: [
+          if (pills.isNotEmpty) ...[
+            TextField(
+              onChanged: (value) => setState(() => _query = value),
+              decoration: InputDecoration(
+                hintText: '내 약 이름 찾기',
+                prefixIcon: const Icon(Icons.search, size: 22, color: muted),
+                filled: true,
+                fillColor: wash,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: blue),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ChoiceChip(
+                  label: Text('관리 중 ${active.length}'),
+                  selected: !_showArchived,
+                  onSelected: (_) => setState(() => _showArchived = false),
+                ),
+                ChoiceChip(
+                  label: Text('보관 · 종료 ${archived.length}'),
+                  selected: _showArchived,
+                  onSelected: (_) => setState(() => _showArchived = true),
+                ),
+              ],
+            ),
+            if (attention > 0 && !_showArchived && _query.isEmpty) ...[
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.info_outline, size: 18, color: muted),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      '일정 또는 수량 확인이 필요한 약 $attention개',
+                      style: const TextStyle(color: muted, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
             ],
-          ),
-          trailing: Icon(
-            Icons.chevron_right,
-            color: Colors.grey.shade400,
-            size: screenWidth * 0.05,
-          ),
-        ),
+            const SizedBox(height: 8),
+          ],
+          if (pills.isNotEmpty && displayed.isEmpty)
+            EmptyState(
+              title: _query.isNotEmpty
+                  ? '찾는 약이 없어요'
+                  : _showArchived
+                  ? '보관한 약이 없어요'
+                  : '관리 중인 약이 없어요',
+              description: _query.isNotEmpty
+                  ? '다른 이름으로 검색해 보세요.'
+                  : '추가한 약과 복용 기록은 여기서 관리할 수 있어요.',
+            ),
+          ...displayed.map((pill) => _row(pill, groups)),
+          const SizedBox(height: 24),
+          _groupManagement(),
+        ],
+      ),
+      bottomNavigationBar: BottomAction(
+        label: '약 추가',
+        onPressed: () => _open(const Pillsearch()),
       ),
     );
   }
 
-  void _navigateToGroupEdit(
-    BuildContext context, {
-    Map<String, dynamic>? group,
-  }) async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => PillGroupEdit(group: group)),
+  Widget _groupManagement() => Material(
+    color: wash,
+    borderRadius: BorderRadius.circular(16),
+    clipBehavior: Clip.antiAlias,
+    child: ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      leading: const Icon(Icons.layers_outlined, color: blue),
+      title: const Text(
+        '약 묶음 관리',
+        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+      ),
+      subtitle: const Text(
+        '함께 먹는 약의 공통 일정',
+        style: TextStyle(color: muted, fontSize: 13),
+      ),
+      trailing: const Icon(Icons.chevron_right, size: 20, color: muted),
+      onTap: () => _open(const PillGroups()),
+    ),
+  );
+
+  Widget _row(Map<String, dynamic> pill, List<Map<String, dynamic>> groups) {
+    final summary = scheduleSummary(pill, groups);
+    final archived = pill['archived'] == true;
+    final ended = isStoredMedication(pill, groups) && !archived;
+    final memberships = groups
+        .where((g) => (g['pillIds'] as List? ?? []).contains(pill['id']))
+        .map((g) => g['name'])
+        .join(' · ');
+    return Column(
+      children: [
+        InkWell(
+          onTap: () => _open(Pilmanagement(pillId: pill['id'].toString())),
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                PillAvatar(pill),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        Medication.name(pill),
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          height: 1.35,
+                        ),
+                      ),
+                      if ('${pill['strength'] ?? ''}'.isNotEmpty)
+                        Text(
+                          '${pill['strength']}',
+                          style: const TextStyle(color: muted),
+                        ),
+                      const SizedBox(height: 8),
+                      Text(
+                        archived
+                            ? '보관 중 · 기록 유지'
+                            : ended
+                            ? '복용 기간 종료 · 일정 수정 가능'
+                            : summary,
+                        style: TextStyle(
+                          color: summary == '일정 설정하기' && !archived && !ended
+                              ? blue
+                              : muted,
+                          fontWeight: summary == '일정 설정하기'
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                          fontSize: 13,
+                        ),
+                      ),
+                      if (!archived &&
+                          !ended &&
+                          Medication.tracksStock(pill)) ...[
+                        const SizedBox(height: 5),
+                        Text(
+                          '남은 약 ${Medication.quantity(pill['stock'] as num)}${Medication.unit(pill)}${Medication.isLowStock(pill) ? ' · 수량 확인' : ''}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Medication.isLowStock(pill)
+                                ? const Color(0xFFB45309)
+                                : muted,
+                          ),
+                        ),
+                      ],
+                      if (memberships.isNotEmpty) ...[
+                        const SizedBox(height: 5),
+                        Text(
+                          memberships,
+                          style: const TextStyle(fontSize: 12, color: muted),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Padding(
+                  padding: EdgeInsets.only(top: 12),
+                  child: Icon(Icons.chevron_right, color: muted, size: 20),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const Divider(),
+      ],
     );
-    setState(() {});
   }
 }

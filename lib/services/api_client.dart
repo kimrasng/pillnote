@@ -1,47 +1,35 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:http/http.dart' as http;
-import 'package:pillnote/config/app_config.dart';
+import 'package:pillnote/services/api/api_transport.dart';
 import 'package:pillnote/services/session_store.dart';
 
-class ApiException implements Exception {
-  const ApiException({
-    required this.statusCode,
-    required this.code,
-    required this.message,
-    this.details,
-  });
+export 'package:pillnote/services/api/api_exception.dart';
 
-  final int statusCode;
-  final String code;
-  final String message;
-  final Object? details;
-
-  @override
-  String toString() => message;
-}
-
+/// Backend endpoints and response mappings. Request and authentication policy
+/// belong to ApiTransport, shared by every endpoint on this client.
 class ApiClient {
   ApiClient({http.Client? client, String? baseUrl, SessionStore? sessionStore})
-    : _client = client ?? http.Client(),
-      _baseUrl = baseUrl ?? AppConfig.apiBaseUrl,
+    : _transport = ApiTransport(
+        client: client,
+        baseUrl: baseUrl,
+        sessionStore: sessionStore ?? SessionStore.instance,
+      ),
       _sessionStore = sessionStore ?? SessionStore.instance;
 
   static final ApiClient instance = ApiClient();
 
-  final http.Client _client;
-  final String _baseUrl;
+  final ApiTransport _transport;
   final SessionStore _sessionStore;
-  Future<bool>? _refreshInFlight;
 
   Future<Map<String, dynamic>> health() async =>
-      _asMap(await _request('GET', '/health'));
+      _asMap(await _transport.request('GET', '/health'));
 
   Future<String?> startEmailLogin(String email) async {
     final response = _asMap(
-      await _request('POST', '/v1/auth/email/start', body: {'email': email}),
+      await _transport.request(
+        'POST',
+        '/v1/auth/email/start',
+        body: {'email': email},
+      ),
     );
     final data = _dataMap(response);
     return data['debugCode']?.toString();
@@ -49,7 +37,7 @@ class ApiClient {
 
   Future<UserSession> verifyEmail(String email, String code) async {
     final response = _asMap(
-      await _request(
+      await _transport.request(
         'POST',
         '/v1/auth/email/verify',
         body: {'email': email, 'code': code},
@@ -60,14 +48,15 @@ class ApiClient {
     return session;
   }
 
-  Future<Map<String, dynamic>> me() async =>
-      _dataMap(_asMap(await _request('GET', '/v1/me', authenticated: true)));
+  Future<Map<String, dynamic>> me() async => _dataMap(
+    _asMap(await _transport.request('GET', '/v1/me', authenticated: true)),
+  );
 
   Future<void> logout() async {
     final refreshToken = _sessionStore.session?.refreshToken;
     try {
       if (refreshToken != null) {
-        await _request(
+        await _transport.request(
           'POST',
           '/v1/auth/logout',
           body: {'refreshToken': refreshToken},
@@ -80,7 +69,11 @@ class ApiClient {
 
   Future<void> logoutAll() async {
     try {
-      await _request('POST', '/v1/auth/logout-all', authenticated: true);
+      await _transport.request(
+        'POST',
+        '/v1/auth/logout-all',
+        authenticated: true,
+      );
     } finally {
       await _sessionStore.clear();
     }
@@ -88,7 +81,7 @@ class ApiClient {
 
   Future<String?> requestAccountDeletionCode() async {
     final response = _asMap(
-      await _request(
+      await _transport.request(
         'POST',
         '/v1/auth/email/start',
         authenticated: true,
@@ -99,7 +92,7 @@ class ApiClient {
   }
 
   Future<void> deleteAccount(String verificationCode) async {
-    await _request(
+    await _transport.request(
       'DELETE',
       '/v1/me',
       authenticated: true,
@@ -113,10 +106,12 @@ class ApiClient {
     int page = 1,
     int limit = 50,
   }) async {
-    final uri = Uri.parse('$_baseUrl/v1/drugs/search').replace(
-      queryParameters: {'name': name, 'page': '$page', 'limit': '$limit'},
-    );
-    final response = _asMap(await _requestUri('GET', uri));
+    final uri = _transport
+        .uri('/v1/drugs/search')
+        .replace(
+          queryParameters: {'name': name, 'page': '$page', 'limit': '$limit'},
+        );
+    final response = _asMap(await _transport.requestUri('GET', uri));
     final data = response['data'] as List? ?? const [];
     return data
         .whereType<Map>()
@@ -126,7 +121,10 @@ class ApiClient {
 
   Future<Map<String, dynamic>> drugDetail(String itemSeq) async {
     final response = _asMap(
-      await _request('GET', '/v1/drugs/${Uri.encodeComponent(itemSeq)}'),
+      await _transport.request(
+        'GET',
+        '/v1/drugs/${Uri.encodeComponent(itemSeq)}',
+      ),
     );
     final detail = _dataMap(response);
     final identification = Map<String, dynamic>.from(
@@ -145,15 +143,17 @@ class ApiClient {
     int radius = 3000,
     int limit = 100,
   }) async {
-    final uri = Uri.parse('$_baseUrl/v1/pharmacies/search').replace(
-      queryParameters: {
-        'lat': '$latitude',
-        'lng': '$longitude',
-        'radius': '$radius',
-        'limit': '$limit',
-      },
-    );
-    return _dataList(_asMap(await _requestUri('GET', uri)));
+    final uri = _transport
+        .uri('/v1/pharmacies/search')
+        .replace(
+          queryParameters: {
+            'lat': '$latitude',
+            'lng': '$longitude',
+            'radius': '$radius',
+            'limit': '$limit',
+          },
+        );
+    return _dataList(_asMap(await _transport.requestUri('GET', uri)));
   }
 
   Future<void> registerDevice({
@@ -161,7 +161,7 @@ class ApiClient {
     required String platform,
     required String pushToken,
   }) async {
-    await _request(
+    await _transport.request(
       'PUT',
       '/v1/devices/${Uri.encodeComponent(deviceId)}',
       authenticated: true,
@@ -170,7 +170,7 @@ class ApiClient {
   }
 
   Future<void> unregisterDevice(String deviceId) async {
-    await _request(
+    await _transport.request(
       'DELETE',
       '/v1/devices/${Uri.encodeComponent(deviceId)}',
       authenticated: true,
@@ -179,7 +179,7 @@ class ApiClient {
 
   Future<List<Map<String, dynamic>>> guardians() async {
     final response = _asMap(
-      await _request('GET', '/v1/guardians', authenticated: true),
+      await _transport.request('GET', '/v1/guardians', authenticated: true),
     );
     return _dataList(response);
   }
@@ -189,7 +189,7 @@ class ApiClient {
     String? name,
   }) async {
     final response = _asMap(
-      await _request(
+      await _transport.request(
         'POST',
         '/v1/guardians',
         authenticated: true,
@@ -208,7 +208,7 @@ class ApiClient {
     bool? enabled,
   }) async {
     final response = _asMap(
-      await _request(
+      await _transport.request(
         'PATCH',
         '/v1/guardians/${Uri.encodeComponent(id)}',
         authenticated: true,
@@ -219,7 +219,7 @@ class ApiClient {
   }
 
   Future<void> deleteGuardian(String id) async {
-    await _request(
+    await _transport.request(
       'DELETE',
       '/v1/guardians/${Uri.encodeComponent(id)}',
       authenticated: true,
@@ -228,7 +228,11 @@ class ApiClient {
 
   Future<List<Map<String, dynamic>>> guardianInvitations() async {
     final response = _asMap(
-      await _request('GET', '/v1/guardian-invitations', authenticated: true),
+      await _transport.request(
+        'GET',
+        '/v1/guardian-invitations',
+        authenticated: true,
+      ),
     );
     return _dataList(response);
   }
@@ -237,7 +241,7 @@ class ApiClient {
     String id, {
     required bool accept,
   }) async {
-    await _request(
+    await _transport.request(
       'POST',
       '/v1/guardian-invitations/${Uri.encodeComponent(id)}/${accept ? 'accept' : 'reject'}',
       authenticated: true,
@@ -249,7 +253,7 @@ class ApiClient {
     required String medicationName,
     required DateTime scheduledAt,
   }) async {
-    await _request(
+    await _transport.request(
       'POST',
       '/v1/guardian-alerts',
       authenticated: true,
@@ -262,15 +266,16 @@ class ApiClient {
     );
   }
 
-  Future<Map<String, dynamic>> fetchSnapshot() async =>
-      _dataMap(_asMap(await _request('GET', '/v1/sync', authenticated: true)));
+  Future<Map<String, dynamic>> fetchSnapshot() async => _dataMap(
+    _asMap(await _transport.request('GET', '/v1/sync', authenticated: true)),
+  );
 
   Future<Map<String, dynamic>> saveSnapshot({
     required int baseRevision,
     required Map<String, dynamic> snapshot,
   }) async => _dataMap(
     _asMap(
-      await _request(
+      await _transport.request(
         'PUT',
         '/v1/sync',
         authenticated: true,
@@ -280,158 +285,10 @@ class ApiClient {
   );
 
   Future<void> deleteSnapshot(int baseRevision) async {
-    final uri = Uri.parse(
-      '$_baseUrl/v1/sync',
-    ).replace(queryParameters: {'baseRevision': '$baseRevision'});
-    await _requestUri('DELETE', uri, authenticated: true);
-  }
-
-  Future<dynamic> _request(
-    String method,
-    String path, {
-    bool authenticated = false,
-    Map<String, dynamic>? body,
-    bool retryAfterRefresh = true,
-  }) => _requestUri(
-    method,
-    Uri.parse('$_baseUrl$path'),
-    authenticated: authenticated,
-    body: body,
-    retryAfterRefresh: retryAfterRefresh,
-  );
-
-  Future<dynamic> _requestUri(
-    String method,
-    Uri uri, {
-    bool authenticated = false,
-    Map<String, dynamic>? body,
-    bool retryAfterRefresh = true,
-  }) async {
-    final headers = <String, String>{'accept': 'application/json'};
-    if (body != null) headers['content-type'] = 'application/json';
-    if (authenticated) {
-      final token = _sessionStore.session?.accessToken;
-      if (token == null) {
-        throw const ApiException(
-          statusCode: 401,
-          code: 'AUTH_REQUIRED',
-          message: '로그인이 필요합니다.',
-        );
-      }
-      headers['authorization'] = 'Bearer $token';
-    }
-
-    final request = http.Request(method, uri)..headers.addAll(headers);
-    if (body != null) request.body = jsonEncode(body);
-    late http.StreamedResponse streamed;
-    try {
-      streamed = await _client
-          .send(request)
-          .timeout(const Duration(seconds: 15));
-    } on TimeoutException {
-      throw const ApiException(
-        statusCode: 0,
-        code: 'NETWORK_TIMEOUT',
-        message: '서버 응답 시간이 초과되었습니다.',
-      );
-    } on SocketException {
-      throw const ApiException(
-        statusCode: 0,
-        code: 'NETWORK_UNAVAILABLE',
-        message: '서버에 연결할 수 없습니다.',
-      );
-    } on http.ClientException {
-      throw const ApiException(
-        statusCode: 0,
-        code: 'NETWORK_UNAVAILABLE',
-        message: '서버에 연결할 수 없습니다.',
-      );
-    }
-    final response = await http.Response.fromStream(streamed);
-
-    if (response.statusCode == 401 && authenticated && retryAfterRefresh) {
-      final refreshed = await _refreshSession();
-      if (refreshed) {
-        return _requestUri(
-          method,
-          uri,
-          authenticated: true,
-          body: body,
-          retryAfterRefresh: false,
-        );
-      }
-    }
-    if (response.statusCode == 401 && authenticated && !retryAfterRefresh) {
-      await _sessionStore.clear(reason: SessionChangeReason.expired);
-    }
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw _apiException(response);
-    }
-    if (response.statusCode == 204 || response.body.isEmpty) return null;
-    try {
-      return jsonDecode(response.body);
-    } on FormatException {
-      throw ApiException(
-        statusCode: response.statusCode,
-        code: 'INVALID_SERVER_RESPONSE',
-        message: '서버 응답을 해석할 수 없습니다.',
-      );
-    }
-  }
-
-  Future<bool> _refreshSession() {
-    final inFlight = _refreshInFlight;
-    if (inFlight != null) return inFlight;
-
-    final future = _performRefresh();
-    _refreshInFlight = future;
-    return future.whenComplete(() {
-      if (identical(_refreshInFlight, future)) _refreshInFlight = null;
-    });
-  }
-
-  Future<bool> _performRefresh() async {
-    final current = _sessionStore.session;
-    if (current == null) return false;
-    try {
-      final response = _asMap(
-        await _request(
-          'POST',
-          '/v1/auth/refresh',
-          body: {'refreshToken': current.refreshToken},
-          retryAfterRefresh: false,
-        ),
-      );
-      await _sessionStore.save(UserSession.fromApi(_dataMap(response)));
-      return true;
-    } on ApiException catch (error) {
-      if (error.statusCode == 401) {
-        await _sessionStore.clear(reason: SessionChangeReason.expired);
-        return false;
-      }
-      rethrow;
-    }
-  }
-
-  ApiException _apiException(http.Response response) {
-    try {
-      final payload = _asMap(jsonDecode(response.body));
-      final error = Map<String, dynamic>.from(
-        payload['error'] as Map? ?? const {},
-      );
-      return ApiException(
-        statusCode: response.statusCode,
-        code: error['code']?.toString() ?? 'HTTP_ERROR',
-        message: error['message']?.toString() ?? '요청을 처리하지 못했습니다.',
-        details: error['details'],
-      );
-    } catch (_) {
-      return ApiException(
-        statusCode: response.statusCode,
-        code: 'HTTP_ERROR',
-        message: '서버가 HTTP ${response.statusCode}를 반환했습니다.',
-      );
-    }
+    final uri = _transport
+        .uri('/v1/sync')
+        .replace(queryParameters: {'baseRevision': '$baseRevision'});
+    await _transport.requestUri('DELETE', uri, authenticated: true);
   }
 
   static Map<String, dynamic> _legacyDrug(Map<String, dynamic> item) => {

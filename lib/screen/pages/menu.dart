@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:pillnote/controller/controller.dart';
+import 'package:pillnote/app/app_services.dart';
 import 'package:pillnote/screen/pages/submenu/alarmtime.dart';
 import 'package:pillnote/screen/pages/submenu/pushalarm.dart';
 import 'package:pillnote/screen/register/register.dart';
 import 'package:pillnote/services/api_client.dart';
 import 'package:pillnote/services/push_notification_service.dart';
 import 'package:pillnote/services/session_store.dart';
+import 'package:pillnote/widgets/app_ui.dart';
 
 class Menu extends StatefulWidget {
   const Menu({super.key});
@@ -22,9 +23,9 @@ class _MenuState extends State<Menu> {
   Future<void> _sync() async {
     setState(() => _isBusy = true);
     try {
-      final revision = await Controller.reconcileWithServer();
+      await AppServices.instance.sync.reconcileWithServer();
       if (!mounted) return;
-      _showMessage('클라우드 백업 동기화가 완료되었습니다. (revision $revision)');
+      _showMessage('복약 데이터를 백업했어요.');
       setState(() {});
     } on ApiException catch (error) {
       if (mounted) _showMessage(error.message, error: true);
@@ -111,7 +112,7 @@ class _MenuState extends State<Menu> {
     if (confirmed != true) return;
     setState(() => _isBusy = true);
     try {
-      await Controller.deleteCloudBackup();
+      await AppServices.instance.sync.deleteCloudBackup();
       if (mounted) _showMessage('클라우드 백업을 삭제했습니다.');
     } on ApiException catch (error) {
       if (mounted) _showMessage(error.message, error: true);
@@ -180,7 +181,7 @@ class _MenuState extends State<Menu> {
         // 서버의 계정 삭제가 기기 등록 해제보다 우선입니다.
       }
       await ApiClient.instance.deleteAccount(code);
-      await Controller.clearLocalData();
+      await AppServices.instance.clearLocalData();
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute<void>(builder: (_) => const Register()),
@@ -205,174 +206,235 @@ class _MenuState extends State<Menu> {
   @override
   Widget build(BuildContext context) {
     final session = SessionStore.instance.session;
+    final lastSync = AppServices.instance.sync.lastSyncedAt?.toLocal();
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(title: const Text('메뉴')),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 110),
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: _isLoggedIn
-                    ? Row(
-                        children: [
-                          const CircleAvatar(
-                            radius: 24,
-                            child: Icon(Icons.person_outline),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  '로그인됨',
-                                  style: TextStyle(color: Colors.black54),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  session?.email ?? '',
-                                  style: const TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+      resizeToAvoidBottomInset: false,
+      body: PageScrollView(
+        title: '설정',
+        subtitle: '내 복약 생활을 편하게 맞춰요.',
+        padding: const EdgeInsets.only(bottom: 24),
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SoftPanel(
+                  child: _isLoggedIn
+                      ? Row(
+                          children: [
+                            const CircleAvatar(
+                              backgroundColor: Color(0xFFE5EDFF),
+                              child: Icon(Icons.person_outline, color: blue),
                             ),
-                          ),
-                        ],
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const Text(
-                            '로그인하면 기기 간 백업과 보호자 알림을 사용할 수 있습니다.',
-                            style: TextStyle(height: 1.5),
-                          ),
-                          const SizedBox(height: 14),
-                          FilledButton(
-                            onPressed: () => Navigator.push(
-                              context,
-                              MaterialPageRoute<void>(
-                                builder: (_) => const Register(),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    '내 계정',
+                                    style: TextStyle(
+                                      color: muted,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    session?.email ?? '',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ).then((_) => setState(() {})),
-                            child: const Text('이메일로 로그인'),
+                            ),
+                          ],
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Text(
+                              '내 기기에 저장하고 있어요',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              '로그인하면 약과 기록을 백업하고 보호자를 연결할 수 있어요.',
+                              style: TextStyle(color: muted, height: 1.6),
+                            ),
+                            const SizedBox(height: 16),
+                            FilledButton(
+                              onPressed: _login,
+                              child: const Text('이메일로 로그인'),
+                            ),
+                          ],
+                        ),
+                ),
+                const SizedBox(height: 20),
+                const SectionLabel('복약 알림'),
+                _tile(
+                  Icons.schedule_outlined,
+                  '놓친 복용 알림',
+                  '보호자에게 알리기 전 대기 시간',
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(builder: (_) => const Alarmtime()),
+                  ),
+                ),
+                _tile(
+                  Icons.family_restroom_outlined,
+                  '보호자 연결',
+                  _isLoggedIn ? '연결 상태와 받은 초대 확인' : '로그인 후 보호자를 연결할 수 있어요.',
+                  _isLoggedIn
+                      ? () => Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => const Pushalarm(),
+                          ),
+                        )
+                      : _login,
+                ),
+                const SizedBox(height: 20),
+                const SectionLabel('데이터 백업'),
+                SoftPanel(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.cloud_outlined, color: blue),
+                          const SizedBox(width: 10),
+                          Text(
+                            _isLoggedIn ? '클라우드 백업' : '기기에 저장됨',
+                            style: const TextStyle(fontWeight: FontWeight.w700),
                           ),
                         ],
                       ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            _sectionTitle('복약 및 알림'),
-            _menuTile(
-              icon: Icons.schedule_outlined,
-              title: '미복용 판정 시간',
-              subtitle: '예정 시각 이후 보호자 알림 기준을 설정합니다.',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute<void>(builder: (_) => const Alarmtime()),
-              ),
-            ),
-            _menuTile(
-              icon: Icons.family_restroom_outlined,
-              title: '보호자 및 Push 알림',
-              subtitle: _isLoggedIn
-                  ? '보호자 초대, 받은 초대와 기기 알림을 관리합니다.'
-                  : '로그인 후 사용할 수 있습니다.',
-              onTap: _isLoggedIn
-                  ? () => Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (_) => const Pushalarm(),
+                      const SizedBox(height: 10),
+                      Text(
+                        !_isLoggedIn
+                            ? '다른 기기에서도 기록을 보려면 로그인하세요.'
+                            : lastSync == null
+                            ? '아직 백업을 완료하지 않았어요.'
+                            : '최근 백업: ${lastSync.month}월 ${lastSync.day}일 ${lastSync.hour.toString().padLeft(2, '0')}:${lastSync.minute.toString().padLeft(2, '0')}',
+                        style: const TextStyle(color: muted, fontSize: 13),
                       ),
-                    )
-                  : null,
+                      if (_isLoggedIn) ...[
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: _isBusy ? null : _sync,
+                            icon: _isBusy
+                                ? const SizedBox.square(
+                                    dimension: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.sync, size: 18),
+                            label: const Text('지금 백업하기'),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (_isLoggedIn) ...[
+                  const SizedBox(height: 24),
+                  ExpansionTile(
+                    tilePadding: EdgeInsets.zero,
+                    childrenPadding: EdgeInsets.zero,
+                    title: const Text(
+                      '계정 관리',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: const Text('로그아웃 · 데이터 삭제'),
+                    children: [
+                      _tile(
+                        Icons.logout,
+                        '로그아웃',
+                        null,
+                        _isBusy ? null : _logout,
+                      ),
+                      _tile(
+                        Icons.devices_outlined,
+                        '모든 기기에서 로그아웃',
+                        null,
+                        _isBusy ? null : _logoutAll,
+                      ),
+                      _tile(
+                        Icons.cloud_off_outlined,
+                        '클라우드 백업 삭제',
+                        '이 기기의 기록은 유지돼요.',
+                        _isBusy ? null : _deleteCloudBackup,
+                      ),
+                      _tile(
+                        Icons.delete_forever_outlined,
+                        '계정 삭제',
+                        '계정과 복약 데이터를 삭제해요.',
+                        _isBusy ? null : _deleteAccount,
+                        destructive: true,
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 36),
+                const Center(
+                  child: Text(
+                    'PillNote 1.0.0',
+                    style: TextStyle(color: muted, fontSize: 12),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
-            _sectionTitle('계정 및 데이터'),
-            _menuTile(
-              icon: Icons.cloud_sync_outlined,
-              title: '클라우드 백업 동기화',
-              subtitle: '로컬 복약 데이터를 암호화된 서버 백업과 병합합니다.',
-              onTap: _isLoggedIn && !_isBusy ? _sync : null,
-              trailing: _isBusy
-                  ? const SizedBox.square(
-                      dimension: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : null,
-            ),
-            if (_isLoggedIn) ...[
-              _menuTile(
-                icon: Icons.cloud_off_outlined,
-                title: '클라우드 백업 삭제',
-                subtitle: '이 기기의 데이터는 유지하고 서버 백업만 삭제합니다.',
-                onTap: _isBusy ? null : _deleteCloudBackup,
-              ),
-              _menuTile(
-                icon: Icons.logout,
-                title: '로그아웃',
-                onTap: _isBusy ? null : _logout,
-              ),
-              _menuTile(
-                icon: Icons.devices_outlined,
-                title: '모든 기기에서 로그아웃',
-                onTap: _isBusy ? null : _logoutAll,
-              ),
-              _menuTile(
-                icon: Icons.delete_forever_outlined,
-                title: '계정 삭제',
-                titleColor: Colors.red,
-                onTap: _isBusy ? null : _deleteAccount,
-              ),
-            ],
-            const SizedBox(height: 20),
-            const Center(
-              child: Text(
-                'PillNote 1.0.0',
-                style: TextStyle(color: Colors.black45),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _sectionTitle(String title) => Padding(
-    padding: const EdgeInsets.only(left: 4, bottom: 8),
-    child: Text(
-      title,
-      style: const TextStyle(
-        fontSize: 14,
-        color: Colors.black54,
-        fontWeight: FontWeight.bold,
-      ),
-    ),
-  );
+  void _login() {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(builder: (_) => const Register()),
+    ).then((_) {
+      if (mounted) setState(() {});
+    });
+  }
 
-  Widget _menuTile({
-    required IconData icon,
-    required String title,
+  Widget _tile(
+    IconData icon,
+    String title,
     String? subtitle,
-    VoidCallback? onTap,
-    Widget? trailing,
-    Color? titleColor,
-  }) => Card(
-    margin: const EdgeInsets.only(bottom: 10),
-    child: ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-      leading: Icon(icon, color: titleColor ?? const Color(0xFF2563EB)),
-      title: Text(
-        title,
-        style: TextStyle(fontWeight: FontWeight.bold, color: titleColor),
+    VoidCallback? onTap, {
+    bool destructive = false,
+  }) => Column(
+    children: [
+      ListTile(
+        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+        leading: Icon(icon, color: destructive ? Colors.red : muted),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: destructive ? Colors.red : ink,
+          ),
+        ),
+        subtitle: subtitle == null
+            ? null
+            : Text(
+                subtitle,
+                style: const TextStyle(color: muted, fontSize: 13),
+              ),
+        trailing: const Icon(Icons.chevron_right, color: muted, size: 20),
+        onTap: onTap,
       ),
-      subtitle: subtitle == null ? null : Text(subtitle),
-      trailing: trailing ?? const Icon(Icons.chevron_right),
-      onTap: onTap,
-    ),
+      const Divider(),
+    ],
   );
 }

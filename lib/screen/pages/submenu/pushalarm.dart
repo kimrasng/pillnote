@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pillnote/services/api_client.dart';
 import 'package:pillnote/services/push_notification_service.dart';
 import 'package:pillnote/services/session_store.dart';
+import 'package:pillnote/widgets/app_ui.dart';
 
 class Pushalarm extends StatefulWidget {
   const Pushalarm({super.key});
@@ -36,6 +37,7 @@ class _PushalarmState extends State<Pushalarm> {
       _error = null;
     });
     try {
+      await PushNotificationService.instance.refreshPermissionStatus();
       final results = await Future.wait([
         ApiClient.instance.guardians(),
         ApiClient.instance.guardianInvitations(),
@@ -62,9 +64,8 @@ class _PushalarmState extends State<Pushalarm> {
     setState(() => _isRegisteringDevice = false);
     _message(
       registered
-          ? '이 기기의 Push 알림 등록을 완료했습니다.'
-          : PushNotificationService.instance.lastError ??
-                'Firebase 설정 또는 알림 권한을 확인해주세요.',
+          ? '이 기기에서 알림을 받을 수 있어요.'
+          : '알림을 켜지 못했어요. 기기 설정에서 권한을 확인하고 다시 시도하세요.',
       error: !registered,
     );
   }
@@ -119,7 +120,7 @@ class _PushalarmState extends State<Pushalarm> {
         name: values[1],
       );
       if (!mounted) return;
-      _message('앱 내부 보호자 초대를 생성했습니다.');
+      _message('초대했어요. 보호자가 앱에서 수락하면 연결됩니다.');
       await _load();
     } on ApiException catch (error) {
       if (mounted) _message(error.message, error: true);
@@ -228,115 +229,177 @@ class _PushalarmState extends State<Pushalarm> {
 
   @override
   Widget build(BuildContext context) {
+    final notifications = PushNotificationService.instance;
+    final connected = _guardians
+        .where((g) => g['status'] == 'accepted' && g['enabled'] == true)
+        .length;
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('보호자 및 Push 알림'),
-        actions: [
-          IconButton(onPressed: _load, icon: const Icon(Icons.refresh)),
-        ],
-      ),
+      resizeToAvoidBottomInset: false,
+      appBar: _isLoading || _error != null
+          ? AppBar(title: const Text('보호자 연결'))
+          : null,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(_error!),
-                  TextButton(onPressed: _load, child: const Text('다시 시도')),
-                ],
+          ? Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(_error!, textAlign: TextAlign.center),
+                    TextButton(onPressed: _load, child: const Text('다시 시도')),
+                  ],
+                ),
               ),
             )
           : RefreshIndicator(
               onRefresh: _load,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+              child: PageScrollView(
+                title: '보호자 연결',
+                subtitle: connected > 0
+                    ? '함께 챙기는 복약 생활. 복용 기록이 없으면 연결된 보호자에게 알려요.'
+                    : '혼자 챙기지 않아도 돼요. 보호자를 초대하고, 수락하면 복약 알림으로 연결돼요.',
+                showBackButton: true,
+                physics: const AlwaysScrollableScrollPhysics(),
+                trailing: IconButton(
+                  tooltip: '새로고침',
+                  onPressed: _load,
+                  icon: const Icon(Icons.refresh),
+                ),
                 children: [
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(18),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Row(
-                            children: [
-                              Icon(Icons.phone_android),
-                              SizedBox(width: 10),
-                              Text(
-                                '이 기기 Push 알림',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 17,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            PushNotificationService.instance.isConfigured
-                                ? '알림 권한을 허용하고 FCM 토큰을 서버에 등록합니다.'
-                                : 'Firebase 빌드 설정이 필요합니다.',
-                          ),
-                          const SizedBox(height: 12),
-                          OutlinedButton.icon(
-                            onPressed: _isRegisteringDevice
-                                ? null
-                                : _registerDevice,
-                            icon: _isRegisteringDevice
-                                ? const SizedBox.square(
-                                    dimension: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.notifications_active_outlined,
-                                  ),
-                            label: const Text('이 기기 등록·갱신'),
-                          ),
-                        ],
-                      ),
+                  SectionLabel(
+                    '내 보호자',
+                    trailing: Text(
+                      '$connected명 연결',
+                      style: const TextStyle(color: blue, fontSize: 13),
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  _heading('내게 온 초대'),
-                  if (_invitations.isEmpty)
-                    const _EmptyCard(text: '대기 중인 보호자 초대가 없습니다.')
+                  if (_guardians.isEmpty)
+                    const SoftPanel(
+                      child: Text(
+                        '아직 연결된 보호자가 없어요.',
+                        style: TextStyle(color: muted),
+                      ),
+                    )
                   else
-                    ..._invitations.map(
-                      (invitation) => Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
+                    ..._guardians.map((guardian) {
+                      final status = '${guardian['status'] ?? 'pending'}';
+                      final accepted = status == 'accepted';
+                      final enabled = guardian['enabled'] == true;
+                      final display = '${guardian['name'] ?? ''}'.isEmpty
+                          ? '${guardian['email']}'
+                          : '${guardian['name']}';
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: SoftPanel(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                invitation['owner']?['email']?.toString() ??
-                                    '사용자',
+                                display,
                                 style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
-                              const SizedBox(height: 8),
-                              const Text('복약 보호자로 초대했습니다.'),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${guardian['email']}',
+                                style: const TextStyle(
+                                  color: muted,
+                                  fontSize: 13,
+                                ),
+                              ),
                               const SizedBox(height: 12),
+                              Text(
+                                accepted
+                                    ? enabled
+                                          ? '연결됨 · 알림 켜짐'
+                                          : '연결됨 · 알림 꺼짐'
+                                    : status == 'rejected'
+                                    ? '초대 거절됨'
+                                    : '초대 수락 기다리는 중',
+                                style: TextStyle(
+                                  color: accepted && enabled ? blue : muted,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              if (accepted)
+                                SwitchListTile.adaptive(
+                                  activeTrackColor: blue,
+                                  contentPadding: EdgeInsets.zero,
+                                  title: const Text(
+                                    '놓친 복용 알림 보내기',
+                                    style: TextStyle(fontSize: 14),
+                                  ),
+                                  value: enabled,
+                                  onChanged: (v) =>
+                                      _toggleGuardian(guardian, v),
+                                ),
+                              Wrap(
+                                spacing: 12,
+                                children: [
+                                  TextButton(
+                                    onPressed: () => _renameGuardian(guardian),
+                                    child: const Text('이름 수정'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => _deleteGuardian(guardian),
+                                    child: const Text('연결 삭제'),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  if (_guardians.isEmpty) ...[
+                    const SizedBox(height: 16),
+                    FilledButton.icon(
+                      onPressed: _inviteGuardian,
+                      icon: const Icon(Icons.person_add_alt_1),
+                      label: const Text('보호자 초대'),
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  const SectionLabel('내게 온 초대'),
+                  if (_invitations.isEmpty)
+                    const Text('대기 중인 초대가 없어요.', style: TextStyle(color: muted))
+                  else
+                    ..._invitations.map(
+                      (invitation) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: SoftPanel(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${invitation['owner']?['email'] ?? '사용자'}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              const Text(
+                                '복약 보호자로 초대했어요.',
+                                style: TextStyle(color: muted),
+                              ),
+                              const SizedBox(height: 16),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
                                   TextButton(
-                                    onPressed: () => _respond(
-                                      invitation['id'].toString(),
-                                      false,
-                                    ),
+                                    onPressed: () =>
+                                        _respond('${invitation['id']}', false),
                                     child: const Text('거절'),
                                   ),
                                   const SizedBox(width: 8),
                                   FilledButton(
-                                    onPressed: () => _respond(
-                                      invitation['id'].toString(),
-                                      true,
-                                    ),
+                                    onPressed: () =>
+                                        _respond('${invitation['id']}', true),
                                     child: const Text('수락'),
                                   ),
                                 ],
@@ -347,93 +410,30 @@ class _PushalarmState extends State<Pushalarm> {
                       ),
                     ),
                   const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _heading('내 보호자'),
-                      TextButton.icon(
-                        onPressed: _guardians.isEmpty ? _inviteGuardian : null,
-                        icon: const Icon(Icons.person_add_alt_1),
-                        label: const Text('초대'),
-                      ),
-                    ],
+                  const Divider(),
+                  const SizedBox(height: 24),
+                  const SectionLabel('이 기기 알림'),
+                  Text(
+                    notifications.statusMessage,
+                    style: const TextStyle(color: muted, height: 1.6),
                   ),
-                  if (_guardians.isEmpty)
-                    const _EmptyCard(
-                      text: '보호자를 초대하면 미복용 시 앱 Push 알림을 보낼 수 있습니다.',
-                    )
-                  else
-                    ..._guardians.map((guardian) {
-                      final status =
-                          guardian['status']?.toString() ?? 'pending';
-                      final accepted = status == 'accepted';
-                      return Card(
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.fromLTRB(
-                            16,
-                            10,
-                            8,
-                            10,
-                          ),
-                          title: Text(
-                            guardian['name']?.toString() ??
-                                guardian['email'].toString(),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            '${guardian['email']} · ${_statusLabel(status)}',
-                          ),
-                          onTap: () => _renameGuardian(guardian),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Switch(
-                                value: accepted && guardian['enabled'] == true,
-                                onChanged: accepted
-                                    ? (value) =>
-                                          _toggleGuardian(guardian, value)
-                                    : null,
-                              ),
-                              IconButton(
-                                onPressed: () => _deleteGuardian(guardian),
-                                icon: const Icon(Icons.delete_outline),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }),
+                  const SizedBox(height: 16),
+                  if (notifications.isConfigured)
+                    OutlinedButton.icon(
+                      onPressed: _isRegisteringDevice ? null : _registerDevice,
+                      icon: _isRegisteringDevice
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.notifications_outlined),
+                      label: Text(
+                        notifications.isRegistered ? '알림 상태 갱신' : '알림 켜기',
+                      ),
+                    ),
                 ],
               ),
             ),
     );
   }
-
-  Widget _heading(String text) => Padding(
-    padding: const EdgeInsets.only(left: 4, bottom: 8),
-    child: Text(
-      text,
-      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-    ),
-  );
-
-  String _statusLabel(String status) => switch (status) {
-    'accepted' => '수락됨',
-    'rejected' => '거절됨',
-    _ => '수락 대기',
-  };
-}
-
-class _EmptyCard extends StatelessWidget {
-  const _EmptyCard({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(18),
-      child: Text(text, style: const TextStyle(color: Colors.black54)),
-    ),
-  );
 }

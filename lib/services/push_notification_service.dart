@@ -5,7 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:pillnote/config/app_config.dart';
-import 'package:pillnote/controller/controller.dart';
+import 'package:pillnote/app/app_services.dart';
 import 'package:pillnote/services/api_client.dart';
 import 'package:pillnote/services/session_store.dart';
 
@@ -26,11 +26,35 @@ class PushNotificationService {
   StreamSubscription<String>? _tokenSubscription;
   StreamSubscription<RemoteMessage>? _messageSubscription;
   bool _initialized = false;
+  bool isRegistered = false;
+  bool? permissionGranted;
   String? lastError;
 
   bool get isConfigured => AppConfig.isFirebaseConfigured;
   bool get isInitialized => _initialized;
   Stream<RemoteMessage> get foregroundMessages => _foregroundMessages.stream;
+
+  String get statusMessage {
+    if (!isConfigured) return '현재 환경에서는 기기 알림을 사용할 수 없어요.';
+    if (permissionGranted == false) return '기기 설정에서 PillNote 알림을 허용하세요.';
+    if (isRegistered) return '이 기기에서 알림을 받을 준비가 되었어요.';
+    return '알림을 켜면 보호자 알림을 받을 수 있어요.';
+  }
+
+  Future<void> refreshPermissionStatus() async {
+    if (!isConfigured) return;
+    await initialize();
+    if (!_initialized) return;
+    try {
+      final settings = await FirebaseMessaging.instance
+          .getNotificationSettings();
+      permissionGranted =
+          settings.authorizationStatus == AuthorizationStatus.authorized ||
+          settings.authorizationStatus == AuthorizationStatus.provisional;
+    } catch (_) {
+      permissionGranted = null;
+    }
+  }
 
   Future<void> initialize() async {
     if (_initialized) return;
@@ -79,6 +103,7 @@ class PushNotificationService {
     try {
       await _registerToken(token);
       lastError = null;
+      isRegistered = true;
     } catch (error) {
       lastError = _friendlyError(error);
       debugPrint('FCM 토큰 서버 등록 실패: $error');
@@ -102,6 +127,9 @@ class PushNotificationService {
         badge: true,
         sound: true,
       );
+      permissionGranted =
+          settings.authorizationStatus == AuthorizationStatus.authorized ||
+          settings.authorizationStatus == AuthorizationStatus.provisional;
       if (settings.authorizationStatus == AuthorizationStatus.denied) {
         lastError = '알림 권한이 거부되었습니다.';
         return false;
@@ -124,6 +152,7 @@ class PushNotificationService {
       }
       await _registerToken(token);
       lastError = null;
+      isRegistered = true;
       return true;
     } catch (error) {
       lastError = _friendlyError(error);
@@ -159,7 +188,8 @@ class PushNotificationService {
   Future<void> unregisterCurrentDevice() async {
     if (!SessionStore.instance.isLoggedIn) return;
     try {
-      await ApiClient.instance.unregisterDevice(Controller.deviceId);
+      await ApiClient.instance.unregisterDevice(AppServices.instance.deviceId);
+      isRegistered = false;
     } on ApiException catch (error) {
       if (error.code != 'DEVICE_NOT_FOUND') rethrow;
     }
@@ -168,7 +198,7 @@ class PushNotificationService {
   Future<void> _registerToken(String token) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await ApiClient.instance.registerDevice(
-      deviceId: Controller.deviceId,
+      deviceId: AppServices.instance.deviceId,
       platform: Platform.isIOS ? 'ios' : 'android',
       pushToken: token,
     );

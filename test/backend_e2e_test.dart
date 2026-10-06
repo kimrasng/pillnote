@@ -77,14 +77,47 @@ void main() {
         snapshot: {
           'schemaVersion': 1,
           'deviceId': 'mobile-e2e-device',
-          'pills': [],
-          'groups': [],
-          'intakeHistory': {},
+          'pills': [
+            {
+              'id': 'manual-pill',
+              'ITEM_NAME': '직접 등록 테스트약',
+              'stock': null,
+              'trackStock': false,
+              'times': ['08:00'],
+              'endDate': null,
+            },
+          ],
+          'groups': [
+            {
+              'id': 'deleted-group',
+              'deleted': true,
+              'updatedAt': '2026-10-03T09:00:00.000Z',
+            },
+          ],
+          'intakeHistory': {
+            '2026-10-03': [
+              {
+                'pillId': 'manual-pill',
+                'scheduledTime': '08:00',
+                'cancelled': true,
+                'stockDelta': 0,
+                'updatedAt': '2026-10-03T09:00:00.000Z',
+              },
+            ],
+          },
           'settings': {'reminderMinutes': 30},
         },
       );
       expect(saved['revision'], 1);
       expect((await owner.fetchSnapshot())['revision'], 1);
+      final restored = (await owner.fetchSnapshot())['snapshot'] as Map;
+      expect((restored['pills'] as List).single['stock'], isNull);
+      expect((restored['groups'] as List).single['deleted'], isTrue);
+      expect(
+        ((restored['intakeHistory'] as Map)['2026-10-03'] as List)
+            .single['cancelled'],
+        isTrue,
+      );
 
       await guardian.registerDevice(
         deviceId: 'guardian-e2e-phone',

@@ -1,426 +1,167 @@
 import 'package:flutter/material.dart';
-import 'package:pillnote/controller/controller.dart';
+import 'package:pillnote/app/app_services.dart';
+import 'package:pillnote/models/medication.dart';
+import 'package:pillnote/widgets/app_ui.dart';
+import 'package:pillnote/widgets/schedule_fields.dart';
 
 class PillGroupEdit extends StatefulWidget {
-  final Map<String, dynamic>? group;
-
   const PillGroupEdit({super.key, this.group});
-
+  final Map<String, dynamic>? group;
   @override
   State<PillGroupEdit> createState() => _PillGroupEditState();
 }
 
 class _PillGroupEditState extends State<PillGroupEdit> {
-  final _nameController = TextEditingController();
-  List<String> _selectedPillIds = [];
-  String? _startDate;
-  String? _endDate;
-  List<String> _times = ["08:00", "13:00", "19:00"];
-
+  final _form = GlobalKey<FormState>();
+  late final TextEditingController _name;
+  late final ScheduleDraft _schedule;
+  late Set<String> _ids;
+  bool _saving = false;
   @override
   void initState() {
     super.initState();
-    if (widget.group != null) {
-      _nameController.text = widget.group!['name'] ?? '';
-      _selectedPillIds = List<String>.from(widget.group!['pillIds'] ?? []);
-      _startDate = widget.group!['startDate'];
-      _endDate = widget.group!['endDate'];
-      _times = List<String>.from(
-        widget.group!['times'] ?? ["08:00", "13:00", "19:00"],
-      );
-    }
+    _name = TextEditingController(text: '${widget.group?['name'] ?? ''}');
+    _schedule = ScheduleDraft(widget.group);
+    _ids = (widget.group?['pillIds'] as List? ?? [])
+        .map((id) => id.toString())
+        .toSet();
   }
 
-  void _showScheduleDialog() async {
-    DateTimeRange? pickedRange = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime.now().subtract(const Duration(days: 30)),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      initialDateRange: _startDate != null
-          ? DateTimeRange(
-              start: DateTime.parse(_startDate!),
-              end: DateTime.parse(_endDate!),
-            )
-          : null,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF2563EB),
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
 
-    if (pickedRange == null) return;
-    if (!mounted) return;
-
-    List<String> tempTimes = List<String>.from(_times);
-
-    List<String>? finalTimes = await showDialog<List<String>>(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text(
-                "복용 시간 설정",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: tempTimes.length,
-                        itemBuilder: (context, index) {
-                          return ListTile(
-                            title: Text(
-                              tempTimes[index],
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            trailing: IconButton(
-                              icon: const Icon(
-                                Icons.remove_circle_outline,
-                                color: Colors.redAccent,
-                              ),
-                              onPressed: () => setDialogState(
-                                () => tempTimes.removeAt(index),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    const Divider(),
-                    TextButton.icon(
-                      onPressed: () async {
-                        TimeOfDay? pickedTime = await showTimePicker(
-                          context: context,
-                          initialTime: TimeOfDay.now(),
-                        );
-                        if (pickedTime != null) {
-                          final String formatted =
-                              "${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}";
-                          if (!tempTimes.contains(formatted)) {
-                            setDialogState(() {
-                              tempTimes.add(formatted);
-                              tempTimes.sort();
-                            });
-                          }
-                        }
-                      },
-                      icon: const Icon(Icons.add_circle_outline),
-                      label: const Text("시간 추가"),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("취소"),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.pop(context, tempTimes),
-                  child: const Text("확인"),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-
-    if (finalTimes != null) {
-      setState(() {
-        _startDate = pickedRange.start.toString().split(' ')[0];
-        _endDate = pickedRange.end.toString().split(' ')[0];
-        _times = finalTimes;
-      });
+  void _message(String message) => ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(message)));
+  Future<void> _save() async {
+    if (!_form.currentState!.validate()) return;
+    if (_name.text.trim().isEmpty) {
+      _message('묶음 이름을 입력하세요.');
+      return;
     }
+    if (_ids.isEmpty) {
+      _message('함께 복용할 약을 하나 이상 선택하세요.');
+      return;
+    }
+    if (_schedule.times.isEmpty) {
+      _message('복용 시간을 하나 이상 정하세요.');
+      return;
+    }
+    setState(() => _saving = true);
+    await AppServices.instance.medications.saveGroup({
+      ...?widget.group,
+      'name': _name.text.trim(),
+      'pillIds': _ids.toList(),
+      ..._schedule.data,
+    });
+    if (mounted) Navigator.pop(context);
+  }
+
+  Future<void> _delete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('약 묶음을 삭제할까요?'),
+        content: const Text('묶음의 공통 일정만 삭제됩니다. 포함된 약과 지난 복용 기록은 유지돼요.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await AppServices.instance.medications.removeGroup(
+      '${widget.group!['id']}',
+    );
+    if (mounted) Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    final pills = Controller.getPills();
-    final size = MediaQuery.of(context).size;
-    final double screenWidth = size.width;
-    final double screenHeight = size.height;
-
+    final pills = AppServices.instance.medications
+        .getPills()
+        .where((p) => p['archived'] != true || _ids.contains('${p['id']}'))
+        .toList();
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text(
-          widget.group == null ? "처방전 묶음 만들기" : "처방전 수정",
-          style: TextStyle(
-            fontSize: screenWidth * 0.05,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          if (widget.group != null)
-            IconButton(
-              icon: Icon(
-                Icons.delete_outline,
-                color: Colors.redAccent,
-                size: screenWidth * 0.06,
+      resizeToAvoidBottomInset: false,
+      body: Form(
+        key: _form,
+        child: PageScrollView(
+          title: widget.group == null ? '약 묶음 만들기' : '약 묶음 수정',
+          subtitle: '함께 복용하는 약과 공통 일정을 정해요.',
+          showBackButton: true,
+          trailing: widget.group == null
+              ? null
+              : IconButton(
+                  tooltip: '묶음 삭제',
+                  onPressed: _delete,
+                  icon: const Icon(Icons.delete_outline),
+                ),
+          children: [
+            TextFormField(
+              controller: _name,
+              decoration: const InputDecoration(
+                labelText: '묶음 이름',
+                hintText: '예: 아침에 먹는 약',
               ),
-              onPressed: () async {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text("묶음 삭제"),
-                    content: const Text("이 처방전 묶음을 삭제하시겠습니까?"),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text("취소"),
-                      ),
-                      FilledButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                        ),
-                        child: const Text("삭제"),
-                      ),
-                    ],
-                  ),
-                );
-                if (confirm == true) {
-                  await Controller.removeGroup(widget.group!['id']);
-                  if (context.mounted) Navigator.pop(context);
-                }
-              },
+              validator: (v) =>
+                  v == null || v.trim().isEmpty ? '묶음 이름을 입력하세요.' : null,
             ),
-        ],
-      ),
-      body: ListView(
-        padding: EdgeInsets.all(screenWidth * 0.06),
-        children: [
-          _buildLabel("묶음 이름", screenWidth),
-          TextField(
-            controller: _nameController,
-            style: TextStyle(fontSize: screenWidth * 0.045),
-            decoration: InputDecoration(
-              hintText: "예: 아침 처방약",
-              filled: true,
-              fillColor: const Color(0xFFF8FAFC),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide.none,
+            const SizedBox(height: 20),
+            SectionLabel(
+              '포함할 약',
+              trailing: Text(
+                '${_ids.length}개 선택',
+                style: const TextStyle(color: blue, fontSize: 13),
               ),
-              contentPadding: EdgeInsets.all(screenWidth * 0.04),
             ),
-          ),
-          SizedBox(height: screenHeight * 0.04),
-          _buildLabel("포함할 약 선택", screenWidth),
-          if (pills.isEmpty)
-            Container(
-              padding: EdgeInsets.all(screenWidth * 0.05),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                borderRadius: BorderRadius.circular(16),
+            if (pills.isEmpty)
+              const SoftPanel(child: Text('내 약 상자에서 먼저 약을 추가하세요.')),
+            ...pills.map(
+              (pill) => CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                title: Text(Medication.name(pill)),
+                subtitle: Text(
+                  pill['archived'] == true
+                      ? '보관 중 · 홈 일정에서 제외됨'
+                      : '${pill['strength'] ?? pill['ENTP_NAME'] ?? ''}',
+                ),
+                value: _ids.contains('${pill['id']}'),
+                onChanged: (value) => setState(() {
+                  if (value == true) {
+                    _ids.add('${pill['id']}');
+                  } else {
+                    _ids.remove('${pill['id']}');
+                  }
+                }),
               ),
+            ),
+            const SizedBox(height: 20),
+            const SoftPanel(
               child: Text(
-                "등록된 약이 없습니다. 먼저 개별 약을 등록해주세요.",
-                style: TextStyle(
-                  fontSize: screenWidth * 0.04,
-                  color: Colors.red.shade700,
-                ),
-              ),
-            )
-          else
-            Material(
-              color: const Color(0xFFF8FAFC),
-              clipBehavior: Clip.antiAlias,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(color: Colors.grey.shade100),
-              ),
-              child: Column(
-                children: pills.map((pill) {
-                  final isSelected = _selectedPillIds.contains(pill['id']);
-                  return Material(
-                    color: Colors.transparent,
-                    child: CheckboxListTile(
-                      title: Text(
-                        pill['ITEM_NAME'] ?? '',
-                        style: TextStyle(
-                          fontSize: screenWidth * 0.04,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      subtitle: Text(
-                        pill['ENTP_NAME'] ?? '',
-                        style: TextStyle(fontSize: screenWidth * 0.032),
-                      ),
-                      value: isSelected,
-                      activeColor: const Color(0xFF2563EB),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      onChanged: (val) {
-                        setState(() {
-                          if (val == true) {
-                            _selectedPillIds.add(pill['id']);
-                          } else {
-                            _selectedPillIds.remove(pill['id']);
-                          }
-                        });
-                      },
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: screenWidth * 0.04,
-                      ),
-                      controlAffinity: ListTileControlAffinity.leading,
-                    ),
-                  );
-                }).toList(),
+                '묶음의 공통 일정이 개별 일정에 더해져요. 같은 약의 같은 시간은 한 번만 표시되고, 복용량은 각 약의 설정을 따릅니다.',
+                style: TextStyle(color: muted, height: 1.6),
               ),
             ),
-          SizedBox(height: screenHeight * 0.04),
-          _buildLabel("복용 일정", screenWidth),
-          Material(
-            color: const Color(0xFFF0FDF4),
-            clipBehavior: Clip.antiAlias,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: const BorderSide(color: Color(0xFFDCFCE7)),
-            ),
-            child: InkWell(
-              onTap: _showScheduleDialog,
-              child: Container(
-                padding: EdgeInsets.all(screenWidth * 0.05),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.calendar_today_outlined,
-                      color: Color(0xFF16A34A),
-                    ),
-                    SizedBox(width: screenWidth * 0.04),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (_startDate == null)
-                            Text(
-                              "날짜와 시간을 설정하세요",
-                              style: TextStyle(
-                                fontSize: screenWidth * 0.04,
-                                color: const Color(0xFF16A34A),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            )
-                          else ...[
-                            Text(
-                              "$_startDate ~ $_endDate",
-                              style: TextStyle(
-                                fontSize: screenWidth * 0.04,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF16A34A),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              "시간: ${_times.join(', ')}",
-                              style: TextStyle(
-                                fontSize: screenWidth * 0.035,
-                                color: Colors.black54,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const Icon(
-                      Icons.edit_calendar_outlined,
-                      color: Color(0xFF16A34A),
-                      size: 20,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          SizedBox(height: screenHeight * 0.06),
-          SizedBox(
-            height: screenHeight * 0.07,
-            child: FilledButton(
-              onPressed: () async {
-                if (_nameController.text.isEmpty) {
-                  _showError("묶음 이름을 입력해주세요");
-                  return;
-                }
-                if (_selectedPillIds.isEmpty) {
-                  _showError("최소 하나 이상의 약을 선택해주세요");
-                  return;
-                }
-                if (_startDate == null) {
-                  _showError("복용 일정을 설정해주세요");
-                  return;
-                }
-
-                final groupData = {
-                  if (widget.group != null) 'id': widget.group!['id'],
-                  'name': _nameController.text,
-                  'pillIds': _selectedPillIds,
-                  'startDate': _startDate,
-                  'endDate': _endDate,
-                  'times': _times,
-                };
-
-                await Controller.saveGroup(groupData);
-                if (context.mounted) Navigator.pop(context);
-              },
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF2563EB),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              child: Text(
-                "저장하기",
-                style: TextStyle(
-                  fontSize: screenWidth * 0.045,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-          SizedBox(height: screenHeight * 0.05),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLabel(String text, double screenWidth) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 12),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: screenWidth * 0.042,
-          fontWeight: FontWeight.bold,
-          color: Colors.black87,
+            const SizedBox(height: 16),
+            ScheduleFields(draft: _schedule, showDosage: false),
+          ],
         ),
       ),
-    );
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.redAccent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      bottomNavigationBar: BottomAction(
+        label: '약 묶음 저장',
+        onPressed: _save,
+        busy: _saving,
       ),
     );
   }

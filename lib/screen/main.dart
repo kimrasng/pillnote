@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:pillnote/controller/controller.dart';
+import 'package:pillnote/app/app_services.dart';
 import 'package:pillnote/screen/pages/distanc.dart';
 import 'package:pillnote/screen/pages/home.dart';
 import 'package:pillnote/screen/pages/pill.dart';
@@ -21,12 +21,12 @@ class _MainState extends State<Main> with WidgetsBindingObserver {
 
   final List<({String label, String icon})> _navItems = [
     (label: '홈', icon: 'assets/icon/home.svg'),
+    (label: '내 약 상자', icon: 'assets/icon/pill.svg'),
     (label: '약국', icon: 'assets/icon/distance.svg'),
-    (label: '약 관리', icon: 'assets/icon/pill.svg'),
-    (label: '메뉴', icon: 'assets/icon/menu.svg'),
+    (label: '설정', icon: 'assets/icon/menu.svg'),
   ];
 
-  final List<Widget> _pages = const [Home(), Distanc(), Pill(), Menu()];
+  final List<Widget> _pages = const [Home(), Pill(), Distanc(), Menu()];
 
   @override
   void initState() {
@@ -46,7 +46,7 @@ class _MainState extends State<Main> with WidgetsBindingObserver {
 
   Future<void> _checkMissedDoses() async {
     try {
-      await Controller.checkAndSendMissedDoseAlerts();
+      await AppServices.instance.alerts.checkAndSend();
     } catch (_) {
       // 로컬 복약 화면은 네트워크 장애와 무관하게 계속 동작합니다.
     }
@@ -62,7 +62,7 @@ class _MainState extends State<Main> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true,
+      resizeToAvoidBottomInset: false,
       body: _pages[_currentIndex],
       bottomNavigationBar: _buildBottomBar(),
     );

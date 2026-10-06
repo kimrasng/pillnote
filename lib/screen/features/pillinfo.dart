@@ -1,386 +1,208 @@
 import 'package:flutter/material.dart';
-import 'package:pillnote/controller/controller.dart';
+import 'package:pillnote/app/app_services.dart';
+import 'package:pillnote/models/medication.dart';
 import 'package:pillnote/services/api_client.dart';
+import 'package:pillnote/screen/management/medication_form.dart';
+import 'package:pillnote/widgets/app_ui.dart';
 
 class Pillinfo extends StatefulWidget {
+  const Pillinfo({super.key, required this.pillSEQ, required this.isLocal});
   final String pillSEQ;
   final bool isLocal;
-
-  const Pillinfo({super.key, required this.pillSEQ, required this.isLocal});
-
   @override
   State<Pillinfo> createState() => _PillinfoState();
 }
 
 class _PillinfoState extends State<Pillinfo> {
-  Map<String, dynamic>? pillData;
-  bool isLoading = true;
-  String? errorMessage;
-
+  Map<String, dynamic>? _pill;
+  String? _error;
+  bool _loading = true;
   @override
   void initState() {
     super.initState();
-    _fetchPillData();
+    _load();
   }
 
-  Future<void> _fetchPillData() async {
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     if (widget.isLocal) {
-      final localPills = Controller.getPills();
-      final localPill = localPills.firstWhere(
-        (p) => p['ITEM_SEQ'] == widget.pillSEQ || p['id'] == widget.pillSEQ,
-        orElse: () => {},
-      );
-
-      if (localPill.isNotEmpty) {
+      final pill = AppServices.instance.medications
+          .getPills()
+          .where(
+            (p) => p['id'] == widget.pillSEQ || p['ITEM_SEQ'] == widget.pillSEQ,
+          )
+          .firstOrNull;
+      if (pill != null) {
         setState(() {
-          pillData = localPill;
-          isLoading = false;
+          _pill = pill;
+          _loading = false;
         });
         return;
       }
     }
-
     try {
-      final item = await ApiClient.instance.drugDetail(widget.pillSEQ);
-      if (!mounted) return;
-      setState(() {
-        pillData = item;
-        isLoading = false;
-      });
-    } on ApiException catch (error) {
+      final pill = await ApiClient.instance.drugDetail(widget.pillSEQ);
+      if (mounted) setState(() => _pill = pill);
+    } catch (error) {
       if (mounted) {
-        setState(() {
-          errorMessage = error.message;
-          isLoading = false;
-        });
+        setState(
+          () => _error = error is ApiException
+              ? error.message
+              : '약 정보를 불러오지 못했어요.',
+        );
       }
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          errorMessage = '서버에 연결할 수 없습니다.';
-          isLoading = false;
-        });
-      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _register() async {
+    final saved = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => MedicationForm(pill: _pill)),
+    );
+    if (saved == true && mounted) Navigator.pop(context, true);
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final double screenWidth = size.width;
-    final double screenHeight = size.height;
-
-    if (isLoading) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text('약 정보', style: TextStyle(fontSize: screenWidth * 0.05)),
-        ),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (errorMessage != null || pillData == null) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text('약 정보', style: TextStyle(fontSize: screenWidth * 0.05)),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                errorMessage ?? '약 정보를 불러오지 못했습니다.',
-                style: TextStyle(
-                  fontSize: screenWidth * 0.045,
-                  color: Colors.grey,
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    isLoading = true;
-                    errorMessage = null;
-                  });
-                  _fetchPillData();
-                },
-                child: const Text('다시 시도'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final item = pillData!;
-    final imageUrl = item['ITEM_IMAGE'] ?? '';
-    final consumerInfo = Map<String, dynamic>.from(
-      item['consumerInfo'] as Map? ?? const {},
+    final pill = _pill;
+    final consumer = Map<String, dynamic>.from(
+      pill?['consumerInfo'] as Map? ?? {},
     );
-
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text(
-          item['ITEM_NAME'] ?? '약 정보',
-          style: TextStyle(fontSize: screenWidth * 0.05),
-        ),
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: Icon(Icons.arrow_back_ios_new, size: screenWidth * 0.05),
-        ),
-      ),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                screenWidth * 0.06,
-                screenWidth * 0.04,
-                screenWidth * 0.06,
-                screenHeight * 0.15,
-              ),
+      resizeToAvoidBottomInset: false,
+      appBar: _loading || pill == null || _error != null
+          ? AppBar(title: const Text('약 정보'))
+          : null,
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : pill == null || _error != null
+          ? Center(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (imageUrl.isNotEmpty)
-                    Center(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(
-                            screenWidth * 0.05,
-                          ),
-                          border: Border.all(color: Colors.grey.shade100),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(
-                            screenWidth * 0.05,
-                          ),
-                          child: Image.network(
-                            imageUrl,
-                            width: double.infinity,
-                            height: screenHeight * 0.25,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(
-                                  width: double.infinity,
-                                  height: screenHeight * 0.25,
-                                  color: Colors.grey.shade50,
-                                  child: Icon(
-                                    Icons.broken_image_outlined,
-                                    size: screenWidth * 0.15,
-                                    color: Colors.grey.shade300,
-                                  ),
-                                ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  SizedBox(height: screenHeight * 0.03),
-                  Text(
-                    item['ITEM_NAME'] ?? '이름 없음',
-                    style: TextStyle(
-                      fontSize: screenWidth * 0.055,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  SizedBox(height: screenHeight * 0.01),
-                  Text(
-                    item['ENTP_NAME'] ?? '업체명 없음',
-                    style: TextStyle(
-                      fontSize: screenWidth * 0.04,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24.0),
-                    child: Divider(),
-                  ),
-                  _buildDetailRow('분류명', item['CLASS_NAME'], screenWidth),
-                  _buildDetailRow('성상', item['COLOR_CLASS1'], screenWidth),
-                  _buildDetailRow('모양', item['DRUG_SHAPE'], screenWidth),
-                  _buildDetailRow('표시앞', item['PRINT_FRONT'], screenWidth),
-                  _buildDetailRow('표시뒤', item['PRINT_BACK'], screenWidth),
-                  if (consumerInfo.isNotEmpty) ...[
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20),
-                      child: Divider(),
-                    ),
-                    _buildConsumerSection(
-                      '효능·효과',
-                      consumerInfo['efficacy'],
-                      screenWidth,
-                    ),
-                    _buildConsumerSection(
-                      '복용 방법',
-                      consumerInfo['usage'],
-                      screenWidth,
-                    ),
-                    _buildConsumerSection(
-                      '주의사항',
-                      consumerInfo['precautions'] ?? consumerInfo['warning'],
-                      screenWidth,
-                    ),
-                    _buildConsumerSection(
-                      '부작용',
-                      consumerInfo['sideEffects'],
-                      screenWidth,
-                    ),
-                    _buildConsumerSection(
-                      '보관 방법',
-                      consumerInfo['storage'],
-                      screenWidth,
-                    ),
-                  ],
+                  Text(_error ?? '약 정보를 찾지 못했어요.'),
+                  TextButton(onPressed: _load, child: const Text('다시 시도')),
                 ],
               ),
-            ),
-            if (!widget.isLocal)
-              Positioned(
-                left: screenWidth * 0.06,
-                right: screenWidth * 0.06,
-                bottom: 20,
-                child: SizedBox(
-                  width: double.infinity,
-                  height: screenHeight * 0.07,
-                  child: FilledButton(
-                    onPressed: () async {
-                      final TextEditingController stockController =
-                          TextEditingController(text: "30");
-                      final bool? confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text(
-                            "보유 수량 입력",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Text("보유하고 계신 약의 총 수량을 입력해주세요"),
-                              SizedBox(height: screenHeight * 0.02),
-                              TextField(
-                                controller: stockController,
-                                keyboardType: TextInputType.number,
-                                style: TextStyle(fontSize: screenWidth * 0.045),
-                                decoration: const InputDecoration(
-                                  labelText: "보유 수량",
-                                  suffixText: "정",
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                            ],
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text("취소"),
+            )
+          : PageScrollView(
+              title: '약 정보',
+              showBackButton: true,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    PillAvatar(pill, size: 64),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            Medication.name(pill),
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              height: 1.4,
                             ),
-                            FilledButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text("추가"),
-                            ),
-                          ],
-                        ),
-                      );
-
-                      if (confirm == true) {
-                        final int stock =
-                            int.tryParse(stockController.text) ?? 0;
-                        await Controller.addPill(item, stock);
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('등록되었습니다'),
-                            behavior: SnackBarBehavior.floating,
                           ),
-                        );
-                        Navigator.pop(context);
-                      }
-                    },
-                    style: FilledButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(screenWidth * 0.04),
-                      ),
-                      backgroundColor: const Color(0xFF2563EB),
-                    ),
-                    child: Text(
-                      "내 약 상자에 추가",
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.045,
-                        fontWeight: FontWeight.bold,
+                          if ('${pill['strength'] ?? ''}'.isNotEmpty)
+                            Text(
+                              '${pill['strength']}',
+                              style: const TextStyle(color: muted),
+                            ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${pill['ENTP_NAME'] ?? '직접 등록한 약'}',
+                            style: const TextStyle(color: muted),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ),
-          ],
-        ),
-      ),
+                const SizedBox(height: 24),
+                if (consumer.isEmpty)
+                  const SoftPanel(
+                    child: Text(
+                      '제공된 복용 안내가 없어요. 약 포장이나 처방전의 안내를 확인하세요.',
+                      style: TextStyle(color: muted, height: 1.6),
+                    ),
+                  )
+                else ...[
+                  _section('효능 · 효과', consumer['efficacy']),
+                  _section('복용 방법', consumer['usage']),
+                  _section(
+                    '주의사항',
+                    consumer['precautions'] ?? consumer['warning'],
+                  ),
+                  _section('부작용', consumer['sideEffects']),
+                  _section('보관 방법', consumer['storage']),
+                ],
+                const SizedBox(height: 12),
+                const Divider(),
+                ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  childrenPadding: const EdgeInsets.only(bottom: 16),
+                  title: const Text(
+                    '모양 · 색상 등 식별 정보',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  children: [
+                    if ('${pill['ITEM_IMAGE'] ?? ''}'.isNotEmpty)
+                      Image.network(
+                        '${pill['ITEM_IMAGE']}',
+                        height: 160,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                      ),
+                    _detail('분류', pill['CLASS_NAME']),
+                    _detail('모양', pill['DRUG_SHAPE']),
+                    _detail('색상', pill['COLOR_CLASS1']),
+                    _detail('앞면 표시', pill['PRINT_FRONT']),
+                    _detail('뒷면 표시', pill['PRINT_BACK']),
+                  ],
+                ),
+              ],
+            ),
+      bottomNavigationBar:
+          !widget.isLocal && pill != null && !_loading && _error == null
+          ? BottomAction(label: '이 약 선택 · 일정 설정', onPressed: _register)
+          : null,
     );
   }
 
-  Widget _buildDetailRow(String label, dynamic value, double screenWidth) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: screenWidth * 0.2,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: screenWidth * 0.038,
-                color: Colors.grey.shade500,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              (value ?? '-').toString(),
-              style: TextStyle(
-                fontSize: screenWidth * 0.038,
-                color: Colors.black87,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildConsumerSection(
-    String title,
-    dynamic value,
-    double screenWidth,
-  ) {
+  Widget _section(String title, dynamic value) {
     final text = value?.toString().trim() ?? '';
     if (text.isEmpty) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.only(bottom: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: screenWidth * 0.042,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: screenWidth * 0.037,
-              height: 1.55,
-              color: Colors.black87,
-            ),
-          ),
+          SectionLabel(title),
+          Text(text, style: const TextStyle(height: 1.7)),
         ],
       ),
     );
   }
+
+  Widget _detail(String label, dynamic value) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 90,
+          child: Text(label, style: const TextStyle(color: muted)),
+        ),
+        Expanded(child: Text('${value ?? '정보 없음'}')),
+      ],
+    ),
+  );
 }
