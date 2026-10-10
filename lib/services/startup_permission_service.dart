@@ -151,14 +151,22 @@ class StartupPermissionService extends ChangeNotifier {
     await _checkAll();
     for (final permission in missingPermissions) {
       if (_disposed) return;
+      // Retry runtime dialogs first, then open exact-alarm settings only when
+      // that is the sole permission still missing.
+      if (isAndroid && permission == StartupPermission.exactAlarms) continue;
       await _requestAndCheck(permission);
     }
     if (_disposed) return;
     if (missingPermissions.isEmpty) {
       await completeSetup();
-    } else if (missingPermissions.any(
-      (permission) => permission != StartupPermission.exactAlarms,
-    )) {
+    } else if (isAndroid &&
+        missingPermissions.length == 1 &&
+        missingPermissions.single == StartupPermission.exactAlarms) {
+      await _openSettings([StartupPermission.exactAlarms]);
+    } else if (!isAndroid &&
+        missingPermissions.any(
+          (permission) => permission != StartupPermission.exactAlarms,
+        )) {
       await _openSettings(
         missingPermissions
             .where((permission) => permission != StartupPermission.exactAlarms)

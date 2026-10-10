@@ -1,9 +1,78 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:pillnote/screen/register/verification.dart';
+import 'package:pillnote/services/api_client.dart';
 import 'package:pillnote/widgets/verification_code_field.dart';
 
 void main() {
+  for (final paste in [false, true]) {
+    testWidgets(
+      'automatically verifies ${paste ? 'pasted' : 'typed'} codes once and allows correction after failure',
+      (tester) async {
+        final requests = <http.Request>[];
+        final response = Completer<http.Response>();
+        final api = ApiClient(
+          client: MockClient((request) {
+            requests.add(request);
+            return response.future;
+          }),
+        );
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Verification(email: 'test@example.com', apiClient: api),
+          ),
+        );
+        final field = find.byType(TextField);
+        final submit = tester.widget<TextField>(field).onSubmitted!;
+        if (!paste) {
+          for (var length = 1; length < 6; length++) {
+            await tester.enterText(field, '123456'.substring(0, length));
+            await tester.pump();
+            expect(requests, isEmpty);
+          }
+        }
+        await tester.enterText(field, '123456');
+        await tester.pump();
+        expect(requests, hasLength(1));
+        expect(requests.single.url.path, '/v1/auth/email/verify');
+        expect(jsonDecode(requests.single.body), {
+          'email': 'test@example.com',
+          'code': '123456',
+        });
+        expect(tester.widget<TextField>(field).enabled, isFalse);
+        submit('123456');
+        await tester.pump();
+        expect(requests, hasLength(1));
+
+        response.complete(
+          http.Response(
+            '{"error":{"message":"인증번호가 일치하지 않습니다."}}',
+            400,
+            headers: {'content-type': 'application/json; charset=utf-8'},
+          ),
+        );
+        await tester.pump();
+        await tester.pump();
+        expect(tester.widget<TextField>(field).enabled, isTrue);
+        expect(find.text('인증번호가 일치하지 않습니다.'), findsOneWidget);
+        await tester.tapAt(
+          tester.getCenter(find.byKey(const ValueKey('code-cell-0'))),
+        );
+        await tester.pump();
+        expect(requests, hasLength(1));
+        await tester.enterText(field, '123457');
+        await tester.pump();
+        expect(requests, hasLength(2));
+        expect(jsonDecode(requests.last.body)['code'], '123457');
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+  }
+
   testWidgets(
     'filters input, fills six cells, supports autofill and submission',
     (tester) async {

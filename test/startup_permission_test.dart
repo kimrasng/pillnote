@@ -281,18 +281,89 @@ void main() {
   );
 
   test(
-    'Android exact-alarm retry uses its permission page without general settings',
+    'Android retry opens exact-alarm settings when it is the only missing permission',
     () async {
       gateway.android = true;
       gateway.grants[StartupPermission.exactAlarms] = false;
       await service.requestOnFirstLaunch();
       await service.retryMissingPermissions();
-      expect(gateway.calls, [
-        ...StartupPermission.values,
+      expect(gateway.calls, StartupPermission.values);
+      expect(gateway.settingsOpened, 1);
+      expect(service.missingPermissions, [StartupPermission.exactAlarms]);
+      expect(gateway.settingsPermissions.single, [
         StartupPermission.exactAlarms,
       ]);
+    },
+  );
+
+  test(
+    'Android opens exact-alarm settings after runtime grants and completes on return',
+    () async {
+      gateway.android = true;
+      gateway.grants.addAll({
+        for (final permission in StartupPermission.values) permission: false,
+      });
+      await service.requestOnFirstLaunch();
+      gateway.onRequest = (permission) => gateway.grants[permission] = true;
+      final finish = Completer<void>();
+      gateway.finishSettings = finish;
+      final retry = service.retryMissingPermissions();
+      await Future<void>.delayed(Duration.zero);
+      expect(gateway.settingsPermissions.single, [
+        StartupPermission.exactAlarms,
+      ]);
+      expect(gateway.calls, [
+        ...StartupPermission.values,
+        StartupPermission.notifications,
+        StartupPermission.location,
+      ]);
+      expect(service.isBusy, isTrue);
+      gateway.grants[StartupPermission.exactAlarms] = true;
+      finish.complete();
+      await retry;
+      expect(service.missingPermissions, isEmpty);
+      expect(store.startupPermissionsRequested, isTrue);
+      expect(service.isBusy, isFalse);
+    },
+  );
+
+  test(
+    'Android retry requests runtime permissions without opening settings on refusal',
+    () async {
+      gateway.android = true;
+      gateway.grants.addAll({
+        for (final permission in StartupPermission.values) permission: false,
+      });
+      await service.requestOnFirstLaunch();
+      await service.retryMissingPermissions();
+      expect(gateway.calls, [
+        ...StartupPermission.values,
+        StartupPermission.notifications,
+        StartupPermission.location,
+      ]);
       expect(gateway.settingsOpened, 0);
-      expect(service.missingPermissions, [StartupPermission.exactAlarms]);
+      expect(service.missingPermissions, StartupPermission.values);
+      expect(store.startupPermissionsRequested, isFalse);
+      expect(service.isBusy, isFalse);
+      expect(service.lastError, isNull);
+    },
+  );
+
+  test(
+    'Android runtime grants finish setup when exact alarms are already allowed',
+    () async {
+      gateway.android = true;
+      gateway.grants[StartupPermission.notifications] = false;
+      await service.requestOnFirstLaunch();
+      gateway.onRequest = (permission) => gateway.grants[permission] = true;
+      await service.retryMissingPermissions();
+      expect(gateway.calls, [
+        ...StartupPermission.values,
+        StartupPermission.notifications,
+      ]);
+      expect(gateway.settingsOpened, 0);
+      expect(service.missingPermissions, isEmpty);
+      expect(store.startupPermissionsRequested, isTrue);
     },
   );
 
@@ -463,7 +534,7 @@ void main() {
     );
 
     test(
-      'retry of permanently denied location opens app settings without fetching coordinates',
+      'Android blocked location stays on review until settings are explicitly opened',
       () async {
         locationPermission = LocationPermission.deniedForever;
         final native = StartupPermissionService(
@@ -473,6 +544,11 @@ void main() {
         addTearDown(native.dispose);
         await native.requestOnFirstLaunch();
         await native.retryMissingPermissions();
+        expect(
+          locationCalls.where((call) => call.method == 'openAppSettings'),
+          isEmpty,
+        );
+        await native.openPermissionSettings(StartupPermission.location);
         expect(
           locationCalls.where((call) => call.method == 'requestPermission'),
           isEmpty,
@@ -681,6 +757,41 @@ void main() {
         hasLength(1),
       );
       expect(gateway.settingsOpened, 0);
+    },
+  );
+
+  testWidgets(
+    'Android retry stays on the review screen until settings are explicitly selected',
+    (tester) async {
+      gateway.android = true;
+      gateway.grants[StartupPermission.notifications] = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: StartupPermissionGate(
+            service: service,
+            child: const Scaffold(body: Text('홈')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('다시 권한 허용하기'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('다시 권한 허용하기'));
+      await tester.pumpAndSettle();
+      expect(gateway.calls.last, StartupPermission.notifications);
+      expect(gateway.calls, hasLength(4));
+      expect(gateway.settingsOpened, 0);
+      expect(find.text('알림 · 미허용'), findsOneWidget);
+      expect(find.text('홈'), findsNothing);
+      await tester.ensureVisible(find.text('알림 설정 열기'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('알림 설정 열기'));
+      await tester.pumpAndSettle();
+      expect(gateway.settingsPermissions.single, [
+        StartupPermission.notifications,
+      ]);
+      expect(gateway.calls, hasLength(4));
+      expect(tester.takeException(), isNull);
     },
   );
 

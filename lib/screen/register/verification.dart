@@ -65,7 +65,7 @@ class _VerificationState extends State<Verification>
   }
 
   Future<void> _handleVerify() async {
-    if (_isReturning) return;
+    if (_isReturning || _isLoading || _isResending) return;
     final code = codeController.text.trim();
     if (!RegExp(r'^\d{6}$').hasMatch(code)) {
       ScaffoldMessenger.of(
@@ -192,16 +192,15 @@ class _VerificationState extends State<Verification>
           AutofillGroup(
             child: VerificationCodeField(
               controller: codeController,
-              enabled: !_isLoading && !_isReturning,
+              enabled: !_isLoading && !_isReturning && !_isResending,
               arrivalSequence: _arrivalSequence,
               arrivalDelay:
                   _arrivalSequence == 0 &&
                       ModalRoute.of(context) is AuthStepRoute
                   ? const Duration(milliseconds: 360)
                   : const Duration(milliseconds: 180),
-              onSubmitted: (_) {
-                if (!_isLoading) _handleVerify();
-              },
+              onCompleted: (_) => _handleVerify(),
+              onSubmitted: (_) => _handleVerify(),
             ),
           ),
           if (_debugCode != null)

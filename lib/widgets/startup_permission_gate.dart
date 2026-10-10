@@ -198,6 +198,7 @@ class _StartupPermissionGateState extends State<StartupPermissionGate>
     const SizedBox(height: 24),
     const Text(
       '권한을 한 번 더 확인해주세요',
+      textAlign: TextAlign.center,
       style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: ink),
     ),
     const SizedBox(height: 16),
@@ -206,9 +207,11 @@ class _StartupPermissionGateState extends State<StartupPermissionGate>
     for (final permission in widget.service.missingPermissions)
       _permissionNotice(permission),
     const SizedBox(height: 8),
-    const Text(
-      '각 항목의 설정 버튼으로 PillNote 설정을 바로 열 수 있어요. 위치는 열린 화면에서 권한 또는 위치 항목을 선택해주세요. 허용한 뒤 앱으로 돌아오면 자동으로 확인해요.',
-      style: TextStyle(color: muted, height: 1.5),
+    Text(
+      widget.service.isAndroid
+          ? '다시 권한 허용하기를 누르면 알림과 위치 권한을 재요청해요. 알람 및 리마인더만 남으면 해당 설정을 바로 열어요. 요청 창이 표시되지 않으면 각 항목의 설정 버튼을 눌러주세요.'
+          : '각 항목의 설정 버튼으로 PillNote 설정을 바로 열 수 있어요. 위치는 열린 화면에서 권한 또는 위치 항목을 선택해주세요. 허용한 뒤 앱으로 돌아오면 자동으로 확인해요.',
+      style: const TextStyle(color: muted, height: 1.5),
     ),
     if (widget.service.lastError case final String error) ...[
       const SizedBox(height: 12),
@@ -280,8 +283,12 @@ class _StartupPermissionGateState extends State<StartupPermissionGate>
                   ),
                   const SizedBox(height: 8),
                   TextButton(
+                    style: TextButton.styleFrom(
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
                     onPressed: _busy ? null : () => _openSettings(permission),
-                    child: Text(settingsLabel),
+                    child: Text(settingsLabel, textAlign: TextAlign.left),
                   ),
                 ],
               ),

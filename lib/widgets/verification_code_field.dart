@@ -11,6 +11,7 @@ class VerificationCodeField extends StatefulWidget {
     required this.controller,
     this.enabled = true,
     this.autofocus = true,
+    this.onCompleted,
     this.onSubmitted,
     this.arrivalSequence = 0,
     this.arrivalDelay = const Duration(milliseconds: 180),
@@ -18,6 +19,7 @@ class VerificationCodeField extends StatefulWidget {
 
   final TextEditingController controller;
   final bool enabled, autofocus;
+  final ValueChanged<String>? onCompleted;
   final ValueChanged<String>? onSubmitted;
   final int arrivalSequence;
   final Duration arrivalDelay;
@@ -202,6 +204,9 @@ class _VerificationCodeFieldState extends State<VerificationCodeField>
                         ],
                         onTapAlwaysCalled: true,
                         onTap: _selectCell,
+                        onChanged: (code) {
+                          if (code.length == 6) widget.onCompleted?.call(code);
+                        },
                         onSubmitted: widget.onSubmitted,
                       ),
                     ),

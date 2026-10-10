@@ -1,5 +1,6 @@
 import 'package:http/http.dart' as http;
 import 'package:pillnote/services/api/api_transport.dart';
+import 'package:pillnote/services/api/public_api_cache.dart';
 import 'package:pillnote/services/session_store.dart';
 
 export 'package:pillnote/services/api/api_exception.dart';
@@ -7,18 +8,24 @@ export 'package:pillnote/services/api/api_exception.dart';
 /// Backend endpoints and response mappings. Request and authentication policy
 /// belong to ApiTransport, shared by every endpoint on this client.
 class ApiClient {
-  ApiClient({http.Client? client, String? baseUrl, SessionStore? sessionStore})
-    : _transport = ApiTransport(
-        client: client,
-        baseUrl: baseUrl,
-        sessionStore: sessionStore ?? SessionStore.instance,
-      ),
-      _sessionStore = sessionStore ?? SessionStore.instance;
+  ApiClient({
+    http.Client? client,
+    String? baseUrl,
+    SessionStore? sessionStore,
+    PublicApiCache? cache,
+  }) : _transport = ApiTransport(
+         client: client,
+         baseUrl: baseUrl,
+         sessionStore: sessionStore ?? SessionStore.instance,
+       ),
+       _sessionStore = sessionStore ?? SessionStore.instance,
+       _cache = cache ?? PublicApiCache();
 
   static final ApiClient instance = ApiClient();
 
   final ApiTransport _transport;
   final SessionStore _sessionStore;
+  final PublicApiCache _cache;
   int emailResendCooldownSeconds = 60;
 
   Future<Map<String, dynamic>> health() async =>
@@ -109,12 +116,23 @@ class ApiClient {
     int page = 1,
     int limit = 50,
   }) async {
+    final normalizedName = name.trim().replaceAll(RegExp(r'\s+'), ' ');
     final uri = _transport
         .uri('/v1/drugs/search')
         .replace(
-          queryParameters: {'name': name, 'page': '$page', 'limit': '$limit'},
+          queryParameters: {
+            'name': normalizedName,
+            'page': '$page',
+            'limit': '$limit',
+          },
         );
-    final response = _asMap(await _transport.requestUri('GET', uri));
+    final response = await _cache.getOrLoad(
+      key: uri.toString(),
+      ttl: const Duration(hours: 1),
+      load: () async => _asMap(await _transport.requestUri('GET', uri)),
+      cacheable: (response) =>
+          response['data'] is List && _isFreshDrugResponse(response),
+    );
     final data = response['data'] as List? ?? const [];
     return data
         .whereType<Map>()
@@ -123,11 +141,13 @@ class ApiClient {
   }
 
   Future<Map<String, dynamic>> drugDetail(String itemSeq) async {
-    final response = _asMap(
-      await _transport.request(
-        'GET',
-        '/v1/drugs/${Uri.encodeComponent(itemSeq)}',
-      ),
+    final uri = _transport.uri('/v1/drugs/${Uri.encodeComponent(itemSeq)}');
+    final response = await _cache.getOrLoad(
+      key: uri.toString(),
+      ttl: const Duration(hours: 24),
+      load: () async => _asMap(await _transport.requestUri('GET', uri)),
+      cacheable: (response) =>
+          response['data'] is Map && _isFreshDrugResponse(response),
     );
     final detail = _dataMap(response);
     final identification = Map<String, dynamic>.from(
@@ -334,6 +354,15 @@ class ApiClient {
     'LINE_FRONT': item['lineFront'],
     'LINE_BACK': item['lineBack'],
   };
+
+  static bool _isFreshDrugResponse(Map<String, dynamic> response) {
+    final data = response['data'];
+    final meta = response['meta'] ?? (data is Map ? data['meta'] : null);
+    return meta is! Map ||
+        (meta['stale'] != true &&
+            meta['identificationAvailable'] != false &&
+            meta['consumerInfoAvailable'] != false);
+  }
 
   static Map<String, dynamic> _asMap(dynamic value) =>
       Map<String, dynamic>.from(value as Map? ?? const {});

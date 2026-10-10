@@ -1,0 +1,1593 @@
+{
+  "metadata": {
+    "version": "0.1.9",
+    "profile": true,
+    "device": "Pixel 10 Pro Android emulator",
+    "refreshRate": 60.000003814697266,
+    "searchLimit": 50,
+    "samplesPerCase": 6,
+    "measuredAt": "2026-10-10T19:32:36.362945Z",
+    "androidVersion": "17",
+    "flutterVersion": "3.47.2",
+    "dartVersion": "3.13.2",
+    "emulatorGraphics": "SwiftShader software rendering",
+    "physicalDevice": false,
+    "baselineDefinition": "Current production 0.1.9, Cache-Control: no-cache, local API cache disabled; recreates D1 route, not a historical complete version rollback",
+    "endDefinition": "rasterFinishWallTime for first frame whose buildStart occurs after result state update; stable waits for route animation completion too",
+    "localRestoreDefinition": "New PublicApiCache object restores serialized entry from already initialized SharedPreferences in same process; not full process cold start or first disk read",
+    "imagesIncluded": false,
+    "connections": "One reused native IOClient, public fixture paths warmed before timed trials",
+    "cacheOccupancy": "One fixture entry in each local trial; not a full 100-entry/2MiB cache",
+    "apiBaseUrl": "https://pillnote.kimrasng.kr",
+    "searchQuery": "타이레놀",
+    "searchReturnedItems": 4,
+    "detailItemSeq": "202200407",
+    "collectedAt": "2026-10-10T19:38:42.558447+00:00",
+    "diagnosticFieldNote": "resultFrameBuildStartAfterReadyMs records the frame that completes the measurement; for detail this is the stable frame, not necessarily the first result frame",
+    "baselineD1CacheVerified": true
+  },
+  "summary": [
+    {
+      "scenario": "search_submit",
+      "mode": "baseline",
+      "samples": 6,
+      "metrics": {
+        "actionToFirstFrameMs": {
+          "median": 419.756,
+          "min": 401.247,
+          "max": 492.474
+        },
+        "requestToFirstFrameMs": {
+          "median": 419.7495,
+          "min": 401.244,
+          "max": 492.466
+        },
+        "actionToStableFrameMs": {
+          "median": 419.756,
+          "min": 401.247,
+          "max": 492.474
+        },
+        "actionToDataReadyMs": {
+          "median": 312.0155,
+          "min": 296.351,
+          "max": 344.378
+        },
+        "readyToFirstFrameMs": {
+          "median": 115.239,
+          "min": 65.584,
+          "max": 172.041
+        },
+        "inputWaitMs": {
+          "median": 0.004,
+          "min": 0.002,
+          "max": 0.011
+        },
+        "networkBodyMs": {
+          "median": 311.597,
+          "min": 296.14,
+          "max": 343.905
+        }
+      }
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "edge",
+      "samples": 6,
+      "metrics": {
+        "actionToFirstFrameMs": {
+          "median": 273.626,
+          "min": 254.904,
+          "max": 366.0
+        },
+        "requestToFirstFrameMs": {
+          "median": 273.6175,
+          "min": 254.901,
+          "max": 365.991
+        },
+        "actionToStableFrameMs": {
+          "median": 273.626,
+          "min": 254.904,
+          "max": 366.0
+        },
+        "actionToDataReadyMs": {
+          "median": 195.079,
+          "min": 182.627,
+          "max": 265.353
+        },
+        "readyToFirstFrameMs": {
+          "median": 81.8335,
+          "min": 70.13,
+          "max": 102.248
+        },
+        "inputWaitMs": {
+          "median": 0.004,
+          "min": 0.003,
+          "max": 0.014
+        },
+        "networkBodyMs": {
+          "median": 174.35250000000002,
+          "min": 157.45,
+          "max": 235.736
+        }
+      }
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "local_memory",
+      "samples": 6,
+      "metrics": {
+        "actionToFirstFrameMs": {
+          "median": 21.637500000000003,
+          "min": 17.479,
+          "max": 25.763
+        },
+        "requestToFirstFrameMs": {
+          "median": 21.6325,
+          "min": 17.475,
+          "max": 25.76
+        },
+        "actionToStableFrameMs": {
+          "median": 21.637500000000003,
+          "min": 17.479,
+          "max": 25.763
+        },
+        "actionToDataReadyMs": {
+          "median": 0.2635,
+          "min": 0.179,
+          "max": 0.378
+        },
+        "readyToFirstFrameMs": {
+          "median": 21.3405,
+          "min": 17.141,
+          "max": 25.584
+        },
+        "inputWaitMs": {
+          "median": 0.004,
+          "min": 0.003,
+          "max": 0.006
+        },
+        "networkBodyMs": null
+      }
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "local_restore",
+      "samples": 6,
+      "metrics": {
+        "actionToFirstFrameMs": {
+          "median": 20.1095,
+          "min": 17.638,
+          "max": 20.77
+        },
+        "requestToFirstFrameMs": {
+          "median": 20.1065,
+          "min": 17.635,
+          "max": 20.766
+        },
+        "actionToStableFrameMs": {
+          "median": 20.1095,
+          "min": 17.638,
+          "max": 20.77
+        },
+        "actionToDataReadyMs": {
+          "median": 0.5349999999999999,
+          "min": 0.262,
+          "max": 0.673
+        },
+        "readyToFirstFrameMs": {
+          "median": 19.7695,
+          "min": 17.065,
+          "max": 20.097
+        },
+        "inputWaitMs": {
+          "median": 0.004,
+          "min": 0.002,
+          "max": 0.005
+        },
+        "networkBodyMs": null
+      }
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "baseline",
+      "samples": 6,
+      "metrics": {
+        "actionToFirstFrameMs": {
+          "median": 800.326,
+          "min": 775.175,
+          "max": 842.535
+        },
+        "requestToFirstFrameMs": {
+          "median": 398.84000000000003,
+          "min": 374.232,
+          "max": 440.936
+        },
+        "actionToStableFrameMs": {
+          "median": 800.326,
+          "min": 775.175,
+          "max": 842.535
+        },
+        "actionToDataReadyMs": {
+          "median": 706.126,
+          "min": 684.46,
+          "max": 764.484
+        },
+        "readyToFirstFrameMs": {
+          "median": 94.8675,
+          "min": 65.7,
+          "max": 131.186
+        },
+        "inputWaitMs": {
+          "median": 401.386,
+          "min": 400.943,
+          "max": 401.836
+        },
+        "networkBodyMs": {
+          "median": 304.639,
+          "min": 283.12,
+          "max": 363.022
+        }
+      }
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "edge",
+      "samples": 6,
+      "metrics": {
+        "actionToFirstFrameMs": {
+          "median": 699.9155000000001,
+          "min": 642.58,
+          "max": 731.954
+        },
+        "requestToFirstFrameMs": {
+          "median": 296.6,
+          "min": 239.414,
+          "max": 329.516
+        },
+        "actionToStableFrameMs": {
+          "median": 699.9155000000001,
+          "min": 642.58,
+          "max": 731.954
+        },
+        "actionToDataReadyMs": {
+          "median": 614.2270000000001,
+          "min": 564.31,
+          "max": 671.332
+        },
+        "readyToFirstFrameMs": {
+          "median": 80.164,
+          "min": 60.622,
+          "max": 113.002
+        },
+        "inputWaitMs": {
+          "median": 402.802,
+          "min": 401.509,
+          "max": 405.122
+        },
+        "networkBodyMs": {
+          "median": 200.7785,
+          "min": 154.889,
+          "max": 213.444
+        }
+      }
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "local_memory",
+      "samples": 6,
+      "metrics": {
+        "actionToFirstFrameMs": {
+          "median": 413.9315,
+          "min": 410.084,
+          "max": 415.112
+        },
+        "requestToFirstFrameMs": {
+          "median": 9.79,
+          "min": 8.85,
+          "max": 13.119
+        },
+        "actionToStableFrameMs": {
+          "median": 413.9315,
+          "min": 410.084,
+          "max": 415.112
+        },
+        "actionToDataReadyMs": {
+          "median": 402.6245,
+          "min": 400.905,
+          "max": 405.112
+        },
+        "readyToFirstFrameMs": {
+          "median": 9.526,
+          "min": 8.584,
+          "max": 12.923
+        },
+        "inputWaitMs": {
+          "median": 402.40549999999996,
+          "min": 400.689,
+          "max": 404.8
+        },
+        "networkBodyMs": null
+      }
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "local_restore",
+      "samples": 6,
+      "metrics": {
+        "actionToFirstFrameMs": {
+          "median": 414.7975,
+          "min": 409.45,
+          "max": 560.796
+        },
+        "requestToFirstFrameMs": {
+          "median": 11.7255,
+          "min": 8.616,
+          "max": 156.153
+        },
+        "actionToStableFrameMs": {
+          "median": 414.7975,
+          "min": 409.45,
+          "max": 560.796
+        },
+        "actionToDataReadyMs": {
+          "median": 402.0845,
+          "min": 401.089,
+          "max": 406.426
+        },
+        "readyToFirstFrameMs": {
+          "median": 11.424,
+          "min": 8.361,
+          "max": 154.37
+        },
+        "inputWaitMs": {
+          "median": 401.82349999999997,
+          "min": 400.834,
+          "max": 406.068
+        },
+        "networkBodyMs": null
+      }
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "baseline",
+      "samples": 6,
+      "metrics": {
+        "actionToFirstFrameMs": {
+          "median": 524.0745,
+          "min": 465.748,
+          "max": 582.212
+        },
+        "requestToFirstFrameMs": {
+          "median": 509.989,
+          "min": 449.78,
+          "max": 564.825
+        },
+        "actionToStableFrameMs": {
+          "median": 614.4485,
+          "min": 583.136,
+          "max": 691.005
+        },
+        "actionToDataReadyMs": {
+          "median": 329.79150000000004,
+          "min": 310.087,
+          "max": 410.887
+        },
+        "readyToFirstFrameMs": {
+          "median": 183.8545,
+          "min": 106.977,
+          "max": 236.444
+        },
+        "inputWaitMs": {
+          "median": 14.0855,
+          "min": 12.571,
+          "max": 17.387
+        },
+        "networkBodyMs": {
+          "median": 314.2235,
+          "min": 297.154,
+          "max": 380.267
+        }
+      }
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "edge",
+      "samples": 6,
+      "metrics": {
+        "actionToFirstFrameMs": {
+          "median": 436.8645,
+          "min": 417.894,
+          "max": 775.169
+        },
+        "requestToFirstFrameMs": {
+          "median": 430.83500000000004,
+          "min": 401.19,
+          "max": 757.115
+        },
+        "actionToStableFrameMs": {
+          "median": 595.2375,
+          "min": 577.59,
+          "max": 935.838
+        },
+        "actionToDataReadyMs": {
+          "median": 192.0765,
+          "min": 175.653,
+          "max": 351.843
+        },
+        "readyToFirstFrameMs": {
+          "median": 255.2545,
+          "min": 166.778,
+          "max": 423.326
+        },
+        "inputWaitMs": {
+          "median": 12.6155,
+          "min": 4.399,
+          "max": 21.152
+        },
+        "networkBodyMs": {
+          "median": 168.53050000000002,
+          "min": 157.354,
+          "max": 304.373
+        }
+      }
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "local_memory",
+      "samples": 6,
+      "metrics": {
+        "actionToFirstFrameMs": {
+          "median": 78.178,
+          "min": 69.762,
+          "max": 82.829
+        },
+        "requestToFirstFrameMs": {
+          "median": 64.9185,
+          "min": 54.719,
+          "max": 70.362
+        },
+        "actionToStableFrameMs": {
+          "median": 595.2170000000001,
+          "min": 557.356,
+          "max": 757.031
+        },
+        "actionToDataReadyMs": {
+          "median": 18.426000000000002,
+          "min": 5.47,
+          "max": 20.322
+        },
+        "readyToFirstFrameMs": {
+          "median": 62.817,
+          "min": 52.624,
+          "max": 69.183
+        },
+        "inputWaitMs": {
+          "median": 16.159,
+          "min": 4.291,
+          "max": 18.271
+        },
+        "networkBodyMs": null
+      }
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "local_restore",
+      "samples": 6,
+      "metrics": {
+        "actionToFirstFrameMs": {
+          "median": 88.97149999999999,
+          "min": 49.024,
+          "max": 108.693
+        },
+        "requestToFirstFrameMs": {
+          "median": 73.90950000000001,
+          "min": 32.884,
+          "max": 89.776
+        },
+        "actionToStableFrameMs": {
+          "median": 591.6935000000001,
+          "min": 570.67,
+          "max": 675.873
+        },
+        "actionToDataReadyMs": {
+          "median": 19.7835,
+          "min": 15.445,
+          "max": 21.739
+        },
+        "readyToFirstFrameMs": {
+          "median": 71.273,
+          "min": 29.409,
+          "max": 86.954
+        },
+        "inputWaitMs": {
+          "median": 15.941500000000001,
+          "min": 13.841,
+          "max": 19.239
+        },
+        "networkBodyMs": null
+      }
+    }
+  ],
+  "samples": [
+    {
+      "scenario": "search_submit",
+      "mode": "local_restore",
+      "round": 0,
+      "actionToFirstFrameMs": 20.125,
+      "requestToFirstFrameMs": 20.123,
+      "actionToStableFrameMs": 20.125,
+      "actionToDataReadyMs": 0.262,
+      "readyToFirstFrameMs": 19.863,
+      "inputWaitMs": 0.002,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 13.613,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "local_memory",
+      "round": 0,
+      "actionToFirstFrameMs": 25.763,
+      "requestToFirstFrameMs": 25.76,
+      "actionToStableFrameMs": 25.763,
+      "actionToDataReadyMs": 0.179,
+      "readyToFirstFrameMs": 25.584,
+      "inputWaitMs": 0.003,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 16.969,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "edge",
+      "round": 0,
+      "actionToFirstFrameMs": 326.271,
+      "requestToFirstFrameMs": 326.268,
+      "actionToStableFrameMs": 326.271,
+      "actionToDataReadyMs": 224.023,
+      "readyToFirstFrameMs": 102.248,
+      "inputWaitMs": 0.003,
+      "networkBodyMs": 174.477,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 26.868,
+      "edgeCache": "HIT"
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "baseline",
+      "round": 0,
+      "actionToFirstFrameMs": 401.247,
+      "requestToFirstFrameMs": 401.244,
+      "actionToStableFrameMs": 401.247,
+      "actionToDataReadyMs": 335.663,
+      "readyToFirstFrameMs": 65.584,
+      "inputWaitMs": 0.003,
+      "networkBodyMs": 335.425,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 28.844,
+      "edgeCache": "BYPASS"
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "local_restore",
+      "round": 0,
+      "actionToFirstFrameMs": 415.801,
+      "requestToFirstFrameMs": 9.733,
+      "actionToStableFrameMs": 415.801,
+      "actionToDataReadyMs": 406.353,
+      "readyToFirstFrameMs": 9.448,
+      "inputWaitMs": 406.068,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 6.217,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "local_memory",
+      "round": 0,
+      "actionToFirstFrameMs": 410.084,
+      "requestToFirstFrameMs": 8.88,
+      "actionToStableFrameMs": 410.084,
+      "actionToDataReadyMs": 401.387,
+      "readyToFirstFrameMs": 8.697,
+      "inputWaitMs": 401.204,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 6.159,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "edge",
+      "round": 0,
+      "actionToFirstFrameMs": 642.58,
+      "requestToFirstFrameMs": 239.414,
+      "actionToStableFrameMs": 642.58,
+      "actionToDataReadyMs": 564.31,
+      "readyToFirstFrameMs": 78.27,
+      "inputWaitMs": 403.166,
+      "networkBodyMs": 154.889,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 16.545,
+      "edgeCache": "HIT"
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "baseline",
+      "round": 0,
+      "actionToFirstFrameMs": 784.683,
+      "requestToFirstFrameMs": 383.547,
+      "actionToStableFrameMs": 784.683,
+      "actionToDataReadyMs": 684.46,
+      "readyToFirstFrameMs": 100.223,
+      "inputWaitMs": 401.136,
+      "networkBodyMs": 283.12,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 45.145,
+      "edgeCache": "BYPASS"
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "local_restore",
+      "round": 0,
+      "actionToFirstFrameMs": 72.919,
+      "requestToFirstFrameMs": 58.413,
+      "actionToStableFrameMs": 570.67,
+      "actionToDataReadyMs": 16.55,
+      "readyToFirstFrameMs": 56.369,
+      "inputWaitMs": 14.506,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 463.347,
+      "edgeCache": null
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "local_memory",
+      "round": 0,
+      "actionToFirstFrameMs": 82.829,
+      "requestToFirstFrameMs": 64.558,
+      "actionToStableFrameMs": 588.368,
+      "actionToDataReadyMs": 20.322,
+      "readyToFirstFrameMs": 62.507,
+      "inputWaitMs": 18.271,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 461.684,
+      "edgeCache": null
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "edge",
+      "round": 0,
+      "actionToFirstFrameMs": 444.493,
+      "requestToFirstFrameMs": 434.036,
+      "actionToStableFrameMs": 589.098,
+      "actionToDataReadyMs": 178.682,
+      "readyToFirstFrameMs": 265.811,
+      "inputWaitMs": 10.457,
+      "networkBodyMs": 157.354,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 336.502,
+      "edgeCache": "HIT"
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "baseline",
+      "round": 0,
+      "actionToFirstFrameMs": 502.262,
+      "requestToFirstFrameMs": 489.691,
+      "actionToStableFrameMs": 655.218,
+      "actionToDataReadyMs": 318.73,
+      "readyToFirstFrameMs": 183.532,
+      "inputWaitMs": 12.571,
+      "networkBodyMs": 306.047,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 201.033,
+      "edgeCache": "BYPASS"
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "baseline",
+      "round": 1,
+      "actionToFirstFrameMs": 418.582,
+      "requestToFirstFrameMs": 418.571,
+      "actionToStableFrameMs": 418.582,
+      "actionToDataReadyMs": 297.715,
+      "readyToFirstFrameMs": 120.867,
+      "inputWaitMs": 0.011,
+      "networkBodyMs": 297.364,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 63.461,
+      "edgeCache": "BYPASS"
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "edge",
+      "round": 1,
+      "actionToFirstFrameMs": 366.0,
+      "requestToFirstFrameMs": 365.991,
+      "actionToStableFrameMs": 366.0,
+      "actionToDataReadyMs": 265.353,
+      "readyToFirstFrameMs": 100.647,
+      "inputWaitMs": 0.009,
+      "networkBodyMs": 235.736,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 15.337,
+      "edgeCache": "HIT"
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "local_memory",
+      "round": 1,
+      "actionToFirstFrameMs": 22.707,
+      "requestToFirstFrameMs": 22.703,
+      "actionToStableFrameMs": 22.707,
+      "actionToDataReadyMs": 0.216,
+      "readyToFirstFrameMs": 22.491,
+      "inputWaitMs": 0.004,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 15.161,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "local_restore",
+      "round": 1,
+      "actionToFirstFrameMs": 20.77,
+      "requestToFirstFrameMs": 20.766,
+      "actionToStableFrameMs": 20.77,
+      "actionToDataReadyMs": 0.673,
+      "readyToFirstFrameMs": 20.097,
+      "inputWaitMs": 0.004,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 13.329,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "baseline",
+      "round": 1,
+      "actionToFirstFrameMs": 842.535,
+      "requestToFirstFrameMs": 440.936,
+      "actionToStableFrameMs": 842.535,
+      "actionToDataReadyMs": 711.349,
+      "readyToFirstFrameMs": 131.186,
+      "inputWaitMs": 401.599,
+      "networkBodyMs": 309.502,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 28.577,
+      "edgeCache": "BYPASS"
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "edge",
+      "round": 1,
+      "actionToFirstFrameMs": 731.954,
+      "requestToFirstFrameMs": 329.516,
+      "actionToStableFrameMs": 731.954,
+      "actionToDataReadyMs": 671.332,
+      "readyToFirstFrameMs": 60.622,
+      "inputWaitMs": 402.438,
+      "networkBodyMs": 209.114,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 9.729,
+      "edgeCache": "HIT"
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "local_memory",
+      "round": 1,
+      "actionToFirstFrameMs": 410.154,
+      "requestToFirstFrameMs": 9.465,
+      "actionToStableFrameMs": 410.154,
+      "actionToDataReadyMs": 400.905,
+      "readyToFirstFrameMs": 9.249,
+      "inputWaitMs": 400.689,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 6.96,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "local_restore",
+      "round": 1,
+      "actionToFirstFrameMs": 560.796,
+      "requestToFirstFrameMs": 156.153,
+      "actionToStableFrameMs": 560.796,
+      "actionToDataReadyMs": 406.426,
+      "readyToFirstFrameMs": 154.37,
+      "inputWaitMs": 404.643,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 5.811,
+      "edgeCache": null
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "baseline",
+      "round": 1,
+      "actionToFirstFrameMs": 546.531,
+      "requestToFirstFrameMs": 533.7,
+      "actionToStableFrameMs": 618.904,
+      "actionToDataReadyMs": 310.087,
+      "readyToFirstFrameMs": 236.444,
+      "inputWaitMs": 12.831,
+      "networkBodyMs": 297.154,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 176.042,
+      "edgeCache": "BYPASS"
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "edge",
+      "round": 1,
+      "actionToFirstFrameMs": 775.169,
+      "requestToFirstFrameMs": 757.115,
+      "actionToStableFrameMs": 935.838,
+      "actionToDataReadyMs": 351.843,
+      "readyToFirstFrameMs": 423.326,
+      "inputWaitMs": 18.054,
+      "networkBodyMs": 304.373,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 345.75,
+      "edgeCache": "HIT"
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "local_memory",
+      "round": 1,
+      "actionToFirstFrameMs": 74.653,
+      "requestToFirstFrameMs": 70.362,
+      "actionToStableFrameMs": 757.031,
+      "actionToDataReadyMs": 5.47,
+      "readyToFirstFrameMs": 69.183,
+      "inputWaitMs": 4.291,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 601.496,
+      "edgeCache": null
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "local_restore",
+      "round": 1,
+      "actionToFirstFrameMs": 104.46,
+      "requestToFirstFrameMs": 88.177,
+      "actionToStableFrameMs": 658.809,
+      "actionToDataReadyMs": 19.952,
+      "readyToFirstFrameMs": 84.508,
+      "inputWaitMs": 16.283,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 528.105,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "local_restore",
+      "round": 2,
+      "actionToFirstFrameMs": 20.094,
+      "requestToFirstFrameMs": 20.09,
+      "actionToStableFrameMs": 20.094,
+      "actionToDataReadyMs": 0.418,
+      "readyToFirstFrameMs": 19.676,
+      "inputWaitMs": 0.004,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 12.228,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "local_memory",
+      "round": 2,
+      "actionToFirstFrameMs": 18.697,
+      "requestToFirstFrameMs": 18.694,
+      "actionToStableFrameMs": 18.697,
+      "actionToDataReadyMs": 0.189,
+      "readyToFirstFrameMs": 18.508,
+      "inputWaitMs": 0.003,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 11.878,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "edge",
+      "round": 2,
+      "actionToFirstFrameMs": 254.904,
+      "requestToFirstFrameMs": 254.901,
+      "actionToStableFrameMs": 254.904,
+      "actionToDataReadyMs": 182.627,
+      "readyToFirstFrameMs": 72.277,
+      "inputWaitMs": 0.003,
+      "networkBodyMs": 174.228,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 8.856,
+      "edgeCache": "HIT"
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "baseline",
+      "round": 2,
+      "actionToFirstFrameMs": 404.578,
+      "requestToFirstFrameMs": 404.574,
+      "actionToStableFrameMs": 404.578,
+      "actionToDataReadyMs": 296.351,
+      "readyToFirstFrameMs": 108.227,
+      "inputWaitMs": 0.004,
+      "networkBodyMs": 296.14,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 0.197,
+      "edgeCache": "BYPASS"
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "local_restore",
+      "round": 2,
+      "actionToFirstFrameMs": 414.63,
+      "requestToFirstFrameMs": 12.694,
+      "actionToStableFrameMs": 414.63,
+      "actionToDataReadyMs": 402.219,
+      "readyToFirstFrameMs": 12.411,
+      "inputWaitMs": 401.936,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 9.722,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "local_memory",
+      "round": 2,
+      "actionToFirstFrameMs": 412.948,
+      "requestToFirstFrameMs": 8.85,
+      "actionToStableFrameMs": 412.948,
+      "actionToDataReadyMs": 404.364,
+      "readyToFirstFrameMs": 8.584,
+      "inputWaitMs": 404.098,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 6.32,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "edge",
+      "round": 2,
+      "actionToFirstFrameMs": 677.058,
+      "requestToFirstFrameMs": 273.797,
+      "actionToStableFrameMs": 677.058,
+      "actionToDataReadyMs": 591.071,
+      "readyToFirstFrameMs": 85.987,
+      "inputWaitMs": 403.261,
+      "networkBodyMs": 166.952,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 20.689,
+      "edgeCache": "HIT"
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "baseline",
+      "round": 2,
+      "actionToFirstFrameMs": 775.175,
+      "requestToFirstFrameMs": 374.232,
+      "actionToStableFrameMs": 775.175,
+      "actionToDataReadyMs": 700.903,
+      "readyToFirstFrameMs": 74.272,
+      "inputWaitMs": 400.943,
+      "networkBodyMs": 299.776,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 8.14,
+      "edgeCache": "BYPASS"
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "local_restore",
+      "round": 2,
+      "actionToFirstFrameMs": 73.483,
+      "requestToFirstFrameMs": 59.642,
+      "actionToStableFrameMs": 675.873,
+      "actionToDataReadyMs": 15.445,
+      "readyToFirstFrameMs": 58.038,
+      "inputWaitMs": 13.841,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 601.98,
+      "edgeCache": null
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "local_memory",
+      "round": 2,
+      "actionToFirstFrameMs": 70.9,
+      "requestToFirstFrameMs": 55.006,
+      "actionToStableFrameMs": 620.761,
+      "actionToDataReadyMs": 18.276,
+      "readyToFirstFrameMs": 52.624,
+      "inputWaitMs": 15.894,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 510.611,
+      "edgeCache": null
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "edge",
+      "round": 2,
+      "actionToFirstFrameMs": 437.26,
+      "requestToFirstFrameMs": 429.6,
+      "actionToStableFrameMs": 601.377,
+      "actionToDataReadyMs": 187.567,
+      "readyToFirstFrameMs": 249.693,
+      "inputWaitMs": 7.66,
+      "networkBodyMs": 171.155,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 286.002,
+      "edgeCache": "HIT"
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "baseline",
+      "round": 2,
+      "actionToFirstFrameMs": 582.212,
+      "requestToFirstFrameMs": 564.825,
+      "actionToStableFrameMs": 691.005,
+      "actionToDataReadyMs": 398.035,
+      "readyToFirstFrameMs": 184.177,
+      "inputWaitMs": 17.387,
+      "networkBodyMs": 380.267,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 186.425,
+      "edgeCache": "BYPASS"
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "baseline",
+      "round": 3,
+      "actionToFirstFrameMs": 492.474,
+      "requestToFirstFrameMs": 492.466,
+      "actionToStableFrameMs": 492.474,
+      "actionToDataReadyMs": 320.433,
+      "readyToFirstFrameMs": 172.041,
+      "inputWaitMs": 0.008,
+      "networkBodyMs": 319.785,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 0.988,
+      "edgeCache": "BYPASS"
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "edge",
+      "round": 3,
+      "actionToFirstFrameMs": 271.769,
+      "requestToFirstFrameMs": 271.766,
+      "actionToStableFrameMs": 271.769,
+      "actionToDataReadyMs": 191.953,
+      "readyToFirstFrameMs": 79.816,
+      "inputWaitMs": 0.003,
+      "networkBodyMs": 157.45,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 0.189,
+      "edgeCache": "HIT"
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "local_memory",
+      "round": 3,
+      "actionToFirstFrameMs": 20.568,
+      "requestToFirstFrameMs": 20.562,
+      "actionToStableFrameMs": 20.568,
+      "actionToDataReadyMs": 0.378,
+      "readyToFirstFrameMs": 20.19,
+      "inputWaitMs": 0.006,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 13.608,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "local_restore",
+      "round": 3,
+      "actionToFirstFrameMs": 17.638,
+      "requestToFirstFrameMs": 17.635,
+      "actionToStableFrameMs": 17.638,
+      "actionToDataReadyMs": 0.573,
+      "readyToFirstFrameMs": 17.065,
+      "inputWaitMs": 0.003,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 12.518,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "baseline",
+      "round": 3,
+      "actionToFirstFrameMs": 815.969,
+      "requestToFirstFrameMs": 414.133,
+      "actionToStableFrameMs": 815.969,
+      "actionToDataReadyMs": 714.593,
+      "readyToFirstFrameMs": 101.376,
+      "inputWaitMs": 401.836,
+      "networkBodyMs": 312.587,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 26.569,
+      "edgeCache": "BYPASS"
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "edge",
+      "round": 3,
+      "actionToFirstFrameMs": 728.12,
+      "requestToFirstFrameMs": 325.86,
+      "actionToStableFrameMs": 728.12,
+      "actionToDataReadyMs": 615.118,
+      "readyToFirstFrameMs": 113.002,
+      "inputWaitMs": 402.26,
+      "networkBodyMs": 200.453,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 32.24,
+      "edgeCache": "HIT"
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "local_memory",
+      "round": 3,
+      "actionToFirstFrameMs": 414.941,
+      "requestToFirstFrameMs": 13.119,
+      "actionToStableFrameMs": 414.941,
+      "actionToDataReadyMs": 402.018,
+      "readyToFirstFrameMs": 12.923,
+      "inputWaitMs": 401.822,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 9.946,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "local_restore",
+      "round": 3,
+      "actionToFirstFrameMs": 414.965,
+      "requestToFirstFrameMs": 13.254,
+      "actionToStableFrameMs": 414.965,
+      "actionToDataReadyMs": 401.95,
+      "readyToFirstFrameMs": 13.015,
+      "inputWaitMs": 401.711,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 10.759,
+      "edgeCache": null
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "baseline",
+      "round": 3,
+      "actionToFirstFrameMs": 517.864,
+      "requestToFirstFrameMs": 504.539,
+      "actionToStableFrameMs": 587.541,
+      "actionToDataReadyMs": 410.887,
+      "readyToFirstFrameMs": 106.977,
+      "inputWaitMs": 13.325,
+      "networkBodyMs": 370.457,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 120.615,
+      "edgeCache": "BYPASS"
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "edge",
+      "round": 3,
+      "actionToFirstFrameMs": 436.469,
+      "requestToFirstFrameMs": 432.07,
+      "actionToStableFrameMs": 608.83,
+      "actionToDataReadyMs": 175.653,
+      "readyToFirstFrameMs": 260.816,
+      "inputWaitMs": 4.399,
+      "networkBodyMs": 158.202,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 348.584,
+      "edgeCache": "HIT"
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "local_memory",
+      "round": 3,
+      "actionToFirstFrameMs": 81.703,
+      "requestToFirstFrameMs": 65.279,
+      "actionToStableFrameMs": 582.991,
+      "actionToDataReadyMs": 18.576,
+      "readyToFirstFrameMs": 63.127,
+      "inputWaitMs": 16.424,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 516.17,
+      "edgeCache": null
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "local_restore",
+      "round": 3,
+      "actionToFirstFrameMs": 108.693,
+      "requestToFirstFrameMs": 89.454,
+      "actionToStableFrameMs": 593.354,
+      "actionToDataReadyMs": 21.739,
+      "readyToFirstFrameMs": 86.954,
+      "inputWaitMs": 19.239,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 476.815,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "local_restore",
+      "round": 4,
+      "actionToFirstFrameMs": 20.458,
+      "requestToFirstFrameMs": 20.454,
+      "actionToStableFrameMs": 20.458,
+      "actionToDataReadyMs": 0.497,
+      "readyToFirstFrameMs": 19.961,
+      "inputWaitMs": 0.004,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 12.236,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "local_memory",
+      "round": 4,
+      "actionToFirstFrameMs": 17.479,
+      "requestToFirstFrameMs": 17.475,
+      "actionToStableFrameMs": 17.479,
+      "actionToDataReadyMs": 0.338,
+      "readyToFirstFrameMs": 17.141,
+      "inputWaitMs": 0.004,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 10.74,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "edge",
+      "round": 4,
+      "actionToFirstFrameMs": 275.483,
+      "requestToFirstFrameMs": 275.469,
+      "actionToStableFrameMs": 275.483,
+      "actionToDataReadyMs": 191.632,
+      "readyToFirstFrameMs": 83.851,
+      "inputWaitMs": 0.014,
+      "networkBodyMs": 173.775,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 16.204,
+      "edgeCache": "HIT"
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "baseline",
+      "round": 4,
+      "actionToFirstFrameMs": 420.93,
+      "requestToFirstFrameMs": 420.928,
+      "actionToStableFrameMs": 420.93,
+      "actionToDataReadyMs": 303.598,
+      "readyToFirstFrameMs": 117.332,
+      "inputWaitMs": 0.002,
+      "networkBodyMs": 303.409,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 26.558,
+      "edgeCache": "BYPASS"
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "local_restore",
+      "round": 4,
+      "actionToFirstFrameMs": 412.143,
+      "requestToFirstFrameMs": 10.757,
+      "actionToStableFrameMs": 412.143,
+      "actionToDataReadyMs": 401.706,
+      "readyToFirstFrameMs": 10.437,
+      "inputWaitMs": 401.386,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 7.804,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "local_memory",
+      "round": 4,
+      "actionToFirstFrameMs": 414.915,
+      "requestToFirstFrameMs": 10.115,
+      "actionToStableFrameMs": 414.915,
+      "actionToDataReadyMs": 405.112,
+      "readyToFirstFrameMs": 9.803,
+      "inputWaitMs": 404.8,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 7.192,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "edge",
+      "round": 4,
+      "actionToFirstFrameMs": 693.754,
+      "requestToFirstFrameMs": 292.245,
+      "actionToStableFrameMs": 693.754,
+      "actionToDataReadyMs": 613.336,
+      "readyToFirstFrameMs": 80.418,
+      "inputWaitMs": 401.509,
+      "networkBodyMs": 201.104,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 15.561,
+      "edgeCache": "HIT"
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "baseline",
+      "round": 4,
+      "actionToFirstFrameMs": 830.184,
+      "requestToFirstFrameMs": 428.976,
+      "actionToStableFrameMs": 830.184,
+      "actionToDataReadyMs": 764.484,
+      "readyToFirstFrameMs": 65.7,
+      "inputWaitMs": 401.208,
+      "networkBodyMs": 363.022,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 10.924,
+      "edgeCache": "BYPASS"
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "local_restore",
+      "round": 4,
+      "actionToFirstFrameMs": 105.519,
+      "requestToFirstFrameMs": 89.776,
+      "actionToStableFrameMs": 588.953,
+      "actionToDataReadyMs": 20.565,
+      "readyToFirstFrameMs": 84.954,
+      "inputWaitMs": 15.743,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 510.524,
+      "edgeCache": null
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "local_memory",
+      "round": 4,
+      "actionToFirstFrameMs": 69.762,
+      "requestToFirstFrameMs": 54.719,
+      "actionToStableFrameMs": 602.066,
+      "actionToDataReadyMs": 16.21,
+      "readyToFirstFrameMs": 53.552,
+      "inputWaitMs": 15.043,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 513.001,
+      "edgeCache": null
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "edge",
+      "round": 4,
+      "actionToFirstFrameMs": 417.894,
+      "requestToFirstFrameMs": 403.12,
+      "actionToStableFrameMs": 581.951,
+      "actionToDataReadyMs": 251.116,
+      "readyToFirstFrameMs": 166.778,
+      "inputWaitMs": 14.774,
+      "networkBodyMs": 226.662,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 246.016,
+      "edgeCache": "HIT"
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "baseline",
+      "round": 4,
+      "actionToFirstFrameMs": 465.748,
+      "requestToFirstFrameMs": 449.78,
+      "actionToStableFrameMs": 583.136,
+      "actionToDataReadyMs": 330.97,
+      "readyToFirstFrameMs": 134.778,
+      "inputWaitMs": 15.968,
+      "networkBodyMs": 314.843,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 154.344,
+      "edgeCache": "BYPASS"
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "baseline",
+      "round": 5,
+      "actionToFirstFrameMs": 457.524,
+      "requestToFirstFrameMs": 457.52,
+      "actionToStableFrameMs": 457.524,
+      "actionToDataReadyMs": 344.378,
+      "readyToFirstFrameMs": 113.146,
+      "inputWaitMs": 0.004,
+      "networkBodyMs": 343.905,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 32.48,
+      "edgeCache": "BYPASS"
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "edge",
+      "round": 5,
+      "actionToFirstFrameMs": 268.335,
+      "requestToFirstFrameMs": 268.33,
+      "actionToStableFrameMs": 268.335,
+      "actionToDataReadyMs": 198.205,
+      "readyToFirstFrameMs": 70.13,
+      "inputWaitMs": 0.005,
+      "networkBodyMs": 181.884,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 0.048,
+      "edgeCache": "HIT"
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "local_memory",
+      "round": 5,
+      "actionToFirstFrameMs": 25.359,
+      "requestToFirstFrameMs": 25.354,
+      "actionToStableFrameMs": 25.359,
+      "actionToDataReadyMs": 0.311,
+      "readyToFirstFrameMs": 25.048,
+      "inputWaitMs": 0.005,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 12.015,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_submit",
+      "mode": "local_restore",
+      "round": 5,
+      "actionToFirstFrameMs": 18.756,
+      "requestToFirstFrameMs": 18.751,
+      "actionToStableFrameMs": 18.756,
+      "actionToDataReadyMs": 0.633,
+      "readyToFirstFrameMs": 18.123,
+      "inputWaitMs": 0.005,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 10.939,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "baseline",
+      "round": 5,
+      "actionToFirstFrameMs": 781.424,
+      "requestToFirstFrameMs": 379.86,
+      "actionToStableFrameMs": 781.424,
+      "actionToDataReadyMs": 691.912,
+      "readyToFirstFrameMs": 89.512,
+      "inputWaitMs": 401.564,
+      "networkBodyMs": 290.149,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 18.603,
+      "edgeCache": "BYPASS"
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "edge",
+      "round": 5,
+      "actionToFirstFrameMs": 706.077,
+      "requestToFirstFrameMs": 300.955,
+      "actionToStableFrameMs": 706.077,
+      "actionToDataReadyMs": 626.167,
+      "readyToFirstFrameMs": 79.91,
+      "inputWaitMs": 405.122,
+      "networkBodyMs": 213.444,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 11.603,
+      "edgeCache": "HIT"
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "local_memory",
+      "round": 5,
+      "actionToFirstFrameMs": 415.112,
+      "requestToFirstFrameMs": 12.123,
+      "actionToStableFrameMs": 415.112,
+      "actionToDataReadyMs": 403.231,
+      "readyToFirstFrameMs": 11.881,
+      "inputWaitMs": 402.989,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 8.173,
+      "edgeCache": null
+    },
+    {
+      "scenario": "search_typing",
+      "mode": "local_restore",
+      "round": 5,
+      "actionToFirstFrameMs": 409.45,
+      "requestToFirstFrameMs": 8.616,
+      "actionToStableFrameMs": 409.45,
+      "actionToDataReadyMs": 401.089,
+      "readyToFirstFrameMs": 8.361,
+      "inputWaitMs": 400.834,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 5.609,
+      "edgeCache": null
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "baseline",
+      "round": 5,
+      "actionToFirstFrameMs": 530.285,
+      "requestToFirstFrameMs": 515.439,
+      "actionToStableFrameMs": 609.993,
+      "actionToDataReadyMs": 328.613,
+      "readyToFirstFrameMs": 201.672,
+      "inputWaitMs": 14.846,
+      "networkBodyMs": 313.604,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 202.594,
+      "edgeCache": "BYPASS"
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "edge",
+      "round": 5,
+      "actionToFirstFrameMs": 422.342,
+      "requestToFirstFrameMs": 401.19,
+      "actionToStableFrameMs": 577.59,
+      "actionToDataReadyMs": 196.586,
+      "readyToFirstFrameMs": 225.756,
+      "inputWaitMs": 21.152,
+      "networkBodyMs": 165.906,
+      "networkRequests": 1,
+      "resultFrameBuildStartAfterReadyMs": 292.373,
+      "edgeCache": "HIT"
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "local_memory",
+      "round": 5,
+      "actionToFirstFrameMs": 82.159,
+      "requestToFirstFrameMs": 65.43,
+      "actionToStableFrameMs": 557.356,
+      "actionToDataReadyMs": 18.69,
+      "readyToFirstFrameMs": 63.469,
+      "inputWaitMs": 16.729,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 466.604,
+      "edgeCache": null
+    },
+    {
+      "scenario": "detail_open",
+      "mode": "local_restore",
+      "round": 5,
+      "actionToFirstFrameMs": 49.024,
+      "requestToFirstFrameMs": 32.884,
+      "actionToStableFrameMs": 590.033,
+      "actionToDataReadyMs": 19.615,
+      "readyToFirstFrameMs": 29.409,
+      "inputWaitMs": 16.14,
+      "networkBodyMs": null,
+      "networkRequests": 0,
+      "resultFrameBuildStartAfterReadyMs": 461.141,
+      "edgeCache": null
+    }
+  ]
+}

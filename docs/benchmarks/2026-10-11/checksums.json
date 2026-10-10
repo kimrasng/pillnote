@@ -1,0 +1,8 @@
+{
+  "docs/benchmarks/2026-10-11/latency-samples.json": "ad2cf8f9109fd8f94ae12788c4a5257c81dcf40250b067155ba930b01c467200",
+  "docs/benchmarks/2026-10-11/cache_latency_benchmark.dart": "06c15ce1ceb05720f579dd3e4eb5767edc37f9258d00486a142eaed8d545f4dc",
+  "docs/benchmarks/2026-10-11/screen-instrumentation.patch": "357a1c83ec8e8fafee98ffab865b94f37039c31c67da019316c48f49b2af3491",
+  "docs/benchmarks/2026-10-11/benchmark.log": "f758bdd7782e275d7bbaf77062bb578c82e24e24be775980f69485da30e60c2e",
+  "docs/benchmarks/2026-10-11/README.md": "b817b1993e5e8a147f4f0032fbea197142fb3f91d86f585b5bf53f2228f85591",
+  "docs/benchmarks/2026-10-11/previous-api-only-measurements.json": "6bc44d526f8b6c66a6221888182c586c5dae6ac881f345ef3738f22b12c2b39f"
+}
