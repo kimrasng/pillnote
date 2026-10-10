@@ -29,7 +29,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.44.1'
+          flutter-version: '3.47.2'
           channel: 'stable'
           cache: true
 
@@ -40,12 +40,7 @@ jobs:
         run: flutter analyze
 
       - name: Test
-        run: >-
-          flutter test
-          test/api_client_test.dart
-          test/controller_test.dart
-          test/push_notification_service_test.dart
-          test/widget_test.dart
+        run: flutter test --exclude-tags backend-e2e
 
       - name: Extract version from tag
         id: get_version

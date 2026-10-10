@@ -15,12 +15,14 @@ class Verification extends StatefulWidget {
     this.debugCode,
     this.apiClient,
     this.onReturn,
+    this.resendCooldownSeconds = 60,
   });
 
   final String email;
   final String? debugCode;
   final ApiClient? apiClient;
   final VoidCallback? onReturn;
+  final int resendCooldownSeconds;
 
   @override
   State<Verification> createState() => _VerificationState();
@@ -37,7 +39,7 @@ class _VerificationState extends State<Verification>
   bool _isReturning = false;
   bool _isLoading = false;
   bool _isResending = false;
-  int _cooldown = 30;
+  int _cooldown = 60;
   Timer? _resendTimer;
   int _arrivalSequence = 0;
   String? _debugCode;
@@ -46,12 +48,12 @@ class _VerificationState extends State<Verification>
   void initState() {
     super.initState();
     _debugCode = widget.debugCode;
-    _startCooldown();
+    _startCooldown(widget.resendCooldownSeconds);
   }
 
-  void _startCooldown() {
+  void _startCooldown(int seconds) {
     _resendTimer?.cancel();
-    _cooldown = 30;
+    _cooldown = seconds;
     _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
         timer.cancel();
@@ -118,7 +120,9 @@ class _VerificationState extends State<Verification>
       final debugCode = await (widget.apiClient ?? ApiClient.instance)
           .startEmailLogin(widget.email);
       if (!mounted) return;
-      _startCooldown();
+      _startCooldown(
+        (widget.apiClient ?? ApiClient.instance).emailResendCooldownSeconds,
+      );
       codeController.clear();
       setState(() {
         _arrivalSequence++;

@@ -19,6 +19,7 @@ class ApiClient {
 
   final ApiTransport _transport;
   final SessionStore _sessionStore;
+  int emailResendCooldownSeconds = 60;
 
   Future<Map<String, dynamic>> health() async =>
       _asMap(await _transport.request('GET', '/health'));
@@ -32,6 +33,11 @@ class ApiClient {
       ),
     );
     final data = _dataMap(response);
+    final cooldown = data['resendAfterSeconds'];
+    emailResendCooldownSeconds =
+        cooldown is num && cooldown >= 1 && cooldown <= 3600
+        ? cooldown.ceil()
+        : 60;
     return data['debugCode']?.toString();
   }
 
@@ -54,29 +60,25 @@ class ApiClient {
 
   Future<void> logout() async {
     final refreshToken = _sessionStore.session?.refreshToken;
-    try {
-      if (refreshToken != null) {
-        await _transport.request(
-          'POST',
-          '/v1/auth/logout',
-          body: {'refreshToken': refreshToken},
-        );
-      }
-    } finally {
-      await _sessionStore.clear();
+    // Invalidate pending authenticated requests before contacting the server.
+    await _sessionStore.clear();
+    if (refreshToken != null) {
+      await _transport.request(
+        'POST',
+        '/v1/auth/logout',
+        body: {'refreshToken': refreshToken},
+      );
     }
   }
 
   Future<void> logoutAll() async {
-    try {
-      await _transport.request(
-        'POST',
-        '/v1/auth/logout-all',
-        authenticated: true,
-      );
-    } finally {
-      await _sessionStore.clear();
-    }
+    final generation = _sessionStore.generation;
+    await _transport.request(
+      'POST',
+      '/v1/auth/logout-all',
+      authenticated: true,
+    );
+    await _sessionStore.clear(expectedGeneration: generation);
   }
 
   Future<String?> requestAccountDeletionCode() async {
@@ -92,13 +94,14 @@ class ApiClient {
   }
 
   Future<void> deleteAccount(String verificationCode) async {
+    final generation = _sessionStore.generation;
     await _transport.request(
       'DELETE',
       '/v1/me',
       authenticated: true,
       body: {'verificationCode': verificationCode},
     );
-    await _sessionStore.clear();
+    await _sessionStore.clear(expectedGeneration: generation);
   }
 
   Future<List<Map<String, dynamic>>> searchDrugs(
@@ -166,6 +169,30 @@ class ApiClient {
       '/v1/devices/${Uri.encodeComponent(deviceId)}',
       authenticated: true,
       body: {'platform': platform, 'pushToken': pushToken},
+    );
+  }
+
+  Future<void> registerAppDevice({
+    required String deviceId,
+    required String platform,
+    required bool detailsConsent,
+    required Map<String, String> details,
+    required int generation,
+  }) async {
+    if (generation != _sessionStore.generation) return;
+    await _transport.requestUri(
+      'PUT',
+      _transport.uri('/v1/app-devices/${Uri.encodeComponent(deviceId)}'),
+      authenticated: true,
+      expectedGeneration: generation,
+      body: {
+        'platform': platform,
+        'refreshToken': _sessionStore.session?.refreshToken,
+        'detailsConsent': detailsConsent,
+        if (detailsConsent)
+          for (final key in ['model', 'osVersion', 'appVersion', 'appBuild'])
+            if (details[key] != null) key: details[key],
+      },
     );
   }
 

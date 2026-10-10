@@ -10,13 +10,76 @@ class LocalMedicationStore implements MedicationStore {
   LocalMedicationStore(this._prefs);
 
   final SharedPreferences _prefs;
+  int _dataGeneration = 0;
 
   static const _onboardingKey = 'onboarding_completed';
+  static const _startupPermissionsKey = 'startup_permissions_requested';
   static const _pillsKey = 'user_pills';
   static const _historyKey = 'intake_history';
   static const _groupsKey = 'pill_groups';
   static const _settingsKey = 'app_settings';
   static const _deviceIdKey = 'device_id';
+  static const _doseRemindersKey = 'dose_reminders_enabled';
+  static const _dataOwnerKey = 'local_data_owner_id';
+
+  @override
+  int get dataGeneration => _dataGeneration;
+
+  @override
+  bool get hasExplicitDataOwner => _prefs.containsKey(_dataOwnerKey);
+
+  @override
+  String? get dataOwnerId =>
+      _prefs.getString(_dataOwnerKey) ?? _legacyDataOwner();
+
+  // Older versions kept account sync metadata even after signing out.
+  // An ambiguous legacy cache must not be treated as fresh guest data.
+  String? _legacyDataOwner() {
+    final accounts = <String>{};
+    final syncDates = <String, DateTime>{};
+    for (final key in _prefs.getKeys()) {
+      if (key.startsWith('sync_revision_')) {
+        final id = key.substring('sync_revision_'.length);
+        if (id.isNotEmpty) accounts.add(id);
+      } else if (key.startsWith('last_synced_at_')) {
+        final id = key.substring('last_synced_at_'.length);
+        if (id.isEmpty || id == 'guest') continue;
+        accounts.add(id);
+        final at = DateTime.tryParse(_prefs.getString(key) ?? '');
+        if (at != null) syncDates[id] = at;
+      }
+    }
+    if (accounts.isEmpty) return null;
+    if (accounts.length == 1) return accounts.single;
+    final recent = syncDates.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    if (recent.isNotEmpty &&
+        (recent.length == 1 || recent.first.value.isAfter(recent[1].value))) {
+      return recent.first.key;
+    }
+    return '<legacy-account-cache>';
+  }
+
+  @override
+  Future<void> saveDataOwnerId(String userId) async {
+    if (!await _prefs.setString(_dataOwnerKey, userId)) {
+      throw StateError('로컬 데이터 소유 계정을 저장하지 못했습니다.');
+    }
+  }
+
+  @override
+  Future<void> clearSyncMetadata(String userId) async {
+    await _removeKeys([_revisionKey(userId), _lastSyncKey(userId)]);
+  }
+
+  // Notification preferences belong to this installation, not cloud settings.
+  @override
+  bool get doseRemindersEnabled => _prefs.getBool(_doseRemindersKey) ?? true;
+
+  @override
+  Future<void> setDoseRemindersEnabled(bool enabled) async {
+    await _prefs.setBool(_doseRemindersKey, enabled);
+  }
 
   @override
   bool get onboardingCompleted => _prefs.getBool(_onboardingKey) ?? false;
@@ -24,6 +87,17 @@ class LocalMedicationStore implements MedicationStore {
   @override
   Future<void> setOnboardingCompleted(bool completed) async {
     await _prefs.setBool(_onboardingKey, completed);
+  }
+
+  @override
+  bool get startupPermissionsRequested =>
+      _prefs.getBool(_startupPermissionsKey) ?? false;
+
+  @override
+  Future<void> setStartupPermissionsRequested() async {
+    if (!await _prefs.setBool(_startupPermissionsKey, true)) {
+      throw StateError('첫 실행 권한 요청 상태를 저장하지 못했습니다.');
+    }
   }
 
   @override
@@ -49,11 +123,17 @@ class LocalMedicationStore implements MedicationStore {
   Map<String, dynamic> readHistory() => _readMap(_historyKey);
 
   @override
-  Map<String, dynamic> readSettings() => {
-    'reminderMinutes': 30,
-    'guardianAlertsEnabled': true,
-    ..._readMap(_settingsKey),
-  };
+  Map<String, dynamic> readSettings() {
+    final saved = _readMap(_settingsKey);
+    return {
+      'reminderMinutes': 30,
+      'guardianAlertsEnabled': true,
+      ...saved,
+      // Distinguish existing legacy settings from untouched device defaults.
+      if (saved.isNotEmpty && saved['updatedAt'] == null)
+        'updatedAt': '1970-01-01T00:00:00.000Z',
+    };
+  }
 
   @override
   Future<void> savePills(List<Map<String, dynamic>> pills) =>
@@ -95,14 +175,23 @@ class LocalMedicationStore implements MedicationStore {
 
   @override
   Future<void> clear({String? userId}) async {
-    await Future.wait([
-      _prefs.remove(_pillsKey),
-      _prefs.remove(_groupsKey),
-      _prefs.remove(_historyKey),
-      _prefs.remove(_settingsKey),
-      if (userId != null) _prefs.remove(_revisionKey(userId)),
-      _prefs.remove(_lastSyncKey(userId)),
+    _dataGeneration++;
+    await _removeKeys([
+      _pillsKey,
+      _groupsKey,
+      _historyKey,
+      _settingsKey,
+      _doseRemindersKey,
+      if (userId != null) _revisionKey(userId),
+      _lastSyncKey(userId),
     ]);
+  }
+
+  Future<void> _removeKeys(List<String> keys) async {
+    final removed = await Future.wait(keys.map(_prefs.remove));
+    if (removed.any((success) => !success)) {
+      throw StateError('이전 로컬 데이터를 삭제하지 못했습니다.');
+    }
   }
 
   Future<void> _writeJson(String key, Object value) async {

@@ -4,6 +4,15 @@ abstract interface class MedicationStore {
   String get deviceId;
   bool get onboardingCompleted;
   Future<void> setOnboardingCompleted(bool completed);
+  bool get startupPermissionsRequested;
+  Future<void> setStartupPermissionsRequested();
+  bool get doseRemindersEnabled;
+  Future<void> setDoseRemindersEnabled(bool enabled);
+  String? get dataOwnerId;
+  bool get hasExplicitDataOwner;
+  int get dataGeneration;
+  Future<void> saveDataOwnerId(String userId);
+  Future<void> clearSyncMetadata(String userId);
 
   List<Map<String, dynamic>> readPills();
   List<Map<String, dynamic>> readGroups();

@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -7,6 +9,61 @@ import 'package:pillnote/services/api_client.dart';
 import 'package:pillnote/services/session_store.dart';
 
 void main() {
+  testWidgets('the request deadline includes a stalled response body', (
+    tester,
+  ) async {
+    final body = StreamController<List<int>>();
+    final client = ApiClient(
+      baseUrl: 'https://api.pillnote.test',
+      sessionStore: SessionStore.inMemory(),
+      client: MockClient.streaming((_, _) async {
+        return http.StreamedResponse(body.stream, 200);
+      }),
+    );
+    final assertion = expectLater(
+      client.health(),
+      throwsA(
+        isA<ApiException>().having(
+          (error) => error.code,
+          'code',
+          'NETWORK_TIMEOUT',
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 15));
+    await assertion;
+    await body.close();
+  });
+
+  for (final error in [
+    const SocketException('connection lost while reading response'),
+    http.ClientException('connection lost while reading response'),
+  ]) {
+    test(
+      'response body ${error.runtimeType} becomes a network API error',
+      () async {
+        final client = ApiClient(
+          baseUrl: 'https://api.pillnote.test',
+          sessionStore: SessionStore.inMemory(),
+          client: MockClient.streaming((_, _) async {
+            return http.StreamedResponse(Stream<List<int>>.error(error), 200);
+          }),
+        );
+        await expectLater(
+          client.health(),
+          throwsA(
+            isA<ApiException>().having(
+              (error) => error.code,
+              'code',
+              'NETWORK_UNAVAILABLE',
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   test('email verification saves the returned passwordless session', () async {
     final store = SessionStore.inMemory();
     await store.initialize();

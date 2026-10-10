@@ -54,6 +54,8 @@ class _RegisterState extends State<Register>
           builder: (context) => Verification(
             email: email,
             debugCode: debugCode,
+            resendCooldownSeconds: (widget.apiClient ?? ApiClient.instance)
+                .emailResendCooldownSeconds,
             apiClient: widget.apiClient,
             onReturn: _revealEmail,
           ),

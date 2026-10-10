@@ -42,6 +42,79 @@ void main() {
   );
 
   test(
+    'sync sends the IANA timezone and flushes edits before suspension',
+    () async {
+      await signIn();
+      await store.saveSyncRevision('owner', 0);
+      var uploads = 0;
+      final sync = SnapshotSyncService(
+        store: store,
+        sessions: sessions,
+        now: () => now,
+        resolveTimeZone: () async => 'Asia/Seoul',
+        api: apiWith((request) async {
+          uploads++;
+          final snapshot = (jsonDecode(request.body) as Map)['snapshot'] as Map;
+          expect(snapshot['timeZone'], {
+            'identifier': 'Asia/Seoul',
+            'utcOffsetMinutes': now.timeZoneOffset.inMinutes,
+          });
+          return http.Response(
+            jsonEncode({
+              'data': {'revision': uploads},
+            }),
+            200,
+          );
+        }),
+      );
+      addTearDown(sync.dispose);
+      sync.scheduleSync();
+      await sync.flushPendingChanges();
+      expect(uploads, 1);
+      await sync.flushPendingChanges();
+      expect(uploads, 1);
+    },
+  );
+
+  test(
+    'failed suspension flush retains local edits for the next retry',
+    () async {
+      await signIn();
+      await store.saveSyncRevision('owner', 0);
+      var uploads = 0;
+      final sync = SnapshotSyncService(
+        store: store,
+        sessions: sessions,
+        now: () => now,
+        resolveTimeZone: () async => null,
+        api: apiWith((request) async {
+          uploads++;
+          if (uploads == 1) return http.Response('{}', 503);
+          final snapshot = (jsonDecode(request.body) as Map)['snapshot'] as Map;
+          expect(snapshot['timeZone'], {
+            'utcOffsetMinutes': now.timeZoneOffset.inMinutes,
+          });
+          return http.Response(
+            jsonEncode({
+              'data': {'revision': 1},
+            }),
+            200,
+          );
+        }),
+      );
+      addTearDown(sync.dispose);
+      sync.scheduleSync();
+      await expectLater(
+        sync.flushPendingChanges(),
+        throwsA(isA<ApiException>()),
+      );
+      await sync.flushPendingChanges();
+      expect(uploads, 2);
+      expect(sync.lastSyncedAt, now);
+    },
+  );
+
+  test(
     'isolated guest services record group doses without using the network',
     () async {
       var requests = 0;
@@ -205,9 +278,10 @@ void main() {
       await store.savePills([
         {'id': 'new-pill'},
       ]);
-      expect(await sync.syncToServer(), 1);
+      final queued = sync.syncToServer();
       finish.complete();
-      expect(await initial, 3);
+      expect(await initial, 2);
+      expect(await queued, 3);
       expect(uploads, 2);
     },
   );
@@ -280,6 +354,8 @@ void main() {
       await store.saveSettings({'guardianAlertsEnabled': true});
       await app.alerts.checkAndSend();
       expect(events, ['pill-1:20261004:0800']);
+      await app.alerts.checkAndSend();
+      expect(events, hasLength(1));
       await app.intakes.recordIntake('pill-1', '08:00');
       app.sync.cancelPendingSync();
       await app.alerts.checkAndSend();
@@ -290,7 +366,7 @@ void main() {
   testWidgets('disposing a service cancels its scheduled upload', (
     tester,
   ) async {
-    await signIn();
+    await tester.runAsync(signIn);
     var requests = 0;
     final sync = SnapshotSyncService(
       store: store,

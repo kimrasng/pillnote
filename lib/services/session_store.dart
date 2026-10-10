@@ -61,6 +61,14 @@ class SessionStore {
   final FlutterSecureStorage? _storage;
   final Map<String, String>? _memory;
   final _changes = StreamController<SessionChange>.broadcast(sync: true);
+  final _signInPreparations = <Future<void> Function(UserSession)>{};
+
+  /// Local account data must be ready before publishing a signed-in session.
+  void addSignInPreparation(Future<void> Function(UserSession) prepare) =>
+      _signInPreparations.add(prepare);
+
+  void removeSignInPreparation(Future<void> Function(UserSession) prepare) =>
+      _signInPreparations.remove(prepare);
 
   static const _userIdKey = 'session_user_id';
   static const _emailKey = 'session_email';
@@ -70,9 +78,14 @@ class SessionStore {
   static const _refreshTtlKey = 'session_refresh_ttl';
 
   UserSession? _session;
+  int _generation = 0;
+  Future<void> _writes = Future.value();
 
   UserSession? get session => _session;
   bool get isLoggedIn => _session != null;
+
+  /// Changes on login/logout, but not on an access-token rotation.
+  int get generation => _generation;
   Stream<SessionChange> get changes => _changes.stream;
 
   Future<void> initialize() async {
@@ -99,12 +112,55 @@ class SessionStore {
   }
 
   Future<void> save(UserSession session) async {
+    _validate(session);
+    final generation = ++_generation;
+    _session = null;
+    await _serialize(() async {
+      if (generation != _generation) return;
+      for (final prepare in _signInPreparations.toList()) {
+        await prepare(session);
+        if (generation != _generation) return;
+      }
+      await _persist(session);
+      if (generation != _generation) return;
+      _session = session;
+      _changes.add(
+        SessionChange(reason: SessionChangeReason.signedIn, session: session),
+      );
+    });
+  }
+
+  Future<bool> replaceIfCurrent(
+    UserSession expected,
+    UserSession replacement,
+    int generation,
+  ) async {
+    _validate(replacement);
+    // A superseded refresh must not wait behind a login preparing local data.
+    if (_generation != generation || !identical(_session, expected)) {
+      return false;
+    }
+    var replaced = false;
+    await _serialize(() async {
+      if (_generation != generation || !identical(_session, expected)) return;
+      await _persist(replacement);
+      if (_generation != generation || !identical(_session, expected)) return;
+      _session = replacement;
+      replaced = true;
+    });
+    return replaced;
+  }
+
+  static void _validate(UserSession session) {
     if (session.userId.isEmpty ||
         session.email.isEmpty ||
         session.accessToken.isEmpty ||
         session.refreshToken.isEmpty) {
       throw ArgumentError('완전한 사용자 세션만 저장할 수 있습니다.');
     }
+  }
+
+  Future<void> _persist(UserSession session) async {
     await Future.wait([
       _write(_userIdKey, session.userId),
       _write(_emailKey, session.email),
@@ -113,18 +169,21 @@ class SessionStore {
       _write(_accessTtlKey, session.accessTokenExpiresIn.toString()),
       _write(_refreshTtlKey, session.refreshTokenExpiresIn.toString()),
     ]);
-    _session = session;
-    _changes.add(
-      SessionChange(reason: SessionChangeReason.signedIn, session: session),
-    );
   }
 
   Future<void> clear({
     SessionChangeReason reason = SessionChangeReason.signedOut,
+    int? expectedGeneration,
   }) async {
+    if (expectedGeneration != null && expectedGeneration != _generation) return;
     final hadSession = _session != null;
     _session = null;
-    try {
+    _generation++;
+    if (hadSession) {
+      _changes.add(SessionChange(reason: reason, session: null));
+    }
+    await _serialize(() async {
+      // Writes are serialized: a later login is persisted after this deletion.
       await Future.wait([
         _delete(_userIdKey),
         _delete(_emailKey),
@@ -133,11 +192,13 @@ class SessionStore {
         _delete(_accessTtlKey),
         _delete(_refreshTtlKey),
       ]);
-    } finally {
-      if (hadSession) {
-        _changes.add(SessionChange(reason: reason, session: null));
-      }
-    }
+    });
+  }
+
+  Future<void> _serialize(Future<void> Function() write) {
+    final pending = _writes.then((_) => write());
+    _writes = pending.then<void>((_) {}, onError: (Object _, StackTrace _) {});
+    return pending;
   }
 
   Future<void> _write(String key, String value) async {

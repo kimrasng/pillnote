@@ -1,5 +1,8 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:pillnote/app/app_services.dart';
+import 'package:pillnote/services/snapshot_sync_service.dart';
 import 'package:pillnote/models/medication.dart';
 import 'package:pillnote/screen/features/pillsearch.dart';
 import 'package:pillnote/screen/management/pilmanagement.dart';
@@ -12,6 +15,34 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  late final SnapshotSyncService _sync;
+  final _dateScrollController = ScrollController();
+  late final DateTime _calendarStart;
+  static const _calendarDays = 21;
+  static const _dateCardMargin = 6.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _sync = AppServices.instance.sync;
+    _sync.addListener(_onSynced);
+    _calendarStart = DateTime(_date.year, _date.month, _date.day - 10);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _scrollToDate(animate: false);
+    });
+  }
+
+  void _onSynced() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _sync.removeListener(_onSynced);
+    _dateScrollController.dispose();
+    super.dispose();
+  }
+
   DateTime _date = DateUtils.dateOnly(DateTime.now());
   final Set<String> _busy = {};
   Future<void> _open(Widget page) async {
@@ -63,14 +94,129 @@ class _HomeState extends State<Home> {
     }
   }
 
-  Future<void> _pickDate() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _date,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+  void _selectDate(DateTime date) {
+    setState(() => _date = date);
+    _scrollToDate();
+  }
+
+  void _scrollToDate({bool animate = true}) {
+    if (!_dateScrollController.hasClients) return;
+    final position = _dateScrollController.position;
+    final width = position.viewportDimension;
+    final itemExtent = width * 0.156 + _dateCardMargin * 2;
+    final index = DateTime.utc(_date.year, _date.month, _date.day)
+        .difference(
+          DateTime.utc(
+            _calendarStart.year,
+            _calendarStart.month,
+            _calendarStart.day,
+          ),
+        )
+        .inDays;
+    final offset = (width * 0.04 + (index + 0.5) * itemExtent - width / 2)
+        .clamp(position.minScrollExtent, position.maxScrollExtent);
+    if (animate && !MediaQuery.disableAnimationsOf(context)) {
+      _dateScrollController.animateTo(
+        offset,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      _dateScrollController.jumpTo(offset);
+    }
+  }
+
+  Widget _buildCalendar(DateTime today) {
+    final size = MediaQuery.sizeOf(context);
+    final textScaler = MediaQuery.textScalerOf(context);
+    final weekdayFontSize = size.width * 0.032;
+    final dayFontSize = size.width * 0.048;
+    final height = math.max(
+      size.height * 0.13,
+      textScaler.scale(weekdayFontSize) * 1.4 +
+          textScaler.scale(dayFontSize) * 1.4 +
+          46,
     );
-    if (date != null && mounted) setState(() => _date = date);
+    return SizedBox(
+      height: height,
+      child: ListView.builder(
+        controller: _dateScrollController,
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+        itemExtent: size.width * 0.156 + _dateCardMargin * 2,
+        itemCount: _calendarDays,
+        itemBuilder: (context, index) {
+          final day = DateTime(
+            _calendarStart.year,
+            _calendarStart.month,
+            _calendarStart.day + index,
+          );
+          final selected = DateUtils.isSameDay(day, _date);
+          final isToday = DateUtils.isSameDay(day, today);
+          return Semantics(
+            selected: selected,
+            button: true,
+            label: '${day.month}월 ${day.day}일${isToday ? ', 오늘' : ''}',
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: _dateCardMargin,
+                vertical: 8,
+              ),
+              child: InkWell(
+                onTap: () => _selectDate(day),
+                borderRadius: BorderRadius.circular(20),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? blue
+                        : isToday
+                        ? blue.withValues(alpha: 0.05)
+                        : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: selected
+                          ? blue
+                          : isToday
+                          ? blue.withValues(alpha: 0.3)
+                          : Colors.grey.shade100,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        ['월', '화', '수', '목', '금', '토', '일'][day.weekday - 1],
+                        style: TextStyle(
+                          color: selected ? Colors.white70 : Colors.black38,
+                          fontSize: weekdayFontSize,
+                          height: 1.4,
+                          fontWeight: selected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '${day.day}',
+                        style: TextStyle(
+                          color: selected ? Colors.white : Colors.black87,
+                          fontWeight: FontWeight.bold,
+                          fontSize: dayFontSize,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -85,109 +231,40 @@ class _HomeState extends State<Home> {
     final completed = plan.completed;
     final next = plan.next;
     final progress = plan.progress;
-    final weekStart = _date.subtract(Duration(days: _date.weekday - 1));
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: PageScrollView(
         title: isToday ? '오늘의 복용' : '복용 기록',
         subtitle: isToday ? '한 번의 체크로, 꾸준한 하루를 만들어요.' : '날짜별 일정과 복용 기록을 확인해요.',
         trailing: IconButton(
-          tooltip: '날짜 선택',
-          onPressed: _pickDate,
-          icon: const Icon(Icons.calendar_today_outlined, size: 22),
+          tooltip: '오늘로 돌아가기',
+          onPressed: () => _selectDate(today),
+          style: IconButton.styleFrom(
+            backgroundColor: blue.withValues(alpha: 0.1),
+            foregroundColor: blue,
+            shape: const CircleBorder(),
+          ),
+          icon: const Icon(Icons.today_rounded, size: 26),
         ),
         padding: const EdgeInsets.only(bottom: 24),
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              '${_date.year}년 ${_date.month}월',
+              style: const TextStyle(
+                color: Colors.black54,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          _buildCalendar(today),
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               children: [
-                Row(
-                  children: [
-                    IconButton(
-                      tooltip: '지난주',
-                      onPressed: () => setState(
-                        () => _date = _date.subtract(const Duration(days: 7)),
-                      ),
-                      icon: const Icon(Icons.chevron_left),
-                    ),
-                    Expanded(
-                      child: Center(
-                        child: Text(
-                          '${_date.year}년 ${_date.month}월',
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ),
-                    if (!isToday)
-                      TextButton(
-                        onPressed: () => setState(() => _date = today),
-                        child: const Text('오늘'),
-                      ),
-                    IconButton(
-                      tooltip: '다음 주',
-                      onPressed: () => setState(
-                        () => _date = _date.add(const Duration(days: 7)),
-                      ),
-                      icon: const Icon(Icons.chevron_right),
-                    ),
-                  ],
-                ),
-                Row(
-                  children: List.generate(7, (index) {
-                    final day = weekStart.add(Duration(days: index));
-                    final selected = DateUtils.isSameDay(day, _date);
-                    return Expanded(
-                      child: Semantics(
-                        selected: selected,
-                        label: '${day.month}월 ${day.day}일',
-                        child: InkWell(
-                          onTap: () => setState(() => _date = day),
-                          borderRadius: BorderRadius.circular(14),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            decoration: BoxDecoration(
-                              color: selected ? blue : Colors.transparent,
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  ['월', '화', '수', '목', '금', '토', '일'][index],
-                                  style: TextStyle(
-                                    color: selected ? Colors.white70 : muted,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                const SizedBox(height: 7),
-                                Text(
-                                  '${day.day}',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    color: selected ? Colors.white : ink,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                const SizedBox(height: 5),
-                                Container(
-                                  width: 4,
-                                  height: 4,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: DateUtils.isSameDay(day, today)
-                                        ? (selected ? Colors.white : blue)
-                                        : Colors.transparent,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-                const SizedBox(height: 24),
                 if (doses.isNotEmpty)
                   SoftPanel(
                     color: const Color(0xFFEFF5FF),

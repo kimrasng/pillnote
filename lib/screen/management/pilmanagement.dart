@@ -290,55 +290,59 @@ class _StockEditorState extends State<_StockEditor> {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.all(24),
-    child: SingleChildScrollView(
-      child: Form(
-        key: _form,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              '남은 약 수량',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 12),
-            SwitchListTile.adaptive(
-              activeTrackColor: blue,
-              contentPadding: EdgeInsets.zero,
-              title: const Text('수량 관리'),
-              value: _tracking,
-              onChanged: (value) => setState(() => _tracking = value),
-            ),
-            if (_tracking)
-              TextFormField(
-                controller: _stock,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: InputDecoration(
-                  labelText: '현재 보유 수량',
-                  suffixText: Medication.unit(widget.pill),
-                ),
-                validator: (value) {
-                  final n = num.tryParse(value?.trim() ?? '');
-                  return n == null || !n.isFinite || n < 0
-                      ? '0 이상의 수량을 입력하세요.'
-                      : null;
-                },
+    padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+    child: SafeArea(
+      top: false,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Form(
+          key: _form,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                '남은 약 수량',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
               ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: () {
-                if (!_form.currentState!.validate()) return;
-                Navigator.pop(context, {
-                  'trackStock': _tracking,
-                  'stock': _tracking ? num.parse(_stock.text.trim()) : null,
-                });
-              },
-              child: const Text('저장'),
-            ),
-          ],
+              const SizedBox(height: 12),
+              SwitchListTile.adaptive(
+                activeTrackColor: blue,
+                contentPadding: EdgeInsets.zero,
+                title: const Text('수량 관리'),
+                value: _tracking,
+                onChanged: (value) => setState(() => _tracking = value),
+              ),
+              if (_tracking)
+                TextFormField(
+                  controller: _stock,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: '현재 보유 수량',
+                    suffixText: Medication.unit(widget.pill),
+                  ),
+                  validator: (value) {
+                    final n = num.tryParse(value?.trim() ?? '');
+                    return n == null || !n.isFinite || n < 0
+                        ? '0 이상의 수량을 입력하세요.'
+                        : null;
+                  },
+                ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: () {
+                  if (!_form.currentState!.validate()) return;
+                  Navigator.pop(context, {
+                    'trackStock': _tracking,
+                    'stock': _tracking ? num.parse(_stock.text.trim()) : null,
+                  });
+                },
+                child: const Text('저장'),
+              ),
+            ],
+          ),
         ),
       ),
     ),

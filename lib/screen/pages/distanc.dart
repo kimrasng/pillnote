@@ -3,7 +3,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:pillnote/services/api_client.dart';
-import 'package:pillnote/widgets/app_ui.dart';
+import 'package:pillnote/widgets/app_ui.dart' hide PageScrollView;
+import 'package:pillnote/widgets/common/page_scroll_view.dart';
 
 class Distanc extends StatefulWidget {
   const Distanc({super.key});

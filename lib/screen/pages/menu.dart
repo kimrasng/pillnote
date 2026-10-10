@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:pillnote/app/app_services.dart';
 import 'package:pillnote/screen/pages/submenu/alarmtime.dart';
+import 'package:pillnote/screen/pages/submenu/dose_reminders.dart';
 import 'package:pillnote/screen/pages/submenu/pushalarm.dart';
+import 'package:pillnote/screen/pages/submenu/device_privacy.dart';
 import 'package:pillnote/screen/register/register.dart';
 import 'package:pillnote/services/api_client.dart';
 import 'package:pillnote/services/push_notification_service.dart';
 import 'package:pillnote/services/session_store.dart';
-import 'package:pillnote/widgets/app_ui.dart';
+import 'package:pillnote/widgets/app_ui.dart' hide PageScrollView;
+import 'package:pillnote/widgets/common/page_scroll_view.dart';
 
 class Menu extends StatefulWidget {
-  const Menu({super.key});
+  const Menu({super.key, this.apiClient, this.sessionStore});
+
+  final ApiClient? apiClient;
+  final SessionStore? sessionStore;
 
   @override
   State<Menu> createState() => _MenuState();
@@ -18,7 +24,9 @@ class Menu extends StatefulWidget {
 class _MenuState extends State<Menu> {
   bool _isBusy = false;
 
-  bool get _isLoggedIn => SessionStore.instance.isLoggedIn;
+  ApiClient get _api => widget.apiClient ?? ApiClient.instance;
+  SessionStore get _sessions => widget.sessionStore ?? SessionStore.instance;
+  bool get _isLoggedIn => _sessions.isLoggedIn;
 
   Future<void> _sync() async {
     setState(() => _isBusy = true);
@@ -43,7 +51,11 @@ class _MenuState extends State<Menu> {
     } catch (_) {
       // 로그아웃은 기기 등록 해제 실패와 무관하게 계속합니다.
     }
-    await ApiClient.instance.logout();
+    try {
+      await _api.logout();
+    } on ApiException {
+      // ApiClient clears the local session even when server revocation fails.
+    }
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute<void>(builder: (_) => const Register()),
@@ -72,12 +84,7 @@ class _MenuState extends State<Menu> {
     if (confirmed != true) return;
     setState(() => _isBusy = true);
     try {
-      try {
-        await PushNotificationService.instance.unregisterCurrentDevice();
-      } catch (_) {
-        // 기기 등록 해제 실패가 계정 세션 종료를 막지 않도록 합니다.
-      }
-      await ApiClient.instance.logoutAll();
+      await _api.logoutAll();
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute<void>(builder: (_) => const Register()),
@@ -125,7 +132,7 @@ class _MenuState extends State<Menu> {
     setState(() => _isBusy = true);
     String? debugCode;
     try {
-      debugCode = await ApiClient.instance.requestAccountDeletionCode();
+      debugCode = await _api.requestAccountDeletionCode();
     } on ApiException catch (error) {
       if (mounted) _showMessage(error.message, error: true);
       if (mounted) setState(() => _isBusy = false);
@@ -139,6 +146,7 @@ class _MenuState extends State<Menu> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('계정 삭제'),
+        scrollable: true,
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,8 +188,9 @@ class _MenuState extends State<Menu> {
       } catch (_) {
         // 서버의 계정 삭제가 기기 등록 해제보다 우선입니다.
       }
-      await ApiClient.instance.deleteAccount(code);
-      await AppServices.instance.clearLocalData();
+      final ownerId = _sessions.session?.userId;
+      await _api.deleteAccount(code);
+      await AppServices.instance.clearLocalData(userId: ownerId);
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute<void>(builder: (_) => const Register()),
@@ -205,7 +214,7 @@ class _MenuState extends State<Menu> {
 
   @override
   Widget build(BuildContext context) {
-    final session = SessionStore.instance.session;
+    final session = _sessions.session;
     final lastSync = AppServices.instance.sync.lastSyncedAt?.toLocal();
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -277,6 +286,17 @@ class _MenuState extends State<Menu> {
                 const SizedBox(height: 20),
                 const SectionLabel('복약 알림'),
                 _tile(
+                  Icons.notifications_active_outlined,
+                  '내 복용 시간 알림',
+                  '앱을 열지 않아도 복용 시간에 알려드려요.',
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => const DoseReminders(),
+                    ),
+                  ),
+                ),
+                _tile(
                   Icons.schedule_outlined,
                   '놓친 복용 알림',
                   '보호자에게 알리기 전 대기 시간',
@@ -300,7 +320,20 @@ class _MenuState extends State<Menu> {
                 ),
                 const SizedBox(height: 20),
                 const SectionLabel('데이터 백업'),
-                SoftPanel(
+                if (_isLoggedIn)
+                  _tile(
+                    Icons.phonelink_outlined,
+                    '기기 정보 제공',
+                    '로그인 기기 관리와 선택 정보 제공',
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => const DevicePrivacy(),
+                      ),
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -345,42 +378,27 @@ class _MenuState extends State<Menu> {
                   ),
                 ),
                 if (_isLoggedIn) ...[
-                  const SizedBox(height: 24),
-                  ExpansionTile(
-                    tilePadding: EdgeInsets.zero,
-                    childrenPadding: EdgeInsets.zero,
-                    title: const Text(
-                      '계정 관리',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: const Text('로그아웃 · 데이터 삭제'),
-                    children: [
-                      _tile(
-                        Icons.logout,
-                        '로그아웃',
-                        null,
-                        _isBusy ? null : _logout,
-                      ),
-                      _tile(
-                        Icons.devices_outlined,
-                        '모든 기기에서 로그아웃',
-                        null,
-                        _isBusy ? null : _logoutAll,
-                      ),
-                      _tile(
-                        Icons.cloud_off_outlined,
-                        '클라우드 백업 삭제',
-                        '이 기기의 기록은 유지돼요.',
-                        _isBusy ? null : _deleteCloudBackup,
-                      ),
-                      _tile(
-                        Icons.delete_forever_outlined,
-                        '계정 삭제',
-                        '계정과 복약 데이터를 삭제해요.',
-                        _isBusy ? null : _deleteAccount,
-                        destructive: true,
-                      ),
-                    ],
+                  const SizedBox(height: 20),
+                  const SectionLabel('계정 관리'),
+                  _tile(Icons.logout, '로그아웃', null, _isBusy ? null : _logout),
+                  _tile(
+                    Icons.devices_outlined,
+                    '모든 기기에서 로그아웃',
+                    null,
+                    _isBusy ? null : _logoutAll,
+                  ),
+                  _tile(
+                    Icons.cloud_off_outlined,
+                    '클라우드 백업 삭제',
+                    '이 기기의 기록은 유지돼요.',
+                    _isBusy ? null : _deleteCloudBackup,
+                  ),
+                  _tile(
+                    Icons.delete_forever_outlined,
+                    '계정 삭제',
+                    '계정과 복약 데이터를 삭제해요.',
+                    _isBusy ? null : _deleteAccount,
+                    destructive: true,
                   ),
                 ],
                 const SizedBox(height: 36),

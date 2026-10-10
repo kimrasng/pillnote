@@ -61,16 +61,31 @@ void main() {
       final baseUrl = 'http://127.0.0.1:$port';
       await _waitUntilHealthy(baseUrl, output);
 
-      final owner = ApiClient(
-        baseUrl: baseUrl,
-        sessionStore: SessionStore.inMemory(),
-      );
+      final ownerSessions = SessionStore.inMemory();
+      final guardianSessions = SessionStore.inMemory();
+      final owner = ApiClient(baseUrl: baseUrl, sessionStore: ownerSessions);
       final guardian = ApiClient(
         baseUrl: baseUrl,
-        sessionStore: SessionStore.inMemory(),
+        sessionStore: guardianSessions,
       );
       await _login(owner, 'mobile-owner@example.com');
       await _login(guardian, 'mobile-guardian@example.com');
+      expect((await owner.me())['email'], 'mobile-owner@example.com');
+
+      final session = ownerSessions.session!;
+      await ownerSessions.save(
+        UserSession(
+          userId: session.userId,
+          email: session.email,
+          accessToken: 'invalid-access-token',
+          refreshToken: session.refreshToken,
+          accessTokenExpiresIn: session.accessTokenExpiresIn,
+          refreshTokenExpiresIn: session.refreshTokenExpiresIn,
+        ),
+      );
+      final users = await Future.wait([owner.me(), owner.me()]);
+      expect(users.every((user) => user['id'] == session.userId), isTrue);
+      expect(ownerSessions.session!.refreshToken, isNot(session.refreshToken));
 
       final saved = await owner.saveSnapshot(
         baseRevision: 0,
@@ -118,12 +133,22 @@ void main() {
             .single['cancelled'],
         isTrue,
       );
-
-      await guardian.registerDevice(
-        deviceId: 'guardian-e2e-phone',
-        platform: 'android',
-        pushToken: 'e2e-fcm-token-that-is-long-enough',
+      await expectLater(
+        owner.saveSnapshot(baseRevision: 0, snapshot: Map.from(restored)),
+        throwsA(
+          isA<ApiException>()
+              .having((error) => error.statusCode, 'status', 409)
+              .having((error) => error.code, 'code', 'SYNC_CONFLICT'),
+        ),
       );
+
+      for (final platform in ['android', 'ios']) {
+        await guardian.registerDevice(
+          deviceId: 'guardian-e2e-$platform',
+          platform: platform,
+          pushToken: 'e2e-fcm-token-for-$platform-that-is-long-enough',
+        );
+      }
       final invitation = await owner.inviteGuardian(
         email: 'mobile-guardian@example.com',
         name: '보호자',
@@ -135,14 +160,39 @@ void main() {
         accept: true,
       );
       expect((await owner.guardians()).single['status'], 'accepted');
+      await owner.updateGuardian(invitation['id'].toString(), enabled: false);
+      expect((await owner.guardians()).single['enabled'], isFalse);
+      await owner.updateGuardian(invitation['id'].toString(), enabled: true);
 
       await owner.sendMissedDoseAlert(
         eventKey: 'mobile-e2e-missed-dose',
         medicationName: '테스트약',
         scheduledAt: DateTime.parse('2026-09-18T08:00:00+09:00'),
       );
+      // A repeated event remains valid and is deduplicated by the backend.
+      await owner.sendMissedDoseAlert(
+        eventKey: 'mobile-e2e-missed-dose',
+        medicationName: '테스트약',
+        scheduledAt: DateTime.parse('2026-09-18T08:00:00+09:00'),
+      );
+      for (final platform in ['android', 'ios']) {
+        await guardian.unregisterDevice('guardian-e2e-$platform');
+      }
+      await owner.deleteGuardian(invitation['id'].toString());
+      expect(await owner.guardians(), isEmpty);
+      await owner.deleteSnapshot(1);
+      expect((await owner.fetchSnapshot())['snapshot'], isNull);
+
+      final deletionCode = await owner.requestAccountDeletionCode();
+      expect(deletionCode, matches(RegExp(r'^\d{6}$')));
+      await owner.deleteAccount(deletionCode!);
+      expect(ownerSessions.isLoggedIn, false);
+      await expectLater(owner.me(), throwsA(isA<ApiException>()));
+      await guardian.logoutAll();
+      expect(guardianSessions.isLoggedIn, false);
     },
     timeout: const Timeout(Duration(seconds: 30)),
+    tags: 'backend-e2e',
   );
 }
 

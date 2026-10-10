@@ -42,6 +42,7 @@ class _AlarmtimeState extends State<Alarmtime> {
     resizeToAvoidBottomInset: false,
     body: PageScrollView(
       title: '놓친 복용 알림',
+      compactHeading: true,
       subtitle: '조금 늦어도 괜찮은 시간을 정해요.',
       showBackButton: true,
       children: [
@@ -110,7 +111,8 @@ class _AlarmtimeState extends State<Alarmtime> {
         const Divider(),
         const SizedBox(height: 20),
         const Text(
-          '앱이 열려 있거나 다시 열렸을 때 놓친 복용을 확인해요. 앱이 닫혀 있는 동안에는 자동으로 확인하지 않아요.',
+          '서버에 동기화한 일정과 복용 기록은 앱이 꺼져 있어도 확인해요. '
+          '오프라인 복용 기록은 동기화된 뒤에 반영돼요.',
           style: TextStyle(color: muted, height: 1.7),
         ),
       ],

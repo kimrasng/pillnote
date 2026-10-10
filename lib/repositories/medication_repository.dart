@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:pillnote/data/medication_store.dart';
 import 'package:pillnote/models/medication.dart';
 
@@ -10,7 +12,7 @@ class MedicationRepository {
   }) : _now = now ?? DateTime.now;
 
   final MedicationStore _store;
-  final void Function() _onChanged;
+  final FutureOr<void> Function() _onChanged;
   final DateTime Function() _now;
 
   List<Map<String, dynamic>> getPills() => _store.readPills();
@@ -112,12 +114,16 @@ class MedicationRepository {
   }
 
   Future<void> _savePills(List<Map<String, dynamic>> pills) async {
+    final generation = _store.dataGeneration;
     await _store.savePills(pills);
-    _onChanged();
+    if (generation != _store.dataGeneration) return;
+    await _onChanged();
   }
 
   Future<void> _saveGroups(List<Map<String, dynamic>> groups) async {
+    final generation = _store.dataGeneration;
     await _store.saveGroups(groups);
-    _onChanged();
+    if (generation != _store.dataGeneration) return;
+    await _onChanged();
   }
 }

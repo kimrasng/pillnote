@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:pillnote/data/medication_store.dart';
@@ -12,7 +13,7 @@ class IntakeService {
   }) : _now = now ?? DateTime.now;
 
   final MedicationStore _store;
-  final void Function() _onChanged;
+  final FutureOr<void> Function() _onChanged;
   final DateTime Function() _now;
 
   Map<String, dynamic> getFullHistory() => _store.readHistory();
@@ -32,6 +33,7 @@ class IntakeService {
     String scheduledTime, {
     String? date,
   }) async {
+    final generation = _store.dataGeneration;
     final targetDate = date ?? Medication.dateKey(_now());
     final history = getFullHistory();
     final dayHistory = List<dynamic>.from(
@@ -70,15 +72,18 @@ class IntakeService {
     });
     history[targetDate] = dayHistory;
     await _store.saveHistory(history);
+    if (generation != _store.dataGeneration) return;
     if (Medication.tracksStock(pill)) {
       pills[index]['stock'] = stock - delta;
       pills[index]['updatedAt'] = timestamp;
       await _store.savePills(pills);
     }
-    _onChanged();
+    if (generation != _store.dataGeneration) return;
+    await _onChanged();
   }
 
   Future<void> undoIntake(String pillId, String time, {String? date}) async {
+    final generation = _store.dataGeneration;
     final targetDate = date ?? Medication.dateKey(_now());
     final history = getFullHistory();
     final entries = List<dynamic>.from(
@@ -97,6 +102,7 @@ class IntakeService {
     entries[index] = {...entry, 'cancelled': true, 'updatedAt': timestamp};
     history[targetDate] = entries;
     await _store.saveHistory(history);
+    if (generation != _store.dataGeneration) return;
     final pills = _store.readPills();
     final pillIndex = pills.indexWhere((p) => p['id'] == pillId);
     if (pillIndex != -1 && Medication.tracksStock(pills[pillIndex])) {
@@ -109,7 +115,8 @@ class IntakeService {
           ((pills[pillIndex]['stock'] as num?) ?? 0) + delta;
       await _store.savePills(pills);
     }
-    _onChanged();
+    if (generation != _store.dataGeneration) return;
+    await _onChanged();
   }
 
   Future<void> recordGroupIntake(
@@ -117,6 +124,7 @@ class IntakeService {
     String scheduledTime, {
     String? date,
   }) async {
+    final generation = _store.dataGeneration;
     final group = _store
         .readGroups()
         .where((item) => item['id'] == groupId && item['deleted'] != true)
@@ -125,6 +133,7 @@ class IntakeService {
     final targetDate = date ?? Medication.dateKey(_now());
     for (final pillId in group['pillIds'] as List? ?? const []) {
       await recordIntake(pillId.toString(), scheduledTime, date: targetDate);
+      if (generation != _store.dataGeneration) return;
     }
 
     final history = getFullHistory();
@@ -146,6 +155,7 @@ class IntakeService {
     });
     history[targetDate] = dayHistory;
     await _store.saveHistory(history);
-    _onChanged();
+    if (generation != _store.dataGeneration) return;
+    await _onChanged();
   }
 }

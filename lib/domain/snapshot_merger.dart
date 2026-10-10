@@ -9,17 +9,27 @@ class SnapshotMerger {
   ) => {
     'schemaVersion': 1,
     'deviceId': local['deviceId'] ?? remote['deviceId'],
+    if (local['timeZone'] != null || remote['timeZone'] != null)
+      'timeZone': local['timeZone'] ?? remote['timeZone'],
     'pills': _mergeById(remote['pills'], local['pills']),
     'groups': _mergeById(remote['groups'], local['groups']),
     'intakeHistory': _mergeHistory(
       remote['intakeHistory'],
       local['intakeHistory'],
     ),
-    'settings': {
-      ...Map<String, dynamic>.from(remote['settings'] as Map? ?? const {}),
-      ...Map<String, dynamic>.from(local['settings'] as Map? ?? const {}),
-    },
+    'settings': _mergeSettings(remote['settings'], local['settings']),
   };
+
+  static Map<String, dynamic> _mergeSettings(Object? remote, Object? local) {
+    final server = Map<String, dynamic>.from(remote as Map? ?? const {});
+    final device = Map<String, dynamic>.from(local as Map? ?? const {});
+    // Untouched defaults on a fresh device must not replace saved preferences.
+    final preferLocal =
+        server.isEmpty ||
+        (device['updatedAt'] != null &&
+            _isNewer(server, device, fallback: 'updatedAt'));
+    return preferLocal ? {...server, ...device} : {...device, ...server};
+  }
 
   static List<Map<String, dynamic>> _mergeById(Object? remote, Object? local) {
     final merged = <String, Map<String, dynamic>>{};

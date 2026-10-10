@@ -17,10 +17,92 @@ Future<void> pillNoteFirebaseBackgroundHandler(RemoteMessage message) async {
   }
 }
 
-class PushNotificationService {
-  PushNotificationService._();
+/// Native messaging boundary; tests exercise registration without real FCM.
+abstract interface class PushMessagingGateway {
+  bool get isIos;
+  String? get platform;
+  Future<void> initialize();
+  Stream<String> get tokenRefresh;
+  Stream<RemoteMessage> get messages;
+  Future<AuthorizationStatus> permission({bool request = false});
+  Future<String?> token();
+  Future<String?> apnsToken();
+}
 
-  static final instance = PushNotificationService._();
+class FirebasePushMessagingGateway implements PushMessagingGateway {
+  @override
+  bool get isIos => Platform.isIOS;
+  @override
+  String? get platform => Platform.isIOS
+      ? 'ios'
+      : Platform.isAndroid
+      ? 'android'
+      : null;
+  @override
+  Future<void> initialize() async {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(options: AppConfig.firebaseOptions);
+    }
+    FirebaseMessaging.onBackgroundMessage(pillNoteFirebaseBackgroundHandler);
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+  }
+
+  @override
+  Stream<String> get tokenRefresh => FirebaseMessaging.instance.onTokenRefresh;
+  @override
+  Stream<RemoteMessage> get messages => FirebaseMessaging.onMessage;
+  @override
+  Future<AuthorizationStatus> permission({bool request = false}) async {
+    final settings = request
+        ? await FirebaseMessaging.instance.requestPermission(
+            alert: true,
+            badge: true,
+            sound: true,
+          )
+        : await FirebaseMessaging.instance.getNotificationSettings();
+    return settings.authorizationStatus;
+  }
+
+  @override
+  Future<String?> token() => FirebaseMessaging.instance.getToken();
+  @override
+  Future<String?> apnsToken() => FirebaseMessaging.instance.getAPNSToken();
+}
+
+class PushNotificationService {
+  PushNotificationService({
+    PushMessagingGateway? messaging,
+    ApiClient? api,
+    SessionStore? sessions,
+    String Function()? deviceId,
+    this._configured,
+  }) : _messaging = messaging ?? FirebasePushMessagingGateway(),
+       _api = api ?? ApiClient.instance,
+       _sessions = sessions ?? SessionStore.instance,
+       _deviceId = deviceId ?? (() => AppServices.instance.deviceId) {
+    _sessionSubscription = _sessions.changes.listen((change) {
+      if (change.reason != SessionChangeReason.signedIn) {
+        _registrationEnabled = false;
+        isRegistered = false;
+      }
+    });
+  }
+
+  static final instance = PushNotificationService();
+  final PushMessagingGateway _messaging;
+  final ApiClient _api;
+  final SessionStore _sessions;
+  final String Function() _deviceId;
+  final bool? _configured;
+  StreamSubscription<SessionChange>? _sessionSubscription;
+  Future<void>? _initializing;
+  Future<void> _deviceOperations = Future.value();
+  bool _registrationEnabled = true;
 
   final _foregroundMessages = StreamController<RemoteMessage>.broadcast();
   StreamSubscription<String>? _tokenSubscription;
@@ -30,7 +112,7 @@ class PushNotificationService {
   bool? permissionGranted;
   String? lastError;
 
-  bool get isConfigured => AppConfig.isFirebaseConfigured;
+  bool get isConfigured => _configured ?? AppConfig.isFirebaseConfigured;
   bool get isInitialized => _initialized;
   Stream<RemoteMessage> get foregroundMessages => _foregroundMessages.stream;
 
@@ -46,37 +128,39 @@ class PushNotificationService {
     await initialize();
     if (!_initialized) return;
     try {
-      final settings = await FirebaseMessaging.instance
-          .getNotificationSettings();
+      final status = await _messaging.permission();
       permissionGranted =
-          settings.authorizationStatus == AuthorizationStatus.authorized ||
-          settings.authorizationStatus == AuthorizationStatus.provisional;
+          status == AuthorizationStatus.authorized ||
+          status == AuthorizationStatus.provisional;
+      if (permissionGranted != true) isRegistered = false;
     } catch (_) {
       permissionGranted = null;
     }
   }
 
-  Future<void> initialize() async {
+  Future<void> initialize() {
+    if (_initialized) return Future.value();
+    final pending = _initializing;
+    if (pending != null) return pending;
+    final operation = _initialize();
+    _initializing = operation;
+    return operation.whenComplete(() {
+      if (identical(_initializing, operation)) _initializing = null;
+    });
+  }
+
+  Future<void> _initialize() async {
     if (_initialized) return;
     if (!isConfigured) {
       lastError = 'Firebase 앱 설정이 없습니다. Firebase iOS/Android 앱 설정을 먼저 추가해주세요.';
       return;
     }
     try {
-      if (Firebase.apps.isEmpty) {
-        await Firebase.initializeApp(options: AppConfig.firebaseOptions);
-      }
-      FirebaseMessaging.onBackgroundMessage(pillNoteFirebaseBackgroundHandler);
-      await FirebaseMessaging.instance
-          .setForegroundNotificationPresentationOptions(
-            alert: true,
-            badge: true,
-            sound: true,
-          );
-      _messageSubscription = FirebaseMessaging.onMessage.listen(
+      await _messaging.initialize();
+      _messageSubscription = _messaging.messages.listen(
         _foregroundMessages.add,
       );
-      _tokenSubscription = FirebaseMessaging.instance.onTokenRefresh.listen(
+      _tokenSubscription = _messaging.tokenRefresh.listen(
         (token) => unawaited(_handleTokenRefresh(token)),
         onError: (Object error) {
           lastError = _friendlyError(error);
@@ -99,11 +183,17 @@ class PushNotificationService {
   }
 
   Future<void> _handleTokenRefresh(String token) async {
-    if (!SessionStore.instance.isLoggedIn) return;
+    if (!_sessions.isLoggedIn || !_registrationEnabled) return;
+    final generation = _sessions.generation;
     try {
-      await _registerToken(token);
+      await refreshPermissionStatus();
+      if (permissionGranted != true ||
+          !_registrationEnabled ||
+          generation != _sessions.generation) {
+        return;
+      }
+      await _registerToken(token, generation);
       lastError = null;
-      isRegistered = true;
     } catch (error) {
       lastError = _friendlyError(error);
       debugPrint('FCM 토큰 서버 등록 실패: $error');
@@ -111,7 +201,7 @@ class PushNotificationService {
   }
 
   Future<bool> registerCurrentDevice() async {
-    if (!SessionStore.instance.isLoggedIn) {
+    if (!_sessions.isLoggedIn) {
       lastError = 'Push 알림을 등록하려면 먼저 로그인해주세요.';
       return false;
     }
@@ -122,38 +212,38 @@ class PushNotificationService {
     await initialize();
     if (!_initialized) return false;
     try {
-      final settings = await FirebaseMessaging.instance.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+      final generation = _sessions.generation;
+      _registrationEnabled = true;
+      final status = await _messaging.permission(request: true);
       permissionGranted =
-          settings.authorizationStatus == AuthorizationStatus.authorized ||
-          settings.authorizationStatus == AuthorizationStatus.provisional;
-      if (settings.authorizationStatus == AuthorizationStatus.denied) {
+          status == AuthorizationStatus.authorized ||
+          status == AuthorizationStatus.provisional;
+      if (status == AuthorizationStatus.denied) {
         lastError = '알림 권한이 거부되었습니다.';
         return false;
       }
-      if (settings.authorizationStatus == AuthorizationStatus.notDetermined) {
+      if (status == AuthorizationStatus.notDetermined) {
         lastError = '알림 권한을 확인하지 못했습니다. 시스템 설정에서 알림을 허용해주세요.';
         return false;
       }
 
-      if (Platform.isIOS && await _waitForApnsToken() == null) {
+      if (_messaging.isIos && await _waitForApnsToken() == null) {
         lastError =
             'APNs 기기 토큰을 받지 못했습니다. iOS Push Notifications 설정과 APNs 키를 확인해주세요.';
         return false;
       }
 
-      final token = await FirebaseMessaging.instance.getToken();
+      final token = await _messaging.token();
       if (token == null || token.isEmpty) {
         lastError = 'FCM 기기 토큰을 받지 못했습니다.';
         return false;
       }
-      await _registerToken(token);
+      if (generation != _sessions.generation || !_registrationEnabled) {
+        return false;
+      }
+      await _registerToken(token, generation);
       lastError = null;
-      isRegistered = true;
-      return true;
+      return isRegistered && generation == _sessions.generation;
     } catch (error) {
       lastError = _friendlyError(error);
       debugPrint('Push 기기 등록 실패: $error');
@@ -163,7 +253,7 @@ class PushNotificationService {
 
   Future<String?> _waitForApnsToken() async {
     for (var attempt = 0; attempt < 10; attempt += 1) {
-      final token = await FirebaseMessaging.instance.getAPNSToken();
+      final token = await _messaging.apnsToken();
       if (token != null && token.isNotEmpty) return token;
       await Future<void>.delayed(const Duration(milliseconds: 400));
     }
@@ -171,6 +261,7 @@ class PushNotificationService {
   }
 
   String _friendlyError(Object error) {
+    if (error is ApiException) return error.message;
     final raw = error.toString();
     if (raw.contains('apns-token-not-set')) {
       return 'APNs 토큰이 아직 준비되지 않았습니다. 잠시 후 다시 시도해주세요.';
@@ -186,25 +277,49 @@ class PushNotificationService {
   }
 
   Future<void> unregisterCurrentDevice() async {
-    if (!SessionStore.instance.isLoggedIn) return;
-    try {
-      await ApiClient.instance.unregisterDevice(AppServices.instance.deviceId);
-      isRegistered = false;
-    } on ApiException catch (error) {
-      if (error.code != 'DEVICE_NOT_FOUND') rethrow;
-    }
+    _registrationEnabled = false;
+    isRegistered = false;
+    if (!_sessions.isLoggedIn) return;
+    final generation = _sessions.generation;
+    await _serializeDeviceOperation(() async {
+      if (generation != _sessions.generation) return;
+      try {
+        await _api.unregisterDevice(_deviceId());
+      } on ApiException catch (error) {
+        if (error.code != 'DEVICE_NOT_FOUND') rethrow;
+      }
+    });
   }
 
-  Future<void> _registerToken(String token) async {
-    if (!Platform.isAndroid && !Platform.isIOS) return;
-    await ApiClient.instance.registerDevice(
-      deviceId: AppServices.instance.deviceId,
-      platform: Platform.isIOS ? 'ios' : 'android',
-      pushToken: token,
+  Future<void> _registerToken(String token, int generation) =>
+      _serializeDeviceOperation(() async {
+        final platform = _messaging.platform;
+        if (platform == null ||
+            !_registrationEnabled ||
+            generation != _sessions.generation) {
+          return;
+        }
+        await _api.registerDevice(
+          deviceId: _deviceId(),
+          platform: platform,
+          pushToken: token,
+        );
+        if (generation != _sessions.generation || !_registrationEnabled) return;
+        isRegistered = true;
+      });
+
+  Future<void> _serializeDeviceOperation(Future<void> Function() operation) {
+    final pending = _deviceOperations.then((_) => operation());
+    _deviceOperations = pending.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace _) {},
     );
+    return pending;
   }
 
   Future<void> dispose() async {
+    _registrationEnabled = false;
+    await _sessionSubscription?.cancel();
     await _tokenSubscription?.cancel();
     await _messageSubscription?.cancel();
     await _foregroundMessages.close();

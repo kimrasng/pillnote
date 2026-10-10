@@ -21,6 +21,7 @@ class ApiTransport {
   final String _baseUrl;
   final SessionStore _sessionStore;
   Future<bool>? _refreshInFlight;
+  int? _refreshGeneration;
 
   Uri uri(String path) => Uri.parse('$_baseUrl$path');
 
@@ -44,11 +45,17 @@ class ApiTransport {
     bool authenticated = false,
     Map<String, dynamic>? body,
     bool retryAfterRefresh = true,
+    int? expectedGeneration,
   }) async {
+    final generation = expectedGeneration ?? _sessionStore.generation;
+    final originalSession = _sessionStore.session;
+    if (authenticated && generation != _sessionStore.generation) {
+      throw _sessionChanged;
+    }
     final headers = <String, String>{'accept': 'application/json'};
     if (body != null) headers['content-type'] = 'application/json';
     if (authenticated) {
-      final token = _sessionStore.session?.accessToken;
+      final token = originalSession?.accessToken;
       if (token == null) {
         throw const ApiException(
           statusCode: 401,
@@ -61,10 +68,11 @@ class ApiTransport {
 
     final request = http.Request(method, uri)..headers.addAll(headers);
     if (body != null) request.body = jsonEncode(body);
-    late http.StreamedResponse streamed;
+    late http.Response response;
     try {
-      streamed = await _client
+      response = await _client
           .send(request)
+          .then(http.Response.fromStream)
           .timeout(const Duration(seconds: 15));
     } on TimeoutException {
       throw const ApiException(
@@ -85,10 +93,15 @@ class ApiTransport {
         message: '서버에 연결할 수 없습니다.',
       );
     }
-    final response = await http.Response.fromStream(streamed);
-
+    if (authenticated && generation != _sessionStore.generation) {
+      throw _sessionChanged;
+    }
     if (response.statusCode == 401 && authenticated && retryAfterRefresh) {
-      final refreshed = await _refreshSession();
+      // A late 401 may have used a token that another request already rotated.
+      final refreshed =
+          _sessionStore.session?.accessToken != originalSession?.accessToken
+          ? _sessionStore.isLoggedIn
+          : await _refreshSession(originalSession!, generation);
       if (refreshed) {
         return requestUri(
           method,
@@ -96,11 +109,15 @@ class ApiTransport {
           authenticated: true,
           body: body,
           retryAfterRefresh: false,
+          expectedGeneration: generation,
         );
       }
     }
     if (response.statusCode == 401 && authenticated && !retryAfterRefresh) {
-      await _sessionStore.clear(reason: SessionChangeReason.expired);
+      await _sessionStore.clear(
+        reason: SessionChangeReason.expired,
+        expectedGeneration: generation,
+      );
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw _apiException(response);
@@ -117,20 +134,25 @@ class ApiTransport {
     }
   }
 
-  Future<bool> _refreshSession() {
-    final inFlight = _refreshInFlight;
-    if (inFlight != null) return inFlight;
+  static const _sessionChanged = ApiException(
+    statusCode: 401,
+    code: 'SESSION_CHANGED',
+    message: '로그인 상태가 변경되었습니다. 다시 시도해주세요.',
+  );
 
-    final future = _performRefresh();
+  Future<bool> _refreshSession(UserSession current, int generation) {
+    final inFlight = _refreshInFlight;
+    if (inFlight != null && _refreshGeneration == generation) return inFlight;
+
+    final future = _performRefresh(current, generation);
     _refreshInFlight = future;
+    _refreshGeneration = generation;
     return future.whenComplete(() {
       if (identical(_refreshInFlight, future)) _refreshInFlight = null;
     });
   }
 
-  Future<bool> _performRefresh() async {
-    final current = _sessionStore.session;
-    if (current == null) return false;
+  Future<bool> _performRefresh(UserSession current, int generation) async {
     try {
       final response = _asMap(
         await request(
@@ -140,11 +162,25 @@ class ApiTransport {
           retryAfterRefresh: false,
         ),
       );
-      await _sessionStore.save(UserSession.fromApi(_dataMap(response)));
-      return true;
+      final replacement = UserSession.fromApi(_dataMap(response));
+      if (replacement.userId != current.userId) {
+        throw const ApiException(
+          statusCode: 502,
+          code: 'INVALID_SERVER_RESPONSE',
+          message: '서버의 로그인 응답이 올바르지 않습니다.',
+        );
+      }
+      return await _sessionStore.replaceIfCurrent(
+        current,
+        replacement,
+        generation,
+      );
     } on ApiException catch (error) {
       if (error.statusCode == 401) {
-        await _sessionStore.clear(reason: SessionChangeReason.expired);
+        await _sessionStore.clear(
+          reason: SessionChangeReason.expired,
+          expectedGeneration: generation,
+        );
         return false;
       }
       rethrow;

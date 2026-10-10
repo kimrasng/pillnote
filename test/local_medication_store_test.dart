@@ -32,6 +32,7 @@ void main() {
     expect(store.readSettings(), {
       'reminderMinutes': 15,
       'guardianAlertsEnabled': true,
+      'updatedAt': '1970-01-01T00:00:00.000Z',
     });
     final pills = store.readPills();
     pills.single['stock'] = 0;

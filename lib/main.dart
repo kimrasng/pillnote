@@ -8,29 +8,44 @@ import 'package:pillnote/app/app_services.dart';
 import 'package:pillnote/screen/main.dart';
 import 'package:pillnote/screen/onboarding.dart';
 import 'package:pillnote/services/api_client.dart';
+import 'package:pillnote/services/app_device_service.dart';
 import 'package:pillnote/services/push_notification_service.dart';
 import 'package:pillnote/services/session_store.dart';
 import 'package:pillnote/widgets/app_ui.dart';
+import 'package:pillnote/widgets/startup_permission_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await AppServices.initialize();
   await SessionStore.instance.initialize();
-  await PushNotificationService.instance.initialize();
+  await AppServices.initialize();
+  runApp(const MyApp());
+  unawaited(AppServices.instance.reminders.refresh());
+  // Network and Firebase initialization must not delay the local first frame.
+  unawaited(initializeOnlineServices());
+}
 
-  if (SessionStore.instance.isLoggedIn) {
-    try {
-      await ApiClient.instance.me();
-      await AppServices.instance.sync.reconcileWithServer();
+Future<void> initializeOnlineServices() async {
+  AppDeviceService.instance.initialize();
+  await Future.wait([
+    AppDeviceService.instance.register(),
+    () async {
+      if (!SessionStore.instance.isLoggedIn) return;
+      try {
+        await ApiClient.instance.me();
+        await AppServices.instance.sync.reconcileWithServer();
+      } catch (_) {
+        // Local records remain available while the network is unavailable.
+      }
+    }(),
+    () async {
+      await PushNotificationService.instance.initialize();
+      if (!SessionStore.instance.isLoggedIn) return;
       await PushNotificationService.instance.refreshPermissionStatus();
       if (PushNotificationService.instance.permissionGranted == true) {
         await PushNotificationService.instance.registerCurrentDevice();
       }
-    } catch (_) {
-      // 네트워크가 없어도 로컬 우선 기능으로 앱을 시작합니다.
-    }
-  }
-  runApp(const MyApp());
+    }(),
+  ]);
 }
 
 class MyApp extends StatefulWidget {
@@ -40,7 +55,7 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   final _messengerKey = GlobalKey<ScaffoldMessengerState>();
   final _navigatorKey = GlobalKey<NavigatorState>();
   StreamSubscription<RemoteMessage>? _messageSubscription;
@@ -49,6 +64,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _messageSubscription = PushNotificationService.instance.foregroundMessages
         .listen((message) {
           final text = PushNotificationService.foregroundMessageText(message);
@@ -77,9 +93,29 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _messageSubscription?.cancel();
     _sessionSubscription?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(AppServices.instance.reminders.refresh());
+      unawaited(AppDeviceService.instance.register());
+    }
+  }
+
+  void _startupPermissionsCompleted() {
+    unawaited(AppServices.instance.reminders.refresh());
+    unawaited(() async {
+      await PushNotificationService.instance.refreshPermissionStatus();
+      if (SessionStore.instance.isLoggedIn &&
+          PushNotificationService.instance.permissionGranted == true) {
+        await PushNotificationService.instance.registerCurrentDevice();
+      }
+    }());
   }
 
   @override
@@ -172,11 +208,15 @@ class _MyAppState extends State<MyApp> {
           scrolledUnderElevation: 0,
         ),
       ),
-      home:
-          AppServices.instance.shouldShowOnboarding &&
-              !SessionStore.instance.isLoggedIn
-          ? const Onboarding()
-          : const Main(),
+      home: StartupPermissionGate(
+        service: AppServices.instance.permissions,
+        onCompleted: _startupPermissionsCompleted,
+        child:
+            AppServices.instance.shouldShowOnboarding &&
+                !SessionStore.instance.isLoggedIn
+            ? const Onboarding()
+            : const Main(),
+      ),
     );
   }
 }

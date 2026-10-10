@@ -1,10 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pillnote/controller/controller.dart';
+import 'package:pillnote/screen/pages/menu.dart';
 import 'package:pillnote/widgets/app_ui.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  testWidgets('settings uses the shared collapsing title and subtitle', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    await Controller.init();
+    await tester.pumpWidget(const MaterialApp(home: Menu()));
+    final title = find.byKey(const ValueKey('page-title-설정'));
+    final subtitle = find.byKey(const ValueKey('page-subtitle-설정'));
+    final scrollable = tester.state<ScrollableState>(
+      find.byType(Scrollable).first,
+    );
+    expect(tester.widget<Text>(title).style!.fontSize, 30);
+    expect(tester.widget<Opacity>(subtitle).opacity, 1);
+
+    scrollable.position.jumpTo(24);
+    await tester.pump();
+    expect(
+      tester.widget<Text>(title).style!.fontSize,
+      inExclusiveRange(22, 30),
+    );
+    expect(tester.widget<Opacity>(subtitle).opacity, inExclusiveRange(0, 1));
+
+    scrollable.position.jumpTo(200);
+    await tester.pump();
+    expect(tester.widget<Text>(title).style!.fontSize, 22);
+    expect(tester.widget<Opacity>(subtitle).opacity, 0);
+
+    scrollable.position.jumpTo(0);
+    await tester.pump();
+    expect(tester.widget<Text>(title).style!.fontSize, 30);
+    expect(tester.widget<Opacity>(subtitle).opacity, 1);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
-    'title size stays fixed while the heading collapses and stays pinned',
+    'title shrinks smoothly while the heading collapses and stays pinned',
     (tester) async {
       final controller = ScrollController();
       addTearDown(controller.dispose);
@@ -36,13 +73,25 @@ void main() {
 
       controller.jumpTo(24);
       await tester.pump();
-      expect(fontSize(), 30);
+      final intermediateSize = fontSize();
+      expect(intermediateSize, allOf(greaterThan(22), lessThan(30)));
       expect(opacity(), allOf(greaterThan(0), lessThan(1)));
+
+      controller.jumpTo(48);
+      await tester.pump();
+      expect(fontSize(), allOf(greaterThan(22), lessThan(intermediateSize)));
 
       controller.jumpTo(200);
       await tester.pump();
-      expect(fontSize(), 30);
+      expect(fontSize(), 22);
       expect(opacity(), 0);
+      expect(
+        find.descendant(
+          of: find.byType(SliverPersistentHeader),
+          matching: find.byType(Divider),
+        ),
+        findsNothing,
+      );
       final pinnedPosition = tester.getTopLeft(title);
       expect(pinnedPosition.dx, initialLeft);
       expect(pinnedPosition.dy, lessThan(24));
@@ -51,6 +100,10 @@ void main() {
       expect(tester.getTopLeft(title), pinnedPosition);
       await tester.tap(find.byTooltip('지역 선택'));
       expect(tapped, isTrue);
+
+      controller.jumpTo(24);
+      await tester.pump();
+      expect(fontSize(), intermediateSize);
 
       controller.jumpTo(0);
       await tester.pump();
@@ -258,7 +311,10 @@ void main() {
     for (final offset in [30.0, 70.0, 300.0, 700.0, 0.0]) {
       controller.jumpTo(offset);
       await tester.pump();
-      expect(tester.widget<Text>(title).style!.fontSize, 30);
+      expect(
+        tester.widget<Text>(title).style!.fontSize,
+        inInclusiveRange(22, 30),
+      );
       expect(tester.getTopLeft(title).dy, greaterThanOrEqualTo(32));
       expect(
         tester.getBottomLeft(title).dy,

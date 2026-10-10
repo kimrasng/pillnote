@@ -41,11 +41,34 @@ class _MainState extends State<Main> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _checkMissedDoses();
+    if (state == AppLifecycleState.resumed) unawaited(_refreshAfterResume());
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused) {
+      unawaited(_flushBeforeBackground());
+    }
+  }
+
+  Future<void> _flushBeforeBackground() async {
+    try {
+      await AppServices.instance.sync.flushPendingChanges();
+    } catch (_) {
+      // The OS can stop the app; unsent records retry on the next resume.
+    }
+  }
+
+  Future<void> _refreshAfterResume() async {
+    try {
+      await AppServices.instance.sync.reconcileWithServer();
+    } catch (_) {
+      // Retry failed offline edits when the app returns to the foreground.
+    }
+    if (mounted) await _checkMissedDoses();
   }
 
   Future<void> _checkMissedDoses() async {
+    await AppServices.instance.reminders.refresh();
     try {
+      await AppServices.instance.sync.flushPendingChanges();
       await AppServices.instance.alerts.checkAndSend();
     } catch (_) {
       // 로컬 복약 화면은 네트워크 장애와 무관하게 계속 동작합니다.

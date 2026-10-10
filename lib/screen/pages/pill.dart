@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:pillnote/app/app_services.dart';
+import 'package:pillnote/services/snapshot_sync_service.dart';
 import 'package:pillnote/models/medication.dart';
 import 'package:pillnote/screen/features/pillsearch.dart';
 import 'package:pillnote/screen/management/pilmanagement.dart';
 import 'package:pillnote/screen/management/pill_groups.dart';
-import 'package:pillnote/widgets/app_ui.dart';
+import 'package:pillnote/widgets/app_ui.dart' hide PageScrollView;
+import 'package:pillnote/widgets/common/page_scroll_view.dart';
 
 class Pill extends StatefulWidget {
   const Pill({super.key});
@@ -13,6 +15,25 @@ class Pill extends StatefulWidget {
 }
 
 class _PillState extends State<Pill> {
+  late final SnapshotSyncService _sync;
+
+  @override
+  void initState() {
+    super.initState();
+    _sync = AppServices.instance.sync;
+    _sync.addListener(_onSynced);
+  }
+
+  void _onSynced() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _sync.removeListener(_onSynced);
+    super.dispose();
+  }
+
   bool _showArchived = false;
   String _query = '';
   Future<void> _open(Widget page) async {

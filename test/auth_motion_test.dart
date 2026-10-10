@@ -449,7 +449,7 @@ void main() {
           ),
         );
         await tester.enterText(find.byType(TextField), '12');
-        await tester.pump(const Duration(seconds: 31));
+        await tester.pump(const Duration(seconds: 61));
         await tester.tap(find.text('인증번호 다시 받기'));
         await tester.pump();
         await tester.pump();
@@ -460,7 +460,7 @@ void main() {
         expect(field.arrivalSequence, successful ? 1 : 0);
         expect(field.controller.text, successful ? '' : '12');
         if (successful) {
-          expect(find.text('30초 후 다시 받기'), findsOneWidget);
+          expect(find.text('60초 후 다시 받기'), findsOneWidget);
           expect(find.text('개발 환경 인증번호: 654321'), findsOneWidget);
         }
         await tester.pumpWidget(const SizedBox.shrink());

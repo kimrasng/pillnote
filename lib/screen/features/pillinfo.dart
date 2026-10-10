@@ -155,11 +155,13 @@ class _PillinfoState extends State<Pillinfo> {
                   ),
                   children: [
                     if ('${pill['ITEM_IMAGE'] ?? ''}'.isNotEmpty)
-                      Image.network(
-                        '${pill['ITEM_IMAGE']}',
-                        height: 160,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: PillAvatar(
+                          pill,
+                          size: 160,
+                          width: double.infinity,
+                        ),
                       ),
                     _detail('분류', pill['CLASS_NAME']),
                     _detail('모양', pill['DRUG_SHAPE']),

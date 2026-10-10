@@ -153,7 +153,8 @@ void main() {
     final guestPosition = tester.getTopLeft(find.text('로그인 없이 시작하기'));
     tester.view.viewInsets = const FakeViewPadding(bottom: 400);
     await tester.pumpAndSettle();
-    expect(position().maxScrollExtent, 0);
+    expect(position().maxScrollExtent, greaterThan(0));
+    expect(position().pixels, 0);
     expect(tester.getTopLeft(find.text('인증번호 받기')), actionPosition);
     expect(tester.getTopLeft(find.text('로그인 없이 시작하기')), guestPosition);
     tester.view.resetViewInsets();
@@ -174,7 +175,7 @@ void main() {
         tester.widget<TextField>(find.byType(TextField)).controller!.text,
         '123456',
       );
-      expect(find.text('30초 후 다시 받기'), findsOneWidget);
+      expect(find.text('60초 후 다시 받기'), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );

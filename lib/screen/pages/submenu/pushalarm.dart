@@ -65,7 +65,8 @@ class _PushalarmState extends State<Pushalarm> {
     _message(
       registered
           ? '이 기기에서 알림을 받을 수 있어요.'
-          : '알림을 켜지 못했어요. 기기 설정에서 권한을 확인하고 다시 시도하세요.',
+          : PushNotificationService.instance.lastError ??
+                '알림 등록에 실패했습니다. 다시 시도해주세요.',
       error: !registered,
     );
   }
@@ -77,26 +78,25 @@ class _PushalarmState extends State<Pushalarm> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('보호자 초대'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                keyboardType: TextInputType.emailAddress,
-                autocorrect: false,
-                onChanged: (value) => email = value,
-                decoration: const InputDecoration(
-                  labelText: '보호자 이메일',
-                  hintText: 'guardian@example.com',
-                ),
+        scrollable: true,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              keyboardType: TextInputType.emailAddress,
+              autocorrect: false,
+              onChanged: (value) => email = value,
+              decoration: const InputDecoration(
+                labelText: '보호자 이메일',
+                hintText: 'guardian@example.com',
               ),
-              const SizedBox(height: 12),
-              TextFormField(
-                onChanged: (value) => name = value,
-                decoration: const InputDecoration(labelText: '이름 (선택)'),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              onChanged: (value) => name = value,
+              decoration: const InputDecoration(labelText: '이름 (선택)'),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -159,6 +159,7 @@ class _PushalarmState extends State<Pushalarm> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('보호자 이름 수정'),
+        scrollable: true,
         content: TextFormField(
           initialValue: updatedName,
           onChanged: (value) => updatedName = value,
@@ -257,6 +258,7 @@ class _PushalarmState extends State<Pushalarm> {
               onRefresh: _load,
               child: PageScrollView(
                 title: '보호자 연결',
+                compactHeading: true,
                 subtitle: connected > 0
                     ? '함께 챙기는 복약 생활. 복용 기록이 없으면 연결된 보호자에게 알려요.'
                     : '혼자 챙기지 않아도 돼요. 보호자를 초대하고, 수락하면 복약 알림으로 연결돼요.',
@@ -268,6 +270,13 @@ class _PushalarmState extends State<Pushalarm> {
                   icon: const Icon(Icons.refresh),
                 ),
                 children: [
+                  const Text(
+                    '서버에 동기화된 일정과 복용 기록을 기준으로, 앱이 꺼져 있어도 복용 기록을 확인해요. '
+                    '설정한 시간이 지나도록 기록이 확인되지 않으면 연결된 보호자에게 알려요. '
+                    '오프라인에서 기록한 복용은 동기화 전까지 반영되지 않을 수 있어요.',
+                    style: TextStyle(color: muted, height: 1.6),
+                  ),
+                  const SizedBox(height: 16),
                   SectionLabel(
                     '내 보호자',
                     trailing: Text(
