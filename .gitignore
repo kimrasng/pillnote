@@ -51,3 +51,6 @@ app.*.map.json
 **/.wrangler/
 **/node_modules/
 app_config.local.json
+
+# Local documentation and operational reports
+/docs/
