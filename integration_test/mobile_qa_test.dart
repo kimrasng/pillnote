@@ -39,7 +39,10 @@ void main() {
       find.widgetWithText(TextFormField, '약 이름'),
       'QA 테스트약',
     );
-    await _tap(tester, find.text('내 약 상자에 등록'));
+    await _tap(tester, find.text('시간 추가'));
+    await _tap(tester, find.text('확인'));
+    await _tap(tester, find.text('등록하기'));
+    await _tap(tester, find.text('완료'));
     final pill = AppServices.instance.medications.getPills().single;
     final id = pill['id'].toString();
     expect(pill['stock'], isNull);

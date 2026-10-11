@@ -27,11 +27,20 @@ void main() {
       await tester.pumpAndSettle();
       final name = find.widgetWithText(TextFormField, '약 이름');
       await tester.enterText(name, '직접 등록한 약');
-      await tester.tap(find.text('내 약 상자에 등록'));
+      expect(find.text('08:00'), findsNothing);
+      await tester.tap(find.text('시간 추가'));
       await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('등록하기'));
+      await tester.pumpAndSettle();
+      expect(find.text('등록 완료'), findsOneWidget);
       expect(Controller.getPills().single['ITEM_NAME'], '직접 등록한 약');
       expect(Controller.getPills().single['times'], ['08:00']);
       expect(Controller.getPills().single['stock'], isNull);
+      await tester.tap(find.text('완료'));
+      await tester.pumpAndSettle();
+      expect(find.byType(MedicationForm), findsNothing);
     },
   );
   testWidgets(
@@ -77,6 +86,18 @@ void main() {
   testWidgets('empty stock input cannot silently save as zero', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: MedicationForm()));
     await tester.enterText(find.widgetWithText(TextFormField, '약 이름'), '테스트약');
+    await tester.scrollUntilVisible(
+      find.text('추가 설정'),
+      220,
+      scrollable: find
+          .descendant(
+            of: find.byType(CustomScrollView),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.tap(find.text('추가 설정'));
+    await tester.pumpAndSettle();
     final stockToggle = find.widgetWithText(SwitchListTile, '남은 약 수량 관리');
     await tester.scrollUntilVisible(
       find.text('남은 약 수량 관리'),
@@ -91,7 +112,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(stockToggle);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('내 약 상자에 등록'));
+    await tester.tap(find.text('등록하기'));
     await tester.pumpAndSettle();
     expect(Controller.getPills(), isEmpty);
     expect(find.text('0 이상의 수량을 입력하세요.'), findsOneWidget);

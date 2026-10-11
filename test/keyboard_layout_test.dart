@@ -69,6 +69,10 @@ void main() {
   for (final page in <Widget>[
     const Register(),
     const Verification(email: 'test@example.com'),
+    Verification.accountDeletion(
+      email: 'test@example.com',
+      onDeleteAccount: (_) async {},
+    ),
     const MedicationForm(),
     const PillGroupEdit(),
   ]) {

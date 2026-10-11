@@ -39,6 +39,10 @@ class ApiClient {
         body: {'email': email},
       ),
     );
+    return _emailCodeResponse(response);
+  }
+
+  String? _emailCodeResponse(Map<String, dynamic> response) {
     final data = _dataMap(response);
     final cooldown = data['resendAfterSeconds'];
     emailResendCooldownSeconds =
@@ -97,7 +101,7 @@ class ApiClient {
         body: {'purpose': 'delete-account'},
       ),
     );
-    return _dataMap(response)['debugCode']?.toString();
+    return _emailCodeResponse(response);
   }
 
   Future<void> deleteAccount(String verificationCode) async {

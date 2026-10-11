@@ -6,9 +6,17 @@ import 'package:pillnote/screen/management/medication_form.dart';
 import 'package:pillnote/widgets/app_ui.dart';
 
 class Pillinfo extends StatefulWidget {
-  const Pillinfo({super.key, required this.pillSEQ, required this.isLocal});
+  const Pillinfo({
+    super.key,
+    required this.pillSEQ,
+    required this.isLocal,
+    this.canSelect = true,
+    this.apiClient,
+  });
   final String pillSEQ;
   final bool isLocal;
+  final bool canSelect;
+  final ApiClient? apiClient;
   @override
   State<Pillinfo> createState() => _PillinfoState();
 }
@@ -16,6 +24,7 @@ class Pillinfo extends StatefulWidget {
 class _PillinfoState extends State<Pillinfo> {
   Map<String, dynamic>? _pill;
   String? _error;
+  String? _guidanceError;
   bool _loading = true;
   @override
   void initState() {
@@ -27,7 +36,9 @@ class _PillinfoState extends State<Pillinfo> {
     setState(() {
       _loading = true;
       _error = null;
+      _guidanceError = null;
     });
+    Map<String, dynamic>? localPill;
     if (widget.isLocal) {
       final pill = AppServices.instance.medications
           .getPills()
@@ -36,23 +47,41 @@ class _PillinfoState extends State<Pillinfo> {
           )
           .firstOrNull;
       if (pill != null) {
+        localPill = pill;
         setState(() {
           _pill = pill;
           _loading = false;
         });
-        return;
+        if ('${pill['ITEM_SEQ'] ?? ''}'.isEmpty ||
+            (pill['consumerInfo'] is Map &&
+                (pill['consumerInfo'] as Map).isNotEmpty)) {
+          return;
+        }
       }
     }
     try {
-      final pill = await ApiClient.instance.drugDetail(widget.pillSEQ);
-      if (mounted) setState(() => _pill = pill);
-    } catch (error) {
+      final pill = await (widget.apiClient ?? ApiClient.instance).drugDetail(
+        '${localPill?['ITEM_SEQ'] ?? widget.pillSEQ}',
+      );
       if (mounted) {
+        setState(
+          () => _pill = {
+            ...pill,
+            ...?localPill,
+            if (pill['consumerInfo'] != null)
+              'consumerInfo': pill['consumerInfo'],
+          },
+        );
+      }
+    } catch (error) {
+      if (mounted && localPill == null) {
         setState(
           () => _error = error is ApiException
               ? error.message
               : '약 정보를 불러오지 못했어요.',
         );
+      } else if (mounted) {
+        setState(() => _guidanceError = '복용 안내를 불러오지 못했어요. 다시 시도해주세요.');
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -60,11 +89,11 @@ class _PillinfoState extends State<Pillinfo> {
   }
 
   Future<void> _register() async {
-    final saved = await Navigator.push<bool>(
+    final result = await Navigator.push<MedicationFormResult>(
       context,
       MaterialPageRoute(builder: (_) => MedicationForm(pill: _pill)),
     );
-    if (saved == true && mounted) Navigator.pop(context, true);
+    if (result != null && mounted) Navigator.pop(context, result);
   }
 
   @override
@@ -92,6 +121,7 @@ class _PillinfoState extends State<Pillinfo> {
             )
           : PageScrollView(
               title: '약 정보',
+              compactHeading: true,
               showBackButton: true,
               children: [
                 Row(
@@ -128,10 +158,21 @@ class _PillinfoState extends State<Pillinfo> {
                 ),
                 const SizedBox(height: 24),
                 if (consumer.isEmpty)
-                  const SoftPanel(
-                    child: Text(
-                      '제공된 복용 안내가 없어요. 약 포장이나 처방전의 안내를 확인하세요.',
-                      style: TextStyle(color: muted, height: 1.6),
+                  SoftPanel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _guidanceError ??
+                              '제공된 복용 안내가 없어요. 약 포장이나 처방전의 안내를 확인하세요.',
+                          style: const TextStyle(color: muted, height: 1.6),
+                        ),
+                        if (_guidanceError != null)
+                          TextButton(
+                            onPressed: _load,
+                            child: const Text('안내 다시 불러오기'),
+                          ),
+                      ],
                     ),
                   )
                 else ...[
@@ -173,7 +214,11 @@ class _PillinfoState extends State<Pillinfo> {
               ],
             ),
       bottomNavigationBar:
-          !widget.isLocal && pill != null && !_loading && _error == null
+          !widget.isLocal &&
+              widget.canSelect &&
+              pill != null &&
+              !_loading &&
+              _error == null
           ? BottomAction(label: '이 약 선택 · 일정 설정', onPressed: _register)
           : null,
     );

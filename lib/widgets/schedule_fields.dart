@@ -6,7 +6,7 @@ class ScheduleDraft {
   ScheduleDraft([Map<String, dynamic>? item]) {
     start = DateTime.tryParse('${item?['startDate']}') ?? DateTime.now();
     end = DateTime.tryParse('${item?['endDate']}');
-    times = item == null ? ['08:00'] : Medication.times(item['times']);
+    times = Medication.times(item?['times']);
     dosage = ((item?['dosage'] as num?) ?? 1).toDouble();
   }
   late DateTime start;
@@ -27,16 +27,21 @@ class ScheduleFields extends StatefulWidget {
     required this.draft,
     this.showDosage = true,
     this.unit = '정',
+    this.compactPeriod = false,
+    this.onUnitChanged,
   });
   final ScheduleDraft draft;
   final bool showDosage;
   final String unit;
+  final bool compactPeriod;
+  final ValueChanged<String>? onUnitChanged;
   @override
   State<ScheduleFields> createState() => _ScheduleFieldsState();
 }
 
 class _ScheduleFieldsState extends State<ScheduleFields> {
   ScheduleDraft get draft => widget.draft;
+
   Future<void> _pickDate(bool isEnd) async {
     final picked = await showDatePicker(
       context: context,
@@ -119,33 +124,60 @@ class _ScheduleFieldsState extends State<ScheduleFields> {
           },
           onChanged: (value) => draft.dosage = double.tryParse(value) ?? 0,
         ),
+        if (widget.onUnitChanged != null) ...[
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            initialValue: widget.unit,
+            items: {'정', '캡슐', '포', 'mL', '회', widget.unit}
+                .map((unit) => DropdownMenuItem(value: unit, child: Text(unit)))
+                .toList(),
+            onChanged: (value) => widget.onUnitChanged!(value!),
+            decoration: const InputDecoration(labelText: '복용 단위'),
+          ),
+        ],
       ],
       const SizedBox(height: 20),
-      const SectionLabel('복용 기간'),
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: const Text('시작일'),
-        subtitle: Text(Medication.dateKey(draft.start)),
-        trailing: const Icon(Icons.calendar_today_outlined, size: 20),
-        onTap: () => _pickDate(false),
-      ),
-      SwitchListTile.adaptive(
-        activeTrackColor: blue,
-        contentPadding: EdgeInsets.zero,
-        title: const Text('종료일 없이 계속 복용'),
-        value: draft.end == null,
-        onChanged: (ongoing) => setState(
-          () => draft.end = ongoing ? null : DateUtils.dateOnly(draft.start),
-        ),
-      ),
-      if (draft.end != null)
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('종료일'),
-          subtitle: Text(Medication.dateKey(draft.end!)),
-          trailing: const Icon(Icons.calendar_today_outlined, size: 20),
-          onTap: () => _pickDate(true),
-        ),
+      if (widget.compactPeriod)
+        ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          title: const Text('복용 기간'),
+          subtitle: Text(
+            '${Medication.dateKey(draft.start)}부터 · '
+            '${draft.end == null ? '종료일 없이' : '${Medication.dateKey(draft.end!)}까지'}',
+          ),
+          children: _periodFields(),
+        )
+      else ...[
+        const SectionLabel('복용 기간'),
+        ..._periodFields(),
+      ],
     ],
   );
+
+  List<Widget> _periodFields() => [
+    ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: const Text('시작일'),
+      subtitle: Text(Medication.dateKey(draft.start)),
+      trailing: const Icon(Icons.calendar_today_outlined, size: 20),
+      onTap: () => _pickDate(false),
+    ),
+    SwitchListTile.adaptive(
+      activeTrackColor: blue,
+      contentPadding: EdgeInsets.zero,
+      title: const Text('종료일 없이 계속 복용'),
+      value: draft.end == null,
+      onChanged: (ongoing) => setState(
+        () => draft.end = ongoing ? null : DateUtils.dateOnly(draft.start),
+      ),
+    ),
+    if (draft.end != null)
+      ListTile(
+        contentPadding: EdgeInsets.zero,
+        title: const Text('종료일'),
+        subtitle: Text(Medication.dateKey(draft.end!)),
+        trailing: const Icon(Icons.calendar_today_outlined, size: 20),
+        onTap: () => _pickDate(true),
+      ),
+  ];
 }

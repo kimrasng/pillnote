@@ -64,16 +64,20 @@ class AppServices {
       _instance ??
       (throw StateError('AppServices.initialize() must run first.'));
 
-  static Future<void> initialize() async {
+  static Future<void> initialize({
+    DoseReminderGateway? reminderGateway,
+    DateTime Function()? now,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     _instance?.dispose();
-    final reminders = NativeDoseReminderGateway();
+    final reminders = reminderGateway ?? NativeDoseReminderGateway();
     _instance = AppServices(
       store: LocalMedicationStore(prefs),
       api: ApiClient.instance,
       sessions: SessionStore.instance,
       reminderGateway: reminders,
       permissionGateway: NativeStartupPermissionGateway(reminders),
+      now: now,
     );
     await _instance!.sync.prepareCurrentAccount();
   }

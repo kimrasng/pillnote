@@ -193,11 +193,13 @@ class DoseReminderService extends ChangeNotifier {
   int pendingCount = 0;
   DateTime? nextScheduledAt;
   DateTime? lastScheduledAt;
+  final Map<String, DateTime> _nextByPill = {};
   String? lastError;
   bool get isSupported => _gateway.isSupported;
   bool get isAndroid => _gateway.isAndroid;
   bool get isEnabled => _store.doseRemindersEnabled;
   int get pendingLimit => _gateway.pendingLimit;
+  DateTime? nextScheduledForPill(String id) => _nextByPill[id];
 
   String get statusMessage {
     if (!isSupported) return '복용 시간 알림은 iPhone과 Android에서 사용할 수 있어요.';
@@ -240,6 +242,7 @@ class DoseReminderService extends ChangeNotifier {
 
   Future<void> _refresh() async {
     if (!isSupported || _disposed) return;
+    _nextByPill.clear();
     await _gateway.initialize();
     permissionGranted = await _gateway.permission();
     exactPermissionGranted = await _gateway.exactPermission();
@@ -289,6 +292,11 @@ class DoseReminderService extends ChangeNotifier {
     pendingCount = reserved.length;
     nextScheduledAt = reserved.firstOrNull?.at;
     lastScheduledAt = reserved.lastOrNull?.at;
+    for (final reminder in reserved) {
+      for (final id in reminder.pillIds) {
+        _nextByPill.putIfAbsent(id, () => reminder.at);
+      }
+    }
     lastError = reserved.length == plan.length
         ? null
         : '일부 복용 알림을 예약하지 못했어요. 다시 시도해주세요.';

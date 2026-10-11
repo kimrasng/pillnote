@@ -14,7 +14,7 @@ class Pilmanagement extends StatefulWidget {
 
 class _PilmanagementState extends State<Pilmanagement> {
   Future<void> _edit(Map<String, dynamic> pill) async {
-    await Navigator.push<bool>(
+    await Navigator.push<MedicationFormResult>(
       context,
       MaterialPageRoute(
         builder: (_) => MedicationForm(pill: pill, editing: true),

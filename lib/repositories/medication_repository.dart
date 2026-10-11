@@ -20,12 +20,13 @@ class MedicationRepository {
   List<Map<String, dynamic>> getGroups() =>
       _store.readGroups().where((group) => group['deleted'] != true).toList();
 
-  Future<void> addPill(Map<String, dynamic> pill, num? stock) async {
+  Future<String> addPill(Map<String, dynamic> pill, num? stock) async {
     final pills = getPills();
     final now = _now();
+    final id = now.microsecondsSinceEpoch.toString();
     pills.add({
       ...pill,
-      'id': now.microsecondsSinceEpoch.toString(),
+      'id': id,
       'createdAt': now.toIso8601String(),
       'updatedAt': now.toIso8601String(),
       'startDate': pill['startDate'],
@@ -37,6 +38,7 @@ class MedicationRepository {
       'archived': false,
     });
     await _savePills(pills);
+    return id;
   }
 
   Future<void> updatePill(String id, Map<String, dynamic> changes) async {

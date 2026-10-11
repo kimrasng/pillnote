@@ -44,6 +44,40 @@ void main() {
   tearDown(() => service.dispose());
 
   test(
+    'per-medication status uses confirmed slots and clears revoked reservations',
+    () async {
+      gateway.pendingLimit = 1;
+      await store.savePills([
+        {
+          'id': 'p1',
+          'times': ['18:00'],
+        },
+        {
+          'id': 'p2',
+          'times': ['18:00'],
+        },
+        {
+          'id': 'p3',
+          'times': ['19:00'],
+        },
+      ]);
+      await service.refresh();
+      expect(service.nextScheduledForPill('p1')!.hour, 18);
+      expect(
+        service.nextScheduledForPill('p2'),
+        service.nextScheduledForPill('p1'),
+      );
+      expect(service.nextScheduledForPill('p3'), isNull);
+      expect(gateway.items.values.single.payload, isNot(contains('p1')));
+      gateway.granted = false;
+      await service.refresh();
+      expect(service.nextScheduledForPill('p1'), isNull);
+      expect(service.nextScheduledForPill('p2'), isNull);
+      expect(gateway.items, isEmpty);
+    },
+  );
+
+  test(
     'guest reminders default to enabled; refresh is idempotent and explicit disable persists',
     () async {
       expect(service.isEnabled, isTrue);

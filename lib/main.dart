@@ -12,7 +12,6 @@ import 'package:pillnote/services/app_device_service.dart';
 import 'package:pillnote/services/push_notification_service.dart';
 import 'package:pillnote/services/session_store.dart';
 import 'package:pillnote/widgets/app_ui.dart';
-import 'package:pillnote/widgets/startup_permission_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,11 +59,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   final _navigatorKey = GlobalKey<NavigatorState>();
   StreamSubscription<RemoteMessage>? _messageSubscription;
   StreamSubscription<SessionChange>? _sessionSubscription;
+  bool _notificationsAllowed = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    AppServices.instance.reminders.addListener(_reminderStatusChanged);
     _messageSubscription = PushNotificationService.instance.foregroundMessages
         .listen((message) {
           final text = PushNotificationService.foregroundMessageText(message);
@@ -94,6 +95,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    AppServices.instance.reminders.removeListener(_reminderStatusChanged);
     _messageSubscription?.cancel();
     _sessionSubscription?.cancel();
     super.dispose();
@@ -104,11 +106,17 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       unawaited(AppServices.instance.reminders.refresh());
       unawaited(AppDeviceService.instance.register());
+      _refreshPushPermission();
     }
   }
 
-  void _startupPermissionsCompleted() {
-    unawaited(AppServices.instance.reminders.refresh());
+  void _reminderStatusChanged() {
+    final allowed = AppServices.instance.reminders.permissionGranted == true;
+    if (allowed && !_notificationsAllowed) _refreshPushPermission();
+    _notificationsAllowed = allowed;
+  }
+
+  void _refreshPushPermission() {
     unawaited(() async {
       await PushNotificationService.instance.refreshPermissionStatus();
       if (SessionStore.instance.isLoggedIn &&
@@ -208,15 +216,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           scrolledUnderElevation: 0,
         ),
       ),
-      home: StartupPermissionGate(
-        service: AppServices.instance.permissions,
-        onCompleted: _startupPermissionsCompleted,
-        child:
-            AppServices.instance.shouldShowOnboarding &&
-                !SessionStore.instance.isLoggedIn
-            ? const Onboarding()
-            : const Main(),
-      ),
+      home:
+          AppServices.instance.shouldShowOnboarding &&
+              !SessionStore.instance.isLoggedIn
+          ? const Onboarding()
+          : const Main(),
     );
   }
 }

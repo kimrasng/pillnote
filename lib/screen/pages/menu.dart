@@ -5,10 +5,12 @@ import 'package:pillnote/screen/pages/submenu/dose_reminders.dart';
 import 'package:pillnote/screen/pages/submenu/pushalarm.dart';
 import 'package:pillnote/screen/pages/submenu/device_privacy.dart';
 import 'package:pillnote/screen/register/register.dart';
+import 'package:pillnote/screen/register/verification.dart';
 import 'package:pillnote/services/api_client.dart';
 import 'package:pillnote/services/push_notification_service.dart';
 import 'package:pillnote/services/session_store.dart';
 import 'package:pillnote/widgets/app_ui.dart' hide PageScrollView;
+import 'package:pillnote/widgets/auth_step_route.dart';
 import 'package:pillnote/widgets/common/page_scroll_view.dart';
 
 class Menu extends StatefulWidget {
@@ -129,78 +131,48 @@ class _MenuState extends State<Menu> {
   }
 
   Future<void> _deleteAccount() async {
-    setState(() => _isBusy = true);
-    String? debugCode;
-    try {
-      debugCode = await _api.requestAccountDeletionCode();
-    } on ApiException catch (error) {
-      if (mounted) _showMessage(error.message, error: true);
-      if (mounted) setState(() => _isBusy = false);
-      return;
-    }
-    if (!mounted) return;
-    setState(() => _isBusy = false);
-
-    final controller = TextEditingController(text: debugCode);
-    final code = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('계정 삭제'),
-        scrollable: true,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('이메일로 받은 계정 삭제 인증번호를 입력하세요. 모든 서버 백업이 삭제됩니다.'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              maxLength: 6,
-              decoration: const InputDecoration(
-                labelText: '인증번호',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('취소'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () =>
-                Navigator.pop(dialogContext, controller.text.trim()),
-            child: const Text('계정 삭제'),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-    if (code == null || code.isEmpty || !mounted) return;
-
+    final email = _sessions.session?.email;
+    if (_isBusy || email == null) return;
     setState(() => _isBusy = true);
     try {
-      try {
-        await PushNotificationService.instance.unregisterCurrentDevice();
-      } catch (_) {
-        // 서버의 계정 삭제가 기기 등록 해제보다 우선입니다.
-      }
-      final ownerId = _sessions.session?.userId;
-      await _api.deleteAccount(code);
-      await AppServices.instance.clearLocalData(userId: ownerId);
+      final debugCode = await _api.requestAccountDeletionCode();
       if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute<void>(builder: (_) => const Register()),
-        (_) => false,
+      setState(() => _isBusy = false);
+      await Navigator.of(context).push(
+        AuthStepRoute(
+          animate: !MediaQuery.disableAnimationsOf(context),
+          builder: (_) => Verification.accountDeletion(
+            email: email,
+            debugCode: debugCode,
+            apiClient: _api,
+            resendCooldownSeconds: _api.emailResendCooldownSeconds,
+            onDeleteAccount: _confirmAccountDeletion,
+          ),
+        ),
       );
     } on ApiException catch (error) {
       if (mounted) _showMessage(error.message, error: true);
+    } catch (_) {
+      if (mounted) _showMessage('서버에 연결할 수 없습니다.', error: true);
     } finally {
       if (mounted) setState(() => _isBusy = false);
     }
+  }
+
+  Future<void> _confirmAccountDeletion(String code) async {
+    try {
+      await PushNotificationService.instance.unregisterCurrentDevice();
+    } catch (_) {
+      // 서버의 계정 삭제가 기기 등록 해제보다 우선입니다.
+    }
+    final ownerId = _sessions.session?.userId;
+    await _api.deleteAccount(code);
+    await AppServices.instance.clearLocalData(userId: ownerId);
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const Register()),
+      (_) => false,
+    );
   }
 
   void _showMessage(String message, {bool error = false}) {

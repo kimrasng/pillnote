@@ -7,7 +7,8 @@ import 'package:pillnote/screen/management/medication_form.dart';
 import 'package:pillnote/widgets/app_ui.dart';
 
 class Pillsearch extends StatefulWidget {
-  const Pillsearch({super.key});
+  const Pillsearch({super.key, this.apiClient});
+  final ApiClient? apiClient;
   @override
   State<Pillsearch> createState() => _PillsearchState();
 }
@@ -46,7 +47,8 @@ class _PillsearchState extends State<Pillsearch> {
       _error = null;
     });
     try {
-      final results = await ApiClient.instance.searchDrugs(normalized);
+      final results = await (widget.apiClient ?? ApiClient.instance)
+          .searchDrugs(normalized);
       if (mounted && request == _request) {
         setState(() {
           _results = results;
@@ -67,11 +69,18 @@ class _PillsearchState extends State<Pillsearch> {
   }
 
   Future<void> _open(Widget screen) async {
-    final saved = await Navigator.push<bool>(
+    FocusManager.instance.primaryFocus?.unfocus();
+    final result = await Navigator.push<MedicationFormResult>(
       context,
       MaterialPageRoute(builder: (_) => screen),
     );
-    if (saved == true && mounted) Navigator.pop(context, true);
+    if (!mounted) return;
+    if (result == MedicationFormResult.saved) {
+      Navigator.pop(context, true);
+    } else if (result == MedicationFormResult.addAnother) {
+      _search.clear();
+      _changed('');
+    }
   }
 
   @override
@@ -86,7 +95,8 @@ class _PillsearchState extends State<Pillsearch> {
     resizeToAvoidBottomInset: false,
     body: PageScrollView(
       title: '약 추가',
-      subtitle: '어떤 약을 복용하시나요? 약 이름을 검색하고, 복용 시간을 정해요.',
+      compactHeading: true,
+      subtitle: '1단계 · 복용할 약을 검색하거나 직접 입력해주세요.',
       showBackButton: true,
       sliver: SliverMainAxisGroup(
         slivers: [
@@ -146,18 +156,39 @@ class _PillsearchState extends State<Pillsearch> {
               separatorBuilder: (_, _) => const Divider(),
               itemBuilder: (_, index) {
                 final pill = _results[index];
-                return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                  leading: PillAvatar(pill),
-                  title: Text(
-                    Medication.name(pill),
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text('${pill['ENTP_NAME'] ?? ''}'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => _open(
-                    Pillinfo(pillSEQ: '${pill['ITEM_SEQ']}', isLocal: false),
-                  ),
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                      leading: PillAvatar(pill),
+                      title: Text(
+                        Medication.name(pill),
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text('${pill['ENTP_NAME'] ?? ''}'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => _open(MedicationForm(pill: pill)),
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed: () => Navigator.push<void>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => Pillinfo(
+                              pillSEQ: '${pill['ITEM_SEQ']}',
+                              isLocal: false,
+                              canSelect: false,
+                              apiClient: widget.apiClient,
+                            ),
+                          ),
+                        ),
+                        icon: const Icon(Icons.info_outline, size: 18),
+                        label: const Text('약 정보 보기'),
+                      ),
+                    ),
+                  ],
                 );
               },
             ),

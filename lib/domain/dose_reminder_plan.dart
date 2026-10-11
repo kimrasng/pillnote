@@ -53,6 +53,7 @@ class DoseReminderPlan {
         byInstant[at.millisecondsSinceEpoch] = DoseReminder(
           at: at,
           doseCount: (existing?.doseCount ?? 0) + 1,
+          pillIds: {...?existing?.pillIds, '${dose.pill['id']}'},
         );
       }
       final daily = byInstant.values.toList()
@@ -65,10 +66,17 @@ class DoseReminderPlan {
 }
 
 class DoseReminder {
-  const DoseReminder({required this.at, required this.doseCount});
+  const DoseReminder({
+    required this.at,
+    required this.doseCount,
+    this.pillIds = const {},
+  });
   static const payloadPrefix = 'pillnote-dose:';
   final tz.TZDateTime at;
   final int doseCount;
+  // Used only in memory to report each medication's confirmed reservation.
+  // Identifiers are never included in notification content or payloads.
+  final Set<String> pillIds;
 
   // Stable, positive Android int IDs in a namespace reserved for local doses.
   // Calendar minutes are unique throughout the bounded reservation period.

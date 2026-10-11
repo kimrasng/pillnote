@@ -16,13 +16,23 @@ class Verification extends StatefulWidget {
     this.apiClient,
     this.onReturn,
     this.resendCooldownSeconds = 60,
-  });
+  }) : onDeleteAccount = null;
+
+  const Verification.accountDeletion({
+    super.key,
+    required this.email,
+    required Future<void> Function(String code) this.onDeleteAccount,
+    this.debugCode,
+    this.apiClient,
+    this.resendCooldownSeconds = 60,
+  }) : onReturn = null;
 
   final String email;
   final String? debugCode;
   final ApiClient? apiClient;
   final VoidCallback? onReturn;
   final int resendCooldownSeconds;
+  final Future<void> Function(String code)? onDeleteAccount;
 
   @override
   State<Verification> createState() => _VerificationState();
@@ -44,6 +54,9 @@ class _VerificationState extends State<Verification>
   int _arrivalSequence = 0;
   String? _debugCode;
 
+  ApiClient get _api => widget.apiClient ?? ApiClient.instance;
+  bool get _isDeletingAccount => widget.onDeleteAccount != null;
+
   @override
   void initState() {
     super.initState();
@@ -54,6 +67,7 @@ class _VerificationState extends State<Verification>
   void _startCooldown(int seconds) {
     _resendTimer?.cancel();
     _cooldown = seconds;
+    if (seconds <= 0) return;
     _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
         timer.cancel();
@@ -76,10 +90,12 @@ class _VerificationState extends State<Verification>
 
     setState(() => _isLoading = true);
     try {
-      await (widget.apiClient ?? ApiClient.instance).verifyEmail(
-        widget.email,
-        code,
-      );
+      final deleteAccount = widget.onDeleteAccount;
+      if (deleteAccount != null) {
+        await deleteAccount(code);
+        return;
+      }
+      await _api.verifyEmail(widget.email, code);
       await AppServices.instance.setOnboardingCompleted(true);
       try {
         await AppServices.instance.sync.reconcileWithServer();
@@ -104,9 +120,15 @@ class _VerificationState extends State<Verification>
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('로그인 처리 중 오류가 발생했습니다.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _isDeletingAccount
+                  ? '계정 삭제 중 오류가 발생했습니다. 다시 시도해주세요.'
+                  : '로그인 처리 중 오류가 발생했습니다.',
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -114,15 +136,14 @@ class _VerificationState extends State<Verification>
   }
 
   Future<void> _resend() async {
-    if (_isReturning) return;
+    if (_isReturning || _isLoading || _isResending || _cooldown > 0) return;
     setState(() => _isResending = true);
     try {
-      final debugCode = await (widget.apiClient ?? ApiClient.instance)
-          .startEmailLogin(widget.email);
+      final debugCode = await (_isDeletingAccount
+          ? _api.requestAccountDeletionCode()
+          : _api.startEmailLogin(widget.email));
       if (!mounted) return;
-      _startCooldown(
-        (widget.apiClient ?? ApiClient.instance).emailResendCooldownSeconds,
-      );
+      _startCooldown(_api.emailResendCooldownSeconds);
       codeController.clear();
       setState(() {
         _arrivalSequence++;
@@ -152,7 +173,7 @@ class _VerificationState extends State<Verification>
     }
   }
 
-  Future<void> _returnToEmail() async {
+  Future<void> _returnToPrevious() async {
     if (_isReturning || _isLoading || !Navigator.canPop(context)) return;
     setState(() => _isReturning = true);
     FocusScope.of(context).unfocus();
@@ -176,6 +197,7 @@ class _VerificationState extends State<Verification>
 
   @override
   Widget build(BuildContext context) => PopScope(
+    canPop: !_isDeletingAccount || !_isLoading,
     onPopInvokedWithResult: (didPop, result) {
       if (didPop) widget.onReturn?.call();
     },
@@ -186,7 +208,7 @@ class _VerificationState extends State<Verification>
       outgoing: true,
       child: AuthLayout(
         contentAnimation: _isReturning ? _returnVisibility : null,
-        title: '인증번호 입력',
+        title: _isDeletingAccount ? '계정 삭제 인증' : '인증번호 입력',
         description: '${widget.email}로 인증번호를 보냈어요.\n6자리 번호를 입력해주세요.',
         fields: [
           AutofillGroup(
@@ -199,8 +221,8 @@ class _VerificationState extends State<Verification>
                       ModalRoute.of(context) is AuthStepRoute
                   ? const Duration(milliseconds: 360)
                   : const Duration(milliseconds: 180),
-              onCompleted: (_) => _handleVerify(),
-              onSubmitted: (_) => _handleVerify(),
+              onCompleted: _isDeletingAccount ? null : (_) => _handleVerify(),
+              onSubmitted: _isDeletingAccount ? null : (_) => _handleVerify(),
             ),
           ),
           if (_debugCode != null)
@@ -214,7 +236,8 @@ class _VerificationState extends State<Verification>
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
-              onPressed: _isResending || _cooldown > 0 || _isLoading
+              onPressed:
+                  _isResending || _cooldown > 0 || _isLoading || _isReturning
                   ? null
                   : _resend,
               child: Text(
@@ -226,10 +249,23 @@ class _VerificationState extends State<Verification>
               ),
             ),
           ),
+          if (_isDeletingAccount)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(
+                '계정을 삭제하면 모든 서버 백업과 이 기기의 복약 데이터가 삭제돼요.',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ),
         ],
         actions: [
           FilledButton(
-            onPressed: _isLoading ? null : _handleVerify,
+            style: _isDeletingAccount
+                ? FilledButton.styleFrom(backgroundColor: Colors.red)
+                : null,
+            onPressed: _isLoading || _isResending || _isReturning
+                ? null
+                : _handleVerify,
             child: _isLoading
                 ? const SizedBox.square(
                     dimension: 22,
@@ -238,13 +274,13 @@ class _VerificationState extends State<Verification>
                       color: Colors.white,
                     ),
                   )
-                : const Text('인증 완료'),
+                : Text(_isDeletingAccount ? '계정 삭제' : '인증 완료'),
           ),
           if (Navigator.canPop(context)) ...[
             const SizedBox(height: 12),
             TextButton(
-              onPressed: _isLoading || _isReturning ? null : _returnToEmail,
-              child: const Text('이메일 다시 입력'),
+              onPressed: _isLoading || _isReturning ? null : _returnToPrevious,
+              child: Text(_isDeletingAccount ? '취소' : '이메일 다시 입력'),
             ),
           ],
         ],
